@@ -10,7 +10,9 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:web": "cd web && npm run build",
     "dev": "ts-node src/cli.ts",
+    "dev:web": "cd web && npm run dev",
     "chat": "ts-node src/chat.ts",
     "test": "jest",
     "lint": "eslint src/",
