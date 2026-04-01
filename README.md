@@ -1,7 +1,7 @@
 **English** | [中文](./README_zh.md)
 
 # IOE - Intelligent Operations Engine
-
+online demo: https://lucassu2012.github.io/CC-CLI/
 **AI-Native Agent Harness for Telecom Network Operations & Market Operations**
 
 IOE is a lightweight, overlay Agent Harness platform that gives existing telecom systems (SmartCare, AUTIN, etc.) AI-powered reasoning capabilities — without replacing them. Built on battle-tested patterns from Claude Code's Agent Harness architecture, IOE applies the "model is the CPU, harness is the OS" philosophy to telecommunications.
