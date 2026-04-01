@@ -305,9 +305,9 @@ IOE does NOT replace existing systems. It overlays on them.
 
 | Asset | Description | Moat |
 |-------|-------------|------|
-| Pangu Telecom LLM | 718B parameter telecom-specialized model | Only comparable self-developed telecom LLM |
-| 30+ years domain knowledge | AUTIN's 900+ APPs | Years of competitive head start |
-| Digital Twin | ADN + SmartCare experience digital twin | Pre-action validation hooks |
+| GTS-LLM-s Large Model | 718B parameter telecom-specialized model | Only comparable self-developed telecom large mdoel |
+| 30+ years domain knowledge | 900+ APPs | Years of competitive head start |
+| Digital Twin | DTN + Experience + User digital twin | Pre-action validation hooks |
 | Full-stack AI hardware | Ascend chips | On-premise deployment + data sovereignty |
 
 ## Design for the Future
