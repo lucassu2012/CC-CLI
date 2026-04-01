@@ -1,0 +1,43 @@
+{
+  "name": "@ioe/intelligent-operations-engine",
+  "version": "0.1.0",
+  "description": "IOE: Intelligent Operations Engine - An AI-native Agent Harness platform for telecom network operations and market operations",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ioe": "./dist/cli.js",
+    "ioe-chat": "./dist/chat.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/cli.ts",
+    "chat": "ts-node src/chat.ts",
+    "test": "jest",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "telecom",
+    "agent",
+    "harness",
+    "ai",
+    "network-operations",
+    "smartcare",
+    "autin",
+    "agentic-ai"
+  ],
+  "license": "PROPRIETARY",
+  "dependencies": {
+    "typescript": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
