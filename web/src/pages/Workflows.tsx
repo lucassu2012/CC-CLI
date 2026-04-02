@@ -1,596 +1,67 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Play, Pause, Square, ChevronDown, GitBranch, ArrowRight, RefreshCw, X } from 'lucide-react';
+import { GitBranch, Plus, Play, Pause } from 'lucide-react';
 import { useText } from '../hooks/useText';
-
-/* ------------------------------------------------------------------ */
-/*  Inline workflow template data (self-contained, no cross-import)   */
-/* ------------------------------------------------------------------ */
-
-interface WfNode {
-  id: string;
-  type: 'trigger' | 'agent' | 'condition' | 'action' | 'merge' | 'split' | 'transform';
-  name: string;
-  agentType?: string;
-  x: number;
-  y: number;
-  config?: Record<string, any>;
-}
-
-interface WfEdge {
-  id: string;
-  source: string;
-  target: string;
-  label?: string;
-}
-
-interface WfTemplate {
-  id: string;
-  name: string;
-  description: string;
-  nodes: WfNode[];
-  edges: WfEdge[];
-}
-
-const TEMPLATES: WfTemplate[] = [
-  {
-    id: 'wf1', name: '网络故障自动诊断与修复',
-    description: '接收告警→分类→严重程度判断→跨域分析/自动修复→验证',
-    nodes: [
-      { id: 't1', type: 'trigger', name: '告警接收', x: 400, y: 40 },
-      { id: 'a1', type: 'agent', name: '告警分类', agentType: 'ops', x: 400, y: 140 },
-      { id: 'c1', type: 'condition', name: '严重程度', x: 400, y: 250 },
-      { id: 'a2', type: 'agent', name: '跨域分析', agentType: 'ops', x: 200, y: 360 },
-      { id: 'a3', type: 'agent', name: '数字孪生仿真', agentType: 'optimization', x: 200, y: 470 },
-      { id: 'c2', type: 'condition', name: '安全检查', x: 200, y: 580 },
-      { id: 'a4', type: 'action', name: '执行修复', x: 100, y: 690 },
-      { id: 'a5', type: 'action', name: '验证结果', x: 100, y: 790 },
-      { id: 'a6', type: 'action', name: '人工审核', x: 340, y: 690 },
-      { id: 'a7', type: 'agent', name: '自动修复', agentType: 'ops', x: 600, y: 360 },
-      { id: 'a8', type: 'action', name: '关闭工单', x: 600, y: 470 },
-    ],
-    edges: [
-      { id: 'e1', source: 't1', target: 'a1' },
-      { id: 'e2', source: 'a1', target: 'c1' },
-      { id: 'e3', source: 'c1', target: 'a2', label: '严重' },
-      { id: 'e4', source: 'c1', target: 'a7', label: '一般' },
-      { id: 'e5', source: 'a2', target: 'a3' },
-      { id: 'e6', source: 'a3', target: 'c2' },
-      { id: 'e7', source: 'c2', target: 'a4', label: '安全' },
-      { id: 'e8', source: 'c2', target: 'a6', label: '不安全' },
-      { id: 'e9', source: 'a4', target: 'a5' },
-      { id: 'e10', source: 'a7', target: 'a8' },
-    ],
-  },
-  {
-    id: 'wf2', name: '用户投诉闭环处理',
-    description: '接收投诉→体验分析→网络检查→优化或套餐推荐→通知用户',
-    nodes: [
-      { id: 't1', type: 'trigger', name: '投诉接收', x: 400, y: 40 },
-      { id: 'a1', type: 'agent', name: '体验分析', agentType: 'experience', x: 400, y: 140 },
-      { id: 'a2', type: 'agent', name: '网络检查', agentType: 'ops', x: 400, y: 250 },
-      { id: 'c1', type: 'condition', name: '网络问题?', x: 400, y: 360 },
-      { id: 'a3', type: 'agent', name: '参数优化', agentType: 'optimization', x: 200, y: 470 },
-      { id: 'a4', type: 'agent', name: '效果验证', agentType: 'experience', x: 200, y: 580 },
-      { id: 'a5', type: 'action', name: '通知已修复', x: 200, y: 690 },
-      { id: 'a6', type: 'agent', name: '套餐检查', agentType: 'marketing', x: 600, y: 470 },
-      { id: 'c2', type: 'condition', name: '需升级?', x: 600, y: 580 },
-      { id: 'a7', type: 'action', name: '推荐升级', x: 500, y: 690 },
-      { id: 'a8', type: 'action', name: '通知已处理', x: 700, y: 690 },
-    ],
-    edges: [
-      { id: 'e1', source: 't1', target: 'a1' },
-      { id: 'e2', source: 'a1', target: 'a2' },
-      { id: 'e3', source: 'a2', target: 'c1' },
-      { id: 'e4', source: 'c1', target: 'a3', label: '是' },
-      { id: 'e5', source: 'c1', target: 'a6', label: '否' },
-      { id: 'e6', source: 'a3', target: 'a4' },
-      { id: 'e7', source: 'a4', target: 'a5' },
-      { id: 'e8', source: 'a6', target: 'c2' },
-      { id: 'e9', source: 'c2', target: 'a7', label: '是' },
-      { id: 'e10', source: 'c2', target: 'a8', label: '否' },
-    ],
-  },
-  {
-    id: 'wf3', name: '新站开通优化',
-    description: '新站激活→覆盖验证→工程优化→体验监控→KPI达标检查',
-    nodes: [
-      { id: 't1', type: 'trigger', name: '新站激活', x: 400, y: 40 },
-      { id: 'a1', type: 'agent', name: '覆盖验证', agentType: 'planning', x: 400, y: 150 },
-      { id: 'a2', type: 'agent', name: '工程优化', agentType: 'optimization', x: 400, y: 260 },
-      { id: 'a3', type: 'agent', name: '体验监控', agentType: 'experience', x: 400, y: 370 },
-      { id: 'c1', type: 'condition', name: 'KPI达标?', x: 400, y: 480 },
-      { id: 'a4', type: 'action', name: '标记完成', x: 250, y: 590 },
-      { id: 'a5', type: 'agent', name: '重新优化', agentType: 'optimization', x: 550, y: 590 },
-    ],
-    edges: [
-      { id: 'e1', source: 't1', target: 'a1' },
-      { id: 'e2', source: 'a1', target: 'a2' },
-      { id: 'e3', source: 'a2', target: 'a3' },
-      { id: 'e4', source: 'a3', target: 'c1' },
-      { id: 'e5', source: 'c1', target: 'a4', label: '达标' },
-      { id: 'e6', source: 'c1', target: 'a5', label: '未达标' },
-      { id: 'e7', source: 'a5', target: 'a2' },
-    ],
-  },
-  {
-    id: 'wf4', name: '突发事件保障',
-    description: '事件检测→容量扩充→体验监控→稳定性监控→汇总→问题处理',
-    nodes: [
-      { id: 't1', type: 'trigger', name: '事件检测', x: 400, y: 40 },
-      { id: 's1', type: 'split', name: '并行保障', x: 400, y: 150 },
-      { id: 'a1', type: 'agent', name: '容量扩充', agentType: 'optimization', x: 200, y: 280 },
-      { id: 'a2', type: 'agent', name: '体验监控', agentType: 'experience', x: 400, y: 280 },
-      { id: 'a3', type: 'agent', name: '稳定性监控', agentType: 'ops', x: 600, y: 280 },
-      { id: 'm1', type: 'merge', name: '汇总报告', x: 400, y: 400 },
-      { id: 'c1', type: 'condition', name: '有问题?', x: 400, y: 510 },
-      { id: 'a4', type: 'action', name: '升级处理', x: 250, y: 620 },
-      { id: 'a5', type: 'action', name: '保障结束', x: 550, y: 620 },
-    ],
-    edges: [
-      { id: 'e1', source: 't1', target: 's1' },
-      { id: 'e2', source: 's1', target: 'a1' },
-      { id: 'e3', source: 's1', target: 'a2' },
-      { id: 'e4', source: 's1', target: 'a3' },
-      { id: 'e5', source: 'a1', target: 'm1' },
-      { id: 'e6', source: 'a2', target: 'm1' },
-      { id: 'e7', source: 'a3', target: 'm1' },
-      { id: 'e8', source: 'm1', target: 'c1' },
-      { id: 'e9', source: 'c1', target: 'a4', label: '是' },
-      { id: 'e10', source: 'c1', target: 'a5', label: '否' },
-    ],
-  },
-  {
-    id: 'wf5', name: '精准营销活动',
-    description: '营销创建→潜客识别→容量评估→执行营销→效果监控→报告',
-    nodes: [
-      { id: 't1', type: 'trigger', name: '营销创建', x: 400, y: 40 },
-      { id: 'a1', type: 'agent', name: '潜客识别', agentType: 'marketing', x: 400, y: 150 },
-      { id: 'a2', type: 'agent', name: '容量评估', agentType: 'planning', x: 400, y: 260 },
-      { id: 'c1', type: 'condition', name: '容量充足?', x: 400, y: 370 },
-      { id: 'a3', type: 'agent', name: '执行营销', agentType: 'marketing', x: 250, y: 480 },
-      { id: 'a4', type: 'agent', name: '效果监控', agentType: 'experience', x: 250, y: 590 },
-      { id: 'a5', type: 'action', name: '生成报告', x: 250, y: 700 },
-      { id: 'a6', type: 'action', name: '暂停营销', x: 550, y: 480 },
-    ],
-    edges: [
-      { id: 'e1', source: 't1', target: 'a1' },
-      { id: 'e2', source: 'a1', target: 'a2' },
-      { id: 'e3', source: 'a2', target: 'c1' },
-      { id: 'e4', source: 'c1', target: 'a3', label: '充足' },
-      { id: 'e5', source: 'c1', target: 'a6', label: '不足' },
-      { id: 'e6', source: 'a3', target: 'a4' },
-      { id: 'e7', source: 'a4', target: 'a5' },
-    ],
-  },
-  {
-    id: 'wf6', name: '全网健康巡检',
-    description: '定时触发→分区域巡检→汇总→异常处理→生成报告',
-    nodes: [
-      { id: 't1', type: 'trigger', name: '定时触发', x: 400, y: 40 },
-      { id: 's1', type: 'split', name: '分区巡检', x: 400, y: 150 },
-      { id: 'a1', type: 'agent', name: '广东巡检', agentType: 'ops', x: 200, y: 280 },
-      { id: 'a2', type: 'agent', name: '浙江巡检', agentType: 'ops', x: 400, y: 280 },
-      { id: 'a3', type: 'agent', name: '北京巡检', agentType: 'ops', x: 600, y: 280 },
-      { id: 'm1', type: 'merge', name: '汇总结果', x: 400, y: 400 },
-      { id: 'c1', type: 'condition', name: '发现异常?', x: 400, y: 510 },
-      { id: 'a4', type: 'agent', name: '创建工单', agentType: 'ops', x: 250, y: 620 },
-      { id: 'a5', type: 'action', name: '生成报告', x: 400, y: 730 },
-    ],
-    edges: [
-      { id: 'e1', source: 't1', target: 's1' },
-      { id: 'e2', source: 's1', target: 'a1' },
-      { id: 'e3', source: 's1', target: 'a2' },
-      { id: 'e4', source: 's1', target: 'a3' },
-      { id: 'e5', source: 'a1', target: 'm1' },
-      { id: 'e6', source: 'a2', target: 'm1' },
-      { id: 'e7', source: 'a3', target: 'm1' },
-      { id: 'e8', source: 'm1', target: 'c1' },
-      { id: 'e9', source: 'c1', target: 'a4', label: '是' },
-      { id: 'e10', source: 'c1', target: 'a5' },
-      { id: 'e11', source: 'a4', target: 'a5' },
-    ],
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Visual constants                                                  */
-/* ------------------------------------------------------------------ */
-
-const NODE_W = 140;
-const NODE_H = 48;
-const COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  trigger:   { bg: '#7c2d12', border: '#f97316', text: '#fed7aa' },
-  agent:     { bg: '#1e3a5f', border: '#3b82f6', text: '#bfdbfe' },
-  condition: { bg: '#713f12', border: '#eab308', text: '#fef9c3' },
-  action:    { bg: '#14532d', border: '#22c55e', text: '#bbf7d0' },
-  merge:     { bg: '#374151', border: '#6b7280', text: '#d1d5db' },
-  split:     { bg: '#374151', border: '#6b7280', text: '#d1d5db' },
-  transform: { bg: '#581c87', border: '#a855f7', text: '#e9d5ff' },
-};
-
-const AGENT_COLORS: Record<string, string> = {
-  ops: '#ef4444', optimization: '#3b82f6', experience: '#8b5cf6',
-  planning: '#f59e0b', marketing: '#10b981',
-};
-
-function nodeIcon(type: string) {
-  switch (type) {
-    case 'trigger': return '⚡';
-    case 'agent': return '🤖';
-    case 'condition': return '◆';
-    case 'action': return '▶';
-    case 'merge': return '⤵';
-    case 'split': return '⤴';
-    case 'transform': return '⇄';
-    default: return '●';
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/*  SVG edge path helper                                               */
-/* ------------------------------------------------------------------ */
-
-function edgePath(src: WfNode, tgt: WfNode): string {
-  const sx = src.x + NODE_W / 2;
-  const sy = src.y + NODE_H;
-  const tx = tgt.x + NODE_W / 2;
-  const ty = tgt.y;
-  const midY = (sy + ty) / 2;
-  return `M ${sx} ${sy} C ${sx} ${midY}, ${tx} ${midY}, ${tx} ${ty}`;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
 
 export default function Workflows() {
   const { t } = useText();
-  const [selectedTemplate, setSelectedTemplate] = useState(0);
-  const [selectedNode, setSelectedNode] = useState<WfNode | null>(null);
-  const [running, setRunning] = useState(false);
-  const [activeNodeIdx, setActiveNodeIdx] = useState(-1);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const template = TEMPLATES[selectedTemplate];
-
-  // Topological execution order
-  const executionOrder = useMemo(() => {
-    const order: string[] = [];
-    const visited = new Set<string>();
-    const adj = new Map<string, string[]>();
-    template.nodes.forEach(n => adj.set(n.id, []));
-    template.edges.forEach(e => adj.get(e.source)?.push(e.target));
-
-    function dfs(id: string) {
-      if (visited.has(id)) return;
-      visited.add(id);
-      adj.get(id)?.forEach(dfs);
-      order.unshift(id);
-    }
-    template.nodes.forEach(n => dfs(n.id));
-    return order;
-  }, [template]);
-
-  // Demo run animation
-  useEffect(() => {
-    if (!running) { setActiveNodeIdx(-1); return; }
-    if (activeNodeIdx >= executionOrder.length) {
-      setRunning(false);
-      setActiveNodeIdx(-1);
-      return;
-    }
-    const timer = setTimeout(() => setActiveNodeIdx(i => i + 1), 700);
-    return () => clearTimeout(timer);
-  }, [running, activeNodeIdx, executionOrder.length]);
-
-  const startRun = useCallback(() => {
-    setRunning(true);
-    setActiveNodeIdx(0);
-  }, []);
-
-  const stopRun = useCallback(() => {
-    setRunning(false);
-    setActiveNodeIdx(-1);
-  }, []);
-
-  const activeNodeIds = useMemo(() => {
-    if (activeNodeIdx < 0) return new Set<string>();
-    return new Set(executionOrder.slice(0, activeNodeIdx + 1));
-  }, [activeNodeIdx, executionOrder]);
-
-  const currentNodeId = activeNodeIdx >= 0 && activeNodeIdx < executionOrder.length
-    ? executionOrder[activeNodeIdx] : null;
-
-  // Canvas bounds
-  const bounds = useMemo(() => {
-    let maxX = 0, maxY = 0;
-    template.nodes.forEach(n => {
-      if (n.x + NODE_W > maxX) maxX = n.x + NODE_W;
-      if (n.y + NODE_H > maxY) maxY = n.y + NODE_H;
-    });
-    return { w: maxX + 100, h: maxY + 60 };
-  }, [template]);
+  const demoWorkflows = [
+    { id: 'wf-1', name: 'Alarm Correlation & Auto-Heal', nameZh: '告警关联与自动修复', status: 'active', nodes: 12, lastRun: '2 min ago' },
+    { id: 'wf-2', name: 'SLA Breach Prevention', nameZh: 'SLA违约预防', status: 'active', nodes: 8, lastRun: '15 min ago' },
+    { id: 'wf-3', name: 'Security Incident Response', nameZh: '安全事件响应', status: 'paused', nodes: 15, lastRun: '1 hr ago' },
+    { id: 'wf-4', name: 'Customer Churn Prevention', nameZh: '客户流失预防', status: 'active', nodes: 10, lastRun: '30 min ago' },
+  ];
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-bg-card shrink-0">
-        <div className="flex items-center gap-4">
-          <GitBranch className="w-5 h-5 text-accent-cyan" />
-          <div className="relative">
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 bg-bg-primary px-3 py-1.5 rounded-lg border border-border hover:border-accent-cyan/40 text-sm text-text-primary cursor-pointer"
-            >
-              {template.name}
-              <ChevronDown className="w-4 h-4 text-text-muted" />
-            </button>
-            {dropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 w-72 bg-bg-card border border-border rounded-lg shadow-xl z-50">
-                {TEMPLATES.map((tmpl, i) => (
-                  <button
-                    key={tmpl.id}
-                    onClick={() => { setSelectedTemplate(i); setDropdownOpen(false); setSelectedNode(null); stopRun(); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-bg-primary transition-colors cursor-pointer first:rounded-t-lg last:rounded-b-lg ${
-                      i === selectedTemplate ? 'text-accent-cyan bg-bg-primary' : 'text-text-secondary'
-                    }`}
-                  >
-                    <div className="font-medium">{tmpl.name}</div>
-                    <div className="text-xs text-text-muted mt-0.5">{tmpl.description}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <span className="text-xs text-text-muted">v1.0</span>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${
-            running ? 'bg-status-green/20 text-status-green' : 'bg-bg-primary text-text-muted'
-          }`}>
-            {running ? t('Running', '运行中') : t('Ready', '就绪')}
-          </span>
+    <div className="p-5 overflow-auto h-full">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="text-lg font-semibold text-text-primary">{t('Workflow Orchestration', '工作流编排')}</h1>
+          <p className="text-xs text-text-muted mt-0.5">{t('n8n-style visual workflow editor', 'n8n风格可视化工作流编辑器')}</p>
         </div>
-        <div className="flex items-center gap-2">
-          {!running ? (
-            <button onClick={startRun} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-status-green/20 text-status-green text-sm font-medium hover:bg-status-green/30 transition-colors cursor-pointer">
-              <Play className="w-4 h-4" /> {t('Run', '运行')}
-            </button>
-          ) : (
-            <>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-status-yellow/20 text-status-yellow text-sm font-medium cursor-pointer">
-                <Pause className="w-4 h-4" /> {t('Pause', '暂停')}
-              </button>
-              <button onClick={stopRun} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-status-red/20 text-status-red text-sm font-medium hover:bg-status-red/30 transition-colors cursor-pointer">
-                <Square className="w-4 h-4" /> {t('Stop', '停止')}
-              </button>
-            </>
-          )}
-        </div>
+        <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent-cyan text-bg-primary text-sm font-medium hover:bg-accent-cyan/80 transition-colors cursor-pointer">
+          <Plus className="w-4 h-4" />
+          {t('New Workflow', '新建工作流')}
+        </button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left: Node palette */}
-        <div className="w-48 border-r border-border bg-bg-card p-3 shrink-0 overflow-auto">
-          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">{t('Node Types', '节点类型')}</h3>
-          {(['trigger', 'agent', 'condition', 'action', 'merge', 'split', 'transform'] as const).map(type => {
-            const c = COLORS[type];
-            return (
-              <div key={type} className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-bg-primary transition-colors mb-1 cursor-grab">
-                <div className="w-7 h-7 rounded-md flex items-center justify-center text-xs" style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}>
-                  {nodeIcon(type)}
-                </div>
-                <span className="text-xs text-text-secondary capitalize">{type === 'trigger' ? '触发器' : type === 'agent' ? 'Agent' : type === 'condition' ? '条件' : type === 'action' ? '动作' : type === 'merge' ? '合并' : type === 'split' ? '拆分' : '转换'}</span>
+      {/* Workflow list */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        {demoWorkflows.map((wf) => (
+          <div key={wf.id} className="bg-bg-card rounded-xl border border-border p-5 hover:border-accent-cyan/40 transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <GitBranch className="w-4 h-4 text-accent-cyan" />
+                <h3 className="text-sm font-medium text-text-primary">{t(wf.name, wf.nameZh)}</h3>
               </div>
-            );
-          })}
-          <div className="border-t border-border mt-3 pt-3">
-            <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t('Agents', '领域Agent')}</h3>
-            {[['planning','规划'],['optimization','优化'],['experience','体验'],['ops','运维'],['marketing','运营']].map(([key, label]) => (
-              <div key={key} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-bg-primary transition-colors mb-1">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: AGENT_COLORS[key] }} />
-                <span className="text-xs text-text-secondary">{label}Agent</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Center: SVG Canvas */}
-        <div className="flex-1 overflow-auto bg-bg-primary relative">
-          <svg width={bounds.w} height={bounds.h} className="min-w-full min-h-full">
-            <defs>
-              <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                <polygon points="0 0, 8 3, 0 6" fill="#475569" />
-              </marker>
-              <marker id="arrow-active" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                <polygon points="0 0, 8 3, 0 6" fill="#22c55e" />
-              </marker>
-              {/* Grid pattern */}
-              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" strokeWidth="0.5" />
-              </pattern>
-              {/* Glow filter */}
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
-              </filter>
-              {/* Animated dash */}
-              <style>{`
-                @keyframes dash { to { stroke-dashoffset: -20; } }
-                .edge-active { animation: dash 0.5s linear infinite; }
-                @keyframes pulse-glow { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
-                .node-active-glow { animation: pulse-glow 0.8s ease-in-out infinite; }
-              `}</style>
-            </defs>
-
-            <rect width="100%" height="100%" fill="url(#grid)" />
-
-            {/* Edges */}
-            {template.edges.map(edge => {
-              const src = template.nodes.find(n => n.id === edge.source)!;
-              const tgt = template.nodes.find(n => n.id === edge.target)!;
-              const path = edgePath(src, tgt);
-              const srcDone = activeNodeIds.has(edge.source);
-              const tgtDone = activeNodeIds.has(edge.target);
-              const isActive = srcDone && tgtDone;
-              const isAnimating = srcDone && !tgtDone && running;
-
-              return (
-                <g key={edge.id}>
-                  <path d={path} fill="none" stroke={isActive ? '#22c55e' : '#475569'} strokeWidth={isActive ? 2.5 : 1.5}
-                    markerEnd={isActive ? 'url(#arrow-active)' : 'url(#arrow)'}
-                    strokeDasharray={isAnimating ? '6 4' : 'none'}
-                    className={isAnimating ? 'edge-active' : ''}
-                    style={{ transition: 'stroke 0.3s' }}
-                  />
-                  {edge.label && (
-                    <text x={(src.x + NODE_W/2 + tgt.x + NODE_W/2) / 2 + 8}
-                          y={(src.y + NODE_H + tgt.y) / 2}
-                          fill="#94a3b8" fontSize="10" textAnchor="start">
-                      {edge.label}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-
-            {/* Nodes */}
-            {template.nodes.map(node => {
-              const c = COLORS[node.type];
-              const isDone = activeNodeIds.has(node.id);
-              const isCurrent = currentNodeId === node.id;
-              const isSelected = selectedNode?.id === node.id;
-              const agentColor = node.agentType ? AGENT_COLORS[node.agentType] : undefined;
-
-              return (
-                <g key={node.id} onClick={() => setSelectedNode(node)} style={{ cursor: 'pointer' }}>
-                  {/* Glow behind active node */}
-                  {isCurrent && (
-                    <rect x={node.x - 4} y={node.y - 4} width={NODE_W + 8} height={NODE_H + 8}
-                      rx={10} fill="none" stroke="#22c55e" strokeWidth={2}
-                      className="node-active-glow" filter="url(#glow)" />
-                  )}
-                  {/* Selection outline */}
-                  {isSelected && !isCurrent && (
-                    <rect x={node.x - 3} y={node.y - 3} width={NODE_W + 6} height={NODE_H + 6}
-                      rx={9} fill="none" stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 2" />
-                  )}
-                  {/* Node body */}
-                  <rect x={node.x} y={node.y} width={NODE_W} height={NODE_H} rx={8}
-                    fill={isDone ? '#14532d' : c.bg}
-                    stroke={isDone ? '#22c55e' : (agentColor || c.border)}
-                    strokeWidth={isCurrent ? 2.5 : 1.5}
-                    style={{ transition: 'all 0.3s' }}
-                  />
-                  {/* Agent type indicator */}
-                  {agentColor && (
-                    <rect x={node.x} y={node.y} width={4} height={NODE_H} rx={2}
-                      fill={agentColor} />
-                  )}
-                  {/* Icon */}
-                  <text x={node.x + 14} y={node.y + NODE_H/2 + 1}
-                    fill={isDone ? '#bbf7d0' : c.text} fontSize="12" dominantBaseline="middle">
-                    {isDone ? '✓' : nodeIcon(node.type)}
-                  </text>
-                  {/* Label */}
-                  <text x={node.x + 28} y={node.y + NODE_H/2 + 1}
-                    fill={isDone ? '#bbf7d0' : c.text} fontSize="12" dominantBaseline="middle"
-                    fontWeight={500}>
-                    {node.name}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-
-          {/* Minimap */}
-          <div className="absolute bottom-3 right-3 w-32 h-20 bg-bg-card/80 border border-border rounded-lg overflow-hidden">
-            <svg viewBox={`0 0 ${bounds.w} ${bounds.h}`} width="100%" height="100%">
-              {template.edges.map(e => {
-                const src = template.nodes.find(n => n.id === e.source)!;
-                const tgt = template.nodes.find(n => n.id === e.target)!;
-                return <line key={e.id} x1={src.x+NODE_W/2} y1={src.y+NODE_H/2} x2={tgt.x+NODE_W/2} y2={tgt.y+NODE_H/2} stroke="#334155" strokeWidth="3" />;
-              })}
-              {template.nodes.map(n => (
-                <rect key={n.id} x={n.x} y={n.y} width={NODE_W} height={NODE_H} rx={4}
-                  fill={activeNodeIds.has(n.id) ? '#22c55e' : COLORS[n.type].border} opacity={0.6} />
-              ))}
-            </svg>
-          </div>
-        </div>
-
-        {/* Right: Config panel */}
-        {selectedNode && (
-          <div className="w-64 border-l border-border bg-bg-card p-4 shrink-0 overflow-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-text-primary">{t('Node Config', '节点配置')}</h3>
-              <button onClick={() => setSelectedNode(null)} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-4 h-4" /></button>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-text-muted block mb-1">{t('Name', '名称')}</label>
-                <div className="bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm text-text-primary">{selectedNode.name}</div>
-              </div>
-              <div>
-                <label className="text-xs text-text-muted block mb-1">{t('Type', '类型')}</label>
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded flex items-center justify-center text-xs" style={{ backgroundColor: COLORS[selectedNode.type].bg, border: `1px solid ${COLORS[selectedNode.type].border}` }}>
-                    {nodeIcon(selectedNode.type)}
-                  </div>
-                  <span className="text-sm text-text-secondary capitalize">{selectedNode.type}</span>
-                </div>
-              </div>
-              {selectedNode.agentType && (
-                <div>
-                  <label className="text-xs text-text-muted block mb-1">{t('Agent', '领域Agent')}</label>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: AGENT_COLORS[selectedNode.agentType] }} />
-                    <span className="text-sm text-text-secondary">
-                      {selectedNode.agentType === 'ops' ? '运维' : selectedNode.agentType === 'optimization' ? '优化' : selectedNode.agentType === 'experience' ? '体验' : selectedNode.agentType === 'planning' ? '规划' : '运营'}Agent
-                    </span>
-                  </div>
-                </div>
+              {wf.status === 'active' ? (
+                <Pause className="w-4 h-4 text-status-green cursor-pointer" />
+              ) : (
+                <Play className="w-4 h-4 text-text-muted cursor-pointer" />
               )}
-              <div>
-                <label className="text-xs text-text-muted block mb-1">{t('Position', '位置')}</label>
-                <div className="text-sm text-text-secondary">x: {selectedNode.x}, y: {selectedNode.y}</div>
-              </div>
-              <div>
-                <label className="text-xs text-text-muted block mb-1">{t('Status', '状态')}</label>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  activeNodeIds.has(selectedNode.id)
-                    ? 'bg-status-green/20 text-status-green'
-                    : 'bg-bg-primary text-text-muted'
-                }`}>
-                  {activeNodeIds.has(selectedNode.id) ? t('Completed', '已完成') : t('Pending', '待执行')}
-                </span>
-              </div>
-
-              {/* Connections */}
-              <div className="border-t border-border pt-3">
-                <label className="text-xs text-text-muted block mb-2">{t('Connections', '连接')}</label>
-                {template.edges.filter(e => e.source === selectedNode.id).map(e => {
-                  const tgt = template.nodes.find(n => n.id === e.target);
-                  return (
-                    <div key={e.id} className="flex items-center gap-2 text-xs text-text-secondary mb-1">
-                      <ArrowRight className="w-3 h-3 text-text-muted" />
-                      <span>{tgt?.name}</span>
-                      {e.label && <span className="text-text-muted">({e.label})</span>}
-                    </div>
-                  );
-                })}
-                {template.edges.filter(e => e.target === selectedNode.id).map(e => {
-                  const src = template.nodes.find(n => n.id === e.source);
-                  return (
-                    <div key={e.id} className="flex items-center gap-2 text-xs text-text-secondary mb-1">
-                      <RefreshCw className="w-3 h-3 text-text-muted" />
-                      <span>← {src?.name}</span>
-                    </div>
-                  );
-                })}
-              </div>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-text-muted">
+              <span>{wf.nodes} {t('nodes', '节点')}</span>
+              <span>{t('Last run:', '上次运行:')} {wf.lastRun}</span>
+              <span className={wf.status === 'active' ? 'text-status-green' : 'text-text-muted'}>
+                {wf.status}
+              </span>
             </div>
           </div>
-        )}
+        ))}
+      </div>
+
+      {/* Placeholder editor area */}
+      <div className="bg-bg-card rounded-xl border-2 border-dashed border-border flex items-center justify-center h-96">
+        <div className="text-center">
+          <GitBranch className="w-12 h-12 text-text-muted mx-auto mb-3" />
+          <h2 className="text-lg font-medium text-text-secondary">{t('Workflow Editor', '工作流编辑器')}</h2>
+          <p className="text-sm text-text-muted mt-1 max-w-md">
+            {t(
+              'Visual workflow editor with drag-and-drop nodes. Click "New Workflow" to start building agent orchestration pipelines.',
+              '可视化工作流编辑器，支持拖拽节点。点击"新建工作流"开始构建智能体编排管道。'
+            )}
+          </p>
+        </div>
       </div>
     </div>
   );
