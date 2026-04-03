@@ -1,15 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Radio, Server, Database, Wifi, X, Activity, Users, BarChart3, Wrench, Zap, AlertTriangle, CheckCircle2, Play, RotateCcw, Search, Filter, Layers, Eye, EyeOff, ZoomIn, ZoomOut, Maximize2, Terminal, ChevronDown, ChevronUp } from 'lucide-react';
+import { Radio, Server, Database, Wifi, X, Activity, Users, Zap, AlertTriangle, CheckCircle2, Play, RotateCcw, Search, Filter, Layers, Eye, EyeOff, ZoomIn, ZoomOut, Maximize2, Terminal, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { topoNodes, topoLinks, type TopoNode } from '../data/topology';
 import StatusBadge from '../components/StatusBadge';
 
-type TabId = 'network' | 'experience' | 'capacity' | 'ops';
+type TabId = 'network' | 'experience' | 'user';
 const TABS: { id: TabId; icon: typeof Radio; label: string; labelZh: string }[] = [
   { id: 'network', icon: Radio, label: 'Network Twin', labelZh: '网络数字孪生' },
-  { id: 'experience', icon: Users, label: 'Experience Twin', labelZh: '体验优化孪生' },
-  { id: 'capacity', icon: BarChart3, label: 'Capacity Twin', labelZh: '容量规划孪生' },
-  { id: 'ops', icon: Wrench, label: 'O&M Twin', labelZh: '智能运维孪生' },
+  { id: 'experience', icon: Activity, label: 'Experience Twin', labelZh: '体验优化孪生' },
+  { id: 'user', icon: Users, label: 'User Twin', labelZh: '用户数字孪生' },
 ];
 
 const NODE_LAYERS = ['data-center', 'core', 'aggregation', 'bts'] as const;
@@ -413,157 +412,230 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
   );
 }
 
-/* ─── Capacity Twin ─── */
-function CapacityTwin({ t }: { t: (en: string, zh: string) => string }) {
-  const gauges = [
-    { label: 'PRB', labelZh: 'PRB利用率', value: 72, max: 100 },
-    { label: 'Bandwidth', labelZh: '带宽利用率', value: 58, max: 100 },
-    { label: 'Sessions', labelZh: '会话数', value: 85, max: 100 },
-    { label: 'Connections', labelZh: '连接数', value: 63, max: 100 },
-  ];
-  const scenarios = [
-    { label: t('Normal Growth', '正常增长'), color: '#22c55e', demand: [40, 45, 50, 55, 62, 68, 74, 80, 85, 88, 92, 95] },
-    { label: t('Event Surge', '突发事件'), color: '#eab308', demand: [40, 45, 52, 78, 95, 98, 85, 70, 60, 55, 50, 48] },
-    { label: t('Peak Holiday', '节假日高峰'), color: '#ef4444', demand: [40, 48, 55, 65, 75, 88, 95, 98, 96, 90, 80, 65] },
-  ];
-  const capacity = [80, 80, 80, 80, 85, 85, 85, 90, 90, 90, 95, 95];
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-3">
-        {gauges.map(g => {
-          const pct = g.value / g.max;
-          const r = 36; const c = 2 * Math.PI * r; const offset = c * (1 - pct * 0.75);
-          return (
-            <div key={g.label} className="bg-bg-card rounded-xl border border-border p-4 flex flex-col items-center">
-              <svg width="90" height="90" viewBox="0 0 90 90">
-                <circle cx="45" cy="45" r={r} fill="none" stroke="#1e293b" strokeWidth="6" strokeDasharray={`${c * 0.75} ${c * 0.25}`} strokeLinecap="round" transform="rotate(135 45 45)" />
-                <circle cx="45" cy="45" r={r} fill="none" stroke={pct > 0.8 ? '#ef4444' : pct > 0.6 ? '#eab308' : '#22c55e'} strokeWidth="6" strokeDasharray={`${c * 0.75} ${c * 0.25}`} strokeDashoffset={offset} strokeLinecap="round" transform="rotate(135 45 45)" />
-                <text x="45" y="45" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="16" fontWeight="bold">{g.value}%</text>
-              </svg>
-              <p className="text-xs text-text-secondary mt-1">{t(g.label, g.labelZh)}</p>
-            </div>
-          );
-        })}
-      </div>
-      <div className="bg-bg-card rounded-xl border border-border p-4">
-        <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-3">{t('Capacity vs Demand Forecast', '容量与需求预测')}</h3>
-        <svg viewBox="0 0 600 200" className="w-full">
-          <defs><pattern id="cgrid" width="50" height="40" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.5" /></pattern></defs>
-          <rect width="600" height="200" fill="url(#cgrid)" />
-          {/* Capacity line */}
-          <polyline points={capacity.map((v, i) => `${i * 50 + 25},${180 - v * 1.6}`).join(' ')} fill="none" stroke="#475569" strokeWidth="2" strokeDasharray="6 3" />
-          {scenarios.map((sc, si) => (
-            <polyline key={si} points={sc.demand.map((v, i) => `${i * 50 + 25},${180 - v * 1.6}`).join(' ')} fill="none" stroke={sc.color} strokeWidth="1.5" opacity="0.8" />
-          ))}
-          {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
-            <text key={m} x={i * 50 + 25} y="198" textAnchor="middle" fill="#64748b" fontSize="8">{m}</text>
-          ))}
-        </svg>
-        <div className="flex gap-4 mt-2 text-[10px]">
-          <span className="text-text-muted flex items-center gap-1"><span className="w-4 h-0 border-t-2 border-dashed border-[#475569]" />{t('Capacity', '容量')}</span>
-          {scenarios.map(s => <span key={s.label} className="flex items-center gap-1"><span className="w-4 h-0 border-t-2" style={{ borderColor: s.color }} />{s.label}</span>)}
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-bg-card rounded-xl border border-accent-cyan/30 p-4">
-          <h4 className="text-xs font-medium text-accent-cyan mb-2">{t('Expansion Recommendations', '扩容建议')}</h4>
-          <div className="space-y-1.5">
-            {[t('Site GD-A003: Add 5G carrier', '站点GD-A003: 新增5G载波'), t('Link SZ-GZ: Upgrade to 100G', '链路SZ-GZ: 升级至100G'), t('UPF-02: Scale to 200Gbps', 'UPF-02: 扩容至200Gbps')].map((r, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-text-primary bg-bg-primary rounded px-2.5 py-1.5"><AlertTriangle className="w-3 h-3 text-status-yellow shrink-0" />{r}</div>
-            ))}
-          </div>
-        </div>
-        <div className="bg-bg-card rounded-xl border border-status-green/30 p-4">
-          <h4 className="text-xs font-medium text-status-green mb-2">{t('Optimization Opportunities', '优化机会')}</h4>
-          <div className="space-y-1.5">
-            {[t('Low-traffic cells: 12 eligible for sleep', '低流量小区: 12个可休眠'), t('PRB load balancing: 8% gain possible', 'PRB负载均衡: 可提升8%'), t('Carrier aggregation: Enable on 23 sites', '载波聚合: 23站点可开启')].map((r, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-text-primary bg-bg-primary rounded px-2.5 py-1.5"><CheckCircle2 className="w-3 h-3 text-status-green shrink-0" />{r}</div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+/* ─── User Twin: Churn Prediction + Lead Identification (LUM Model) ─── */
+function UserTwin({ t }: { t: (en: string, zh: string) => string }) {
+  const [activeView, setActiveView] = useState<'churn' | 'lead'>('churn');
+  const [predicting, setPredicting] = useState(false);
+  const [predStep, setPredStep] = useState(-1);
+  const [intervened, setIntervened] = useState<Set<number>>(new Set());
 
-/* ─── O&M Twin ─── */
-function OpsTwin({ t }: { t: (en: string, zh: string) => string }) {
-  const [fault, setFault] = useState<string | null>(null);
-  const [diagStep, setDiagStep] = useState(-1);
-  const faults = [
-    { id: 'link-down', label: t('Link Down', '链路中断'), steps: [t('Detect alarm','检测告警'), t('Locate fault link','定位故障链路'), t('Check redundancy','检查冗余路径'), t('Reroute traffic','流量重路由'), t('Verify recovery','验证恢复')] },
-    { id: 'power-fail', label: t('Power Failure', '电源故障'), steps: [t('Detect power loss','检测断电'), t('Activate battery','启动电池'), t('Transfer traffic','流量转移'), t('Dispatch team','派遣维修'), t('Restore power','恢复供电')] },
-    { id: 'overload', label: t('Overload', '过载'), steps: [t('Detect high load','检测高负载'), t('Analyze traffic','分析流量'), t('Load balancing','负载均衡'), t('Throttle low-priority','降级低优先'), t('Monitor stability','监控稳定')] },
-  ];
-  const predictions = [
-    { label: t('BTS-GD-007 battery degradation','BTS-GD-007 电池老化'), risk: 78, eta: '3天' },
-    { label: t('Link SZ-GZ-02 BER rising','链路SZ-GZ-02 误码率上升'), risk: 65, eta: '7天' },
-    { label: t('Core-01 memory leak trend','Core-01 内存泄漏趋势'), risk: 52, eta: '14天' },
+  // Churn risk users
+  const churnUsers = [
+    { id: 1, name: '张明辉', phone: '138****2891', plan: '冰激凌129', arpu: 98, months: 36, riskScore: 92, reason: '连续3月ARPU下降, 投诉2次未解决', signal: '通话时长下降45%, 流量使用减少60%' },
+    { id: 2, name: '李婷', phone: '139****5567', plan: '畅享199', arpu: 156, months: 24, riskScore: 85, reason: '竞对号码活跃, 套餐溢出频繁', signal: '双卡切换比例上升, 夜间流量转移' },
+    { id: 3, name: '王志强', phone: '136****8834', plan: '冰激凌99', arpu: 72, months: 48, riskScore: 78, reason: '合约即将到期, 未续约意愿低', signal: '合约到期前30天, 咨询携号转网' },
+    { id: 4, name: '赵雅楠', phone: '135****1123', plan: '畅享299', arpu: 245, months: 12, riskScore: 71, reason: 'VoLTE质量差导致不满', signal: '连续投诉网络质量, 满意度评分2/5' },
+    { id: 5, name: '刘建国', phone: '137****4456', plan: '冰激凌59', arpu: 45, months: 60, riskScore: 65, reason: '低ARPU长期用户, 价格敏感', signal: '频繁查询资费, 关注竞对低价套餐' },
   ];
 
+  // Lead identification users
+  const leadUsers = [
+    { id: 1, name: '陈思远', phone: '138****7712', current: '冰激凌99', predicted: '畅享199', confidence: 94, trigger: '流量连续3月溢出, 视频消费增长200%', value: '+¥100/月' },
+    { id: 2, name: '黄小明', phone: '136****3345', current: '基础套餐', predicted: '5G尊享399', confidence: 88, trigger: '已购5G手机, 频繁使用高清视频', value: '+¥340/月' },
+    { id: 3, name: '吴丽华', phone: '139****9901', current: '冰激凌129', predicted: '家庭融合版', confidence: 82, trigger: '家庭成员3张卡分散消费, 宽带即将到期', value: '+¥80/月' },
+    { id: 4, name: '周杰', phone: '135****6678', current: '畅享59', predicted: '冰激凌129', confidence: 76, trigger: '数据用量上升趋势, 夜间流量包已满', value: '+¥70/月' },
+  ];
+
+  // LUM prediction animation
   useEffect(() => {
-    if (!fault || diagStep < 0) return;
-    const f = faults.find(f => f.id === fault);
-    if (!f || diagStep >= f.steps.length) return;
-    const timer = setTimeout(() => setDiagStep(s => s + 1), 1200);
+    if (!predicting || predStep < 0) return;
+    if (predStep >= 5) { setPredicting(false); return; }
+    const timer = setTimeout(() => setPredStep(s => s + 1), 900);
     return () => clearTimeout(timer);
-  }, [fault, diagStep]);
+  }, [predicting, predStep]);
 
-  const injectFault = (id: string) => { setFault(id); setDiagStep(0); };
-  const resetFault = () => { setFault(null); setDiagStep(-1); };
-  const activeFault = faults.find(f => f.id === fault);
+  const startPredict = () => { setPredicting(true); setPredStep(0); };
+  const handleIntervene = (id: number) => setIntervened(prev => new Set(prev).add(id));
+
+  const lumSteps = [
+    t('Loading user behavior sequences...', '加载用户行为序列...'),
+    t('LUM Encoder: extracting behavior embeddings...', 'LUM编码器: 提取行为嵌入向量...'),
+    t('Adapter: aligning telecom domain features...', '适配器: 对齐电信领域特征...'),
+    t('LLM Decoder: generating predictions...', 'LLM解码器: 生成预测结果...'),
+    t('Prediction complete! 5 churn risks, 4 leads identified', '预测完成！识别5个离网风险, 4个潜在客户'),
+  ];
 
   return (
-    <div className="space-y-4">
-      <div className="bg-bg-card rounded-xl border border-border p-4">
-        <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-status-red" />{t('Fault Injection Simulator', '故障注入模拟器')}</h3>
-        <div className="flex gap-3 mb-4">
-          {faults.map(f => (
-            <button key={f.id} onClick={() => injectFault(f.id)} disabled={!!fault}
-              className="px-3 py-2 rounded-lg bg-status-red/10 text-status-red text-xs font-medium border border-status-red/30 hover:bg-status-red/20 cursor-pointer disabled:opacity-40 transition-all">{f.label}</button>
-          ))}
-          {fault && <button onClick={resetFault} className="px-3 py-2 rounded-lg bg-bg-primary text-text-secondary text-xs border border-border hover:bg-bg-hover cursor-pointer"><RotateCcw className="w-3 h-3 inline mr-1" />{t('Reset', '重置')}</button>}
+    <div className="space-y-3">
+      {/* Header controls */}
+      <div className="flex items-center gap-3">
+        <div className="flex gap-1 bg-bg-card rounded-lg border border-border p-0.5">
+          <button onClick={() => setActiveView('churn')} className={`px-3 py-1.5 rounded-md text-xs cursor-pointer transition-all ${activeView === 'churn' ? 'bg-status-red/10 text-status-red border border-status-red/30' : 'text-text-secondary hover:bg-bg-primary'}`}>
+            {t('Churn Prediction', '离网预测')}
+          </button>
+          <button onClick={() => setActiveView('lead')} className={`px-3 py-1.5 rounded-md text-xs cursor-pointer transition-all ${activeView === 'lead' ? 'bg-status-green/10 text-status-green border border-status-green/30' : 'text-text-secondary hover:bg-bg-primary'}`}>
+            {t('Lead Identification', '潜客识别')}
+          </button>
         </div>
-        {activeFault && (
-          <div className="bg-bg-primary rounded-lg p-4 border border-status-red/20">
-            <p className="text-xs text-text-muted mb-3">{t('TAOR Auto-Diagnosis', 'TAOR自动诊断')}</p>
-            <div className="space-y-2">
-              {activeFault.steps.map((step, i) => (
-                <div key={i} className={`flex items-center gap-2 text-xs transition-all duration-500 ${i <= diagStep ? 'opacity-100' : 'opacity-30'}`}>
-                  {i < diagStep ? <CheckCircle2 className="w-3.5 h-3.5 text-status-green shrink-0" /> :
-                    i === diagStep ? <Activity className="w-3.5 h-3.5 text-accent-cyan animate-pulse shrink-0" /> :
-                    <div className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />}
-                  <span className={i <= diagStep ? 'text-text-primary' : 'text-text-muted'}>{step}</span>
-                  {i < diagStep && <span className="text-[10px] text-status-green ml-auto">OK</span>}
+        <button onClick={startPredict} disabled={predicting}
+          className="px-3 py-1.5 rounded-lg text-xs bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30 cursor-pointer disabled:opacity-40 flex items-center gap-1.5">
+          <Play className="w-3 h-3" />{t('Run LUM Prediction', '运行LUM预测')}
+        </button>
+        <div className="ml-auto flex items-center gap-2 text-[10px] text-text-muted">
+          <span className="px-2 py-0.5 bg-bg-card rounded border border-border">LUM v2.0</span>
+          <span>Encoder-Adapter-LLM</span>
+        </div>
+      </div>
+
+      {/* LUM prediction animation */}
+      {predicting && (
+        <div className="bg-bg-card rounded-xl border border-accent-cyan/30 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="w-4 h-4 text-accent-cyan animate-pulse" />
+            <h4 className="text-sm font-semibold text-text-primary">{t('LUM Model Inference', 'LUM模型推理')}</h4>
+            <span className="text-[10px] text-text-muted ml-2">Large User Model — Encoder + Domain Adapter + LLM Decoder</span>
+          </div>
+          {/* LUM architecture diagram */}
+          <div className="flex items-center gap-2 mb-3 px-4">
+            {[
+              { label: t('Behavior Seq', '行为序列'), color: '#3b82f6' },
+              { label: t('LUM Encoder', 'LUM编码器'), color: '#8b5cf6' },
+              { label: t('Domain Adapter', '领域适配器'), color: '#f59e0b' },
+              { label: t('LLM Decoder', 'LLM解码器'), color: '#22c55e' },
+              { label: t('Prediction', '预测结果'), color: '#06b6d4' },
+            ].map((block, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className={`px-3 py-1.5 rounded-lg text-[10px] font-medium border transition-all duration-500 ${i <= predStep ? 'opacity-100' : 'opacity-30'}`}
+                  style={{ backgroundColor: `${block.color}15`, borderColor: `${block.color}40`, color: block.color }}>
+                  {block.label}
                 </div>
-              ))}
-            </div>
-            {diagStep >= activeFault.steps.length && (
-              <div className="mt-3 bg-status-green/10 border border-status-green/30 rounded-lg p-2.5">
-                <p className="text-xs text-status-green font-medium">{t('Recovery complete! Time: 6.2s', '恢复完成！用时: 6.2s')}</p>
+                {i < 4 && <ArrowRight className={`w-3 h-3 transition-all duration-500 ${i < predStep ? 'text-accent-cyan' : 'text-text-muted/30'}`} />}
               </div>
-            )}
+            ))}
           </div>
-        )}
-      </div>
-      <div className="bg-bg-card rounded-xl border border-border p-4">
-        <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2"><Activity className="w-4 h-4 text-status-yellow" />{t('Predictive Maintenance', '预测性维护')}</h3>
-        <div className="space-y-2">{predictions.map((p, i) => (
-          <div key={i} className="bg-bg-primary rounded-lg p-3 flex items-center gap-3">
-            <div className="flex-1">
-              <p className="text-xs text-text-primary">{p.label}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex-1 h-1.5 bg-bg-tertiary rounded-full overflow-hidden"><div className="h-full rounded-full" style={{ width: `${p.risk}%`, backgroundColor: p.risk > 70 ? '#ef4444' : p.risk > 50 ? '#eab308' : '#22c55e' }} /></div>
-                <span className="text-[10px] text-text-muted">{p.risk}%</span>
+          <div className="space-y-1.5">
+            {lumSteps.map((step, i) => (
+              <div key={i} className={`flex items-center gap-2 text-xs transition-all ${i <= predStep ? 'opacity-100' : 'opacity-30'}`}>
+                {i < predStep ? <CheckCircle2 className="w-3.5 h-3.5 text-status-green shrink-0" /> :
+                  i === predStep ? <Activity className="w-3.5 h-3.5 text-accent-cyan animate-pulse shrink-0" /> :
+                  <div className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />}
+                <span className={i <= predStep ? 'text-text-primary' : 'text-text-muted'}>{step}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Churn Prediction View */}
+      {activeView === 'churn' && (
+        <div className="space-y-2">
+          <div className="grid grid-cols-4 gap-3 mb-2">
+            {[
+              { l: t('High Risk','高风险'), v: '5', c: 'text-status-red', bg: 'bg-status-red/10 border-status-red/30' },
+              { l: t('Avg Risk Score','平均风险分'), v: '78.2', c: 'text-status-yellow', bg: 'bg-status-yellow/10 border-status-yellow/30' },
+              { l: t('Intervened','已干预'), v: `${intervened.size}`, c: 'text-status-green', bg: 'bg-status-green/10 border-status-green/30' },
+              { l: t('Predicted ARPU Save','预计挽回ARPU'), v: '¥616/月', c: 'text-accent-cyan', bg: 'bg-accent-cyan/10 border-accent-cyan/30' },
+            ].map((s, i) => (
+              <div key={i} className={`rounded-lg border px-3 py-2 ${s.bg}`}>
+                <p className="text-[10px] text-text-muted">{s.l}</p>
+                <p className={`text-lg font-bold ${s.c}`}>{s.v}</p>
+              </div>
+            ))}
+          </div>
+          {/* Flowy-style user cards */}
+          {churnUsers.map(u => {
+            const done = intervened.has(u.id);
+            return (
+              <div key={u.id} className={`bg-bg-card rounded-xl border p-4 transition-all ${done ? 'border-status-green/40 opacity-70' : u.riskScore >= 85 ? 'border-status-red/40' : 'border-border'}`}>
+                <div className="flex items-start gap-4">
+                  {/* Risk score gauge */}
+                  <div className="shrink-0">
+                    <svg width="56" height="56" viewBox="0 0 56 56">
+                      <circle cx="28" cy="28" r="24" fill="none" stroke="#1e293b" strokeWidth="4" />
+                      <circle cx="28" cy="28" r="24" fill="none"
+                        stroke={u.riskScore >= 85 ? '#ef4444' : u.riskScore >= 70 ? '#eab308' : '#22c55e'}
+                        strokeWidth="4" strokeDasharray={`${u.riskScore * 1.5} ${150 - u.riskScore * 1.5}`}
+                        strokeLinecap="round" transform="rotate(-90 28 28)" />
+                      <text x="28" y="28" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="14" fontWeight="bold">{u.riskScore}</text>
+                    </svg>
+                  </div>
+                  {/* User info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-semibold text-text-primary">{u.name}</span>
+                      <span className="text-[10px] text-text-muted font-mono">{u.phone}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-bg-primary text-text-muted">{u.plan}</span>
+                      <span className="text-[10px] text-text-muted">ARPU ¥{u.arpu}</span>
+                      <span className="text-[10px] text-text-muted">{u.months}{t('mo','个月')}</span>
+                    </div>
+                    <p className="text-xs text-status-red mb-1">{t('Risk: ','风险: ')}{u.reason}</p>
+                    <p className="text-[10px] text-text-muted">{t('Signal: ','信号: ')}{u.signal}</p>
+                  </div>
+                  {/* Action */}
+                  <div className="shrink-0">
+                    {done ? (
+                      <span className="flex items-center gap-1 text-xs text-status-green"><CheckCircle2 className="w-3.5 h-3.5" />{t('Intervened','已干预')}</span>
+                    ) : (
+                      <button onClick={() => handleIntervene(u.id)}
+                        className="px-3 py-1.5 rounded-lg text-xs bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30 cursor-pointer hover:bg-accent-cyan/20 transition-all">
+                        {t('Intervene','主动干预')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Lead Identification View */}
+      {activeView === 'lead' && (
+        <div className="space-y-2">
+          <div className="grid grid-cols-4 gap-3 mb-2">
+            {[
+              { l: t('Leads Found','识别潜客'), v: '4', c: 'text-status-green', bg: 'bg-status-green/10 border-status-green/30' },
+              { l: t('Avg Confidence','平均置信度'), v: '85%', c: 'text-accent-cyan', bg: 'bg-accent-cyan/10 border-accent-cyan/30' },
+              { l: t('Revenue Potential','收入潜力'), v: '+¥590/月', c: 'text-status-green', bg: 'bg-status-green/10 border-status-green/30' },
+              { l: t('Conversion Rate','预计转化率'), v: '34.2%', c: 'text-text-primary', bg: 'bg-bg-card border-border' },
+            ].map((s, i) => (
+              <div key={i} className={`rounded-lg border px-3 py-2 ${s.bg}`}>
+                <p className="text-[10px] text-text-muted">{s.l}</p>
+                <p className={`text-lg font-bold ${s.c}`}>{s.v}</p>
+              </div>
+            ))}
+          </div>
+          {/* Lead cards */}
+          {leadUsers.map(u => (
+            <div key={u.id} className="bg-bg-card rounded-xl border border-border p-4 hover:border-status-green/40 transition-all">
+              <div className="flex items-start gap-4">
+                {/* Confidence gauge */}
+                <div className="shrink-0">
+                  <svg width="56" height="56" viewBox="0 0 56 56">
+                    <circle cx="28" cy="28" r="24" fill="none" stroke="#1e293b" strokeWidth="4" />
+                    <circle cx="28" cy="28" r="24" fill="none" stroke="#22c55e" strokeWidth="4"
+                      strokeDasharray={`${u.confidence * 1.5} ${150 - u.confidence * 1.5}`}
+                      strokeLinecap="round" transform="rotate(-90 28 28)" />
+                    <text x="28" y="28" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="14" fontWeight="bold">{u.confidence}</text>
+                  </svg>
+                </div>
+                {/* User info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-semibold text-text-primary">{u.name}</span>
+                    <span className="text-[10px] text-text-muted font-mono">{u.phone}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-bg-primary text-text-muted">{u.current}</span>
+                    <ArrowRight className="w-3 h-3 text-status-green" />
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-status-green/10 text-status-green border border-status-green/30">{u.predicted}</span>
+                  </div>
+                  <p className="text-xs text-status-green mb-1">{t('Trigger: ','触发: ')}{u.trigger}</p>
+                </div>
+                {/* Revenue value */}
+                <div className="shrink-0 text-right">
+                  <p className="text-lg font-bold text-status-green">{u.value}</p>
+                  <button className="mt-1 px-3 py-1 rounded-lg text-[10px] bg-status-green/10 text-status-green border border-status-green/30 cursor-pointer hover:bg-status-green/20 transition-all">
+                    {t('Push Offer','推送优惠')}
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="text-right"><p className="text-[10px] text-text-muted">{t('ETA', '预计')}</p><p className="text-xs text-text-primary font-medium">{p.eta}</p></div>
-          </div>
-        ))}</div>
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
 
 /* ─── Simulation Log Entry ─── */
 interface LogEntry { time: string; level: 'info' | 'warn' | 'error'; msg: string; }
@@ -663,8 +735,7 @@ export default function Topology() {
 
       {/* Tab content */}
       {activeTab === 'experience' && <ExperienceTwin t={t} />}
-      {activeTab === 'capacity' && <CapacityTwin t={t} />}
-      {activeTab === 'ops' && <OpsTwin t={t} />}
+      {activeTab === 'user' && <UserTwin t={t} />}
 
       {activeTab === 'network' && (
       <div className="space-y-3">

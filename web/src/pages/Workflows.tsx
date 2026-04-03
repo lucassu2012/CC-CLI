@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Play, Pause, Square, ChevronDown, GitBranch, ArrowRight, RefreshCw, X, Plus, Trash2, GripVertical } from 'lucide-react';
+import { Play, Pause, Square, ChevronDown, GitBranch, ArrowRight, RefreshCw, X, Plus, Trash2, GripVertical, ZoomIn, ZoomOut, Maximize2, ArrowLeft } from 'lucide-react';
 import { useText } from '../hooks/useText';
 
 /* ------------------------------------------------------------------ */
@@ -275,6 +275,8 @@ export default function Workflows() {
   // Agent selector for new nodes
   const [agentPicker, setAgentPicker] = useState<{ nodeId: string; x: number; y: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  // Zoom state
+  const [zoom, setZoom] = useState(1);
 
   const template = TEMPLATES[selectedTemplate];
   const nodes = isCustom ? customNodes : template.nodes;
@@ -330,8 +332,11 @@ export default function Workflows() {
     const svg = svgRef.current;
     if (!svg) return { x: e.clientX, y: e.clientY };
     const rect = svg.getBoundingClientRect();
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  }, []);
+    // Convert screen coords to SVG viewBox coords
+    const x = (e.clientX - rect.left) * (bounds.w / rect.width);
+    const y = (e.clientY - rect.top) * (bounds.h / rect.height);
+    return { x, y };
+  }, [bounds]);
 
   const handlePaletteDragStart = useCallback((e: React.DragEvent, type: WfNode['type'], agentType?: string) => {
     e.dataTransfer.setData('nodeType', type);
@@ -434,17 +439,32 @@ export default function Workflows() {
     setAgentPicker(null);
   }, []);
 
+  const handleBackToTemplate = useCallback(() => {
+    setIsCustom(false);
+    setCustomNodes([]);
+    setCustomEdges([]);
+    setSelectedNode(null);
+    stopRun();
+  }, [stopRun]);
+
+  const handleZoomIn = useCallback(() => setZoom(z => Math.min(z + 0.15, 2.5)), []);
+  const handleZoomOut = useCallback(() => setZoom(z => Math.max(z - 0.15, 0.3)), []);
+  const handleZoomFit = useCallback(() => setZoom(1), []);
+
   const currentNodeId = activeNodeIdx >= 0 && activeNodeIdx < executionOrder.length
     ? executionOrder[activeNodeIdx] : null;
 
   // Canvas bounds
   const bounds = useMemo(() => {
-    let maxX = 0, maxY = 0;
+    let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
     nodes.forEach(n => {
+      if (n.x < minX) minX = n.x;
+      if (n.y < minY) minY = n.y;
       if (n.x + NODE_W > maxX) maxX = n.x + NODE_W;
       if (n.y + NODE_H > maxY) maxY = n.y + NODE_H;
     });
-    return { w: Math.max(maxX + 100, 900), h: Math.max(maxY + 60, 600) };
+    const pad = 80;
+    return { w: Math.max(maxX + pad, 900), h: Math.max(maxY + pad, 500) };
   }, [nodes]);
 
   return (
@@ -486,6 +506,11 @@ export default function Workflows() {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {isCustom && (
+            <button onClick={handleBackToTemplate} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bg-primary text-text-secondary text-sm font-medium hover:bg-bg-hover border border-border transition-colors cursor-pointer">
+              <ArrowLeft className="w-4 h-4" /> {t('Back', '返回模板')}
+            </button>
+          )}
           <button onClick={handleNewWorkflow} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-cyan/20 text-accent-cyan text-sm font-medium hover:bg-accent-cyan/30 transition-colors cursor-pointer">
             <Plus className="w-4 h-4" /> {t('New', '新建')}
           </button>
@@ -539,7 +564,10 @@ export default function Workflows() {
         {/* Center: SVG Canvas */}
         <div className="flex-1 overflow-auto bg-bg-primary relative"
           onDragOver={e => e.preventDefault()} onDrop={handleCanvasDrop}>
-          <svg ref={svgRef} width={bounds.w} height={bounds.h} className="min-w-full min-h-full"
+          <svg ref={svgRef}
+            width={bounds.w * zoom} height={bounds.h * zoom}
+            viewBox={`0 0 ${bounds.w} ${bounds.h}`}
+            className="min-w-full min-h-full"
             onMouseMove={handleSvgMouseMove} onMouseUp={handleSvgMouseUp}
             onClick={() => { if (connectingFrom) setConnectingFrom(null); setAgentPicker(null); }}>
             <defs>
@@ -702,6 +730,20 @@ export default function Workflows() {
               </div>
             );
           })()}
+
+          {/* Zoom controls */}
+          <div className="absolute bottom-3 left-3 flex flex-col gap-1 z-10">
+            <button onClick={handleZoomIn} className="w-8 h-8 rounded-lg bg-bg-card border border-border flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-hover cursor-pointer transition-colors" title={t('Zoom In', '放大')}>
+              <ZoomIn className="w-4 h-4" />
+            </button>
+            <button onClick={handleZoomOut} className="w-8 h-8 rounded-lg bg-bg-card border border-border flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-hover cursor-pointer transition-colors" title={t('Zoom Out', '缩小')}>
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <button onClick={handleZoomFit} className="w-8 h-8 rounded-lg bg-bg-card border border-border flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-hover cursor-pointer transition-colors" title={t('Fit View', '适配视图')}>
+              <Maximize2 className="w-4 h-4" />
+            </button>
+            <span className="text-[10px] text-text-muted text-center">{Math.round(zoom * 100)}%</span>
+          </div>
 
           <div className="absolute bottom-3 right-3 w-32 h-20 bg-bg-card/80 border border-border rounded-lg overflow-hidden">
             <svg viewBox={`0 0 ${bounds.w} ${bounds.h}`} width="100%" height="100%">
