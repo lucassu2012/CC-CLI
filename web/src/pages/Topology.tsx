@@ -156,72 +156,257 @@ function NodeDetail({ node, onClose }: { node: TopoNode; onClose: () => void }) 
   );
 }
 
-/* ─── Experience Twin ─── */
+/* ─── Experience Twin: RF Coverage Simulation ─── */
 function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
   const [scenario, setScenario] = useState(0);
-  const heatBase = [
-    [72,68,85,91,78,65,88,76],[60,82,90,95,87,73,69,84],[55,77,93,88,92,80,71,67],
-    [63,70,86,94,89,75,83,72],[58,74,81,90,96,82,76,69],[66,79,87,93,85,78,80,73],
+  const [selectedCell, setSelectedCell] = useState<number | null>(null);
+  const [optimizing, setOptimizing] = useState(false);
+  const [optStep, setOptStep] = useState(-1);
+
+  // Base station positions and RF coverage data
+  const cells = [
+    { id: 0, name: 'BTS-001', x: 200, y: 180, power: 43, freq: '3.5GHz', azimuth: 0, tilt: 6, radius: scenario > 0 ? 130 : 110, rsrp: scenario > 0 ? -78 : -85 },
+    { id: 1, name: 'BTS-002', x: 480, y: 140, power: 40, freq: '3.5GHz', azimuth: 120, tilt: 8, radius: scenario > 0 ? 120 : 100, rsrp: scenario > 0 ? -80 : -88 },
+    { id: 2, name: 'BTS-003', x: 360, y: 320, power: 46, freq: '2.1GHz', azimuth: 240, tilt: 4, radius: scenario > 0 ? 150 : 130, rsrp: scenario > 0 ? -72 : -82 },
+    { id: 3, name: 'BTS-004', x: 600, y: 300, power: 43, freq: '3.5GHz', azimuth: 60, tilt: 6, radius: scenario > 1 ? 140 : 105, rsrp: scenario > 1 ? -75 : -90 },
+    { id: 4, name: 'BTS-005', x: 140, y: 370, power: 38, freq: '700MHz', azimuth: 180, tilt: 10, radius: scenario > 1 ? 160 : 140, rsrp: scenario > 1 ? -68 : -76 },
+    ...(scenario > 0 ? [{ id: 5, name: 'BTS-NEW', x: 420, y: 220, power: 46, freq: '3.5GHz', azimuth: 0, tilt: 5, radius: 120, rsrp: -74 }] : []),
   ];
-  const heatImproved = heatBase.map(row => row.map(v => Math.min(99, v + 8 + Math.floor(Math.random() * 5))));
-  const heat = scenario > 0 ? heatImproved : heatBase;
-  const vips = [
-    { name: 'VIP-张总', mos: scenario > 0 ? 4.5 : 3.8, throughput: scenario > 0 ? '156Mbps' : '89Mbps', latency: scenario > 0 ? '12ms' : '35ms' },
-    { name: 'VIP-李总', mos: scenario > 0 ? 4.7 : 4.1, throughput: scenario > 0 ? '203Mbps' : '145Mbps', latency: scenario > 0 ? '8ms' : '22ms' },
-    { name: 'VIP-王总', mos: scenario > 0 ? 4.3 : 3.5, throughput: scenario > 0 ? '128Mbps' : '67Mbps', latency: scenario > 0 ? '15ms' : '48ms' },
-    { name: 'VIP-刘总', mos: scenario > 0 ? 4.6 : 4.0, throughput: scenario > 0 ? '178Mbps' : '120Mbps', latency: scenario > 0 ? '10ms' : '28ms' },
-    { name: 'VIP-赵总', mos: scenario > 0 ? 4.8 : 3.9, throughput: scenario > 0 ? '215Mbps' : '98Mbps', latency: scenario > 0 ? '6ms' : '32ms' },
+
+  // KPIs
+  const avgRsrp = cells.reduce((s, c) => s + c.rsrp, 0) / cells.length;
+  const coverage = scenario > 1 ? 96.8 : scenario > 0 ? 92.4 : 85.2;
+  const weakSpots = scenario > 1 ? 1 : scenario > 0 ? 3 : 7;
+
+  // Optimization animation
+  useEffect(() => {
+    if (!optimizing || optStep < 0) return;
+    if (optStep >= 5) { setOptimizing(false); return; }
+    const timer = setTimeout(() => setOptStep(s => s + 1), 1000);
+    return () => clearTimeout(timer);
+  }, [optimizing, optStep]);
+
+  const startOptimize = () => { setOptimizing(true); setOptStep(0); };
+  const optSteps = [
+    t('Scanning coverage gaps...', '扫描覆盖空洞...'),
+    t('Calculating propagation model...', '计算传播模型...'),
+    t('Optimizing antenna tilt & power...', '优化天线下倾角和功率...'),
+    t('Simulating interference pattern...', '仿真干扰模式...'),
+    t('Optimization complete! Coverage +7.2%', '优化完成！覆盖率 +7.2%'),
   ];
+
   return (
-    <div className="space-y-4">
-      {/* What-if controls */}
-      <div className="bg-bg-card rounded-xl border border-border p-4">
-        <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2"><Zap className="w-4 h-4 text-accent-cyan" />{t('What-If Scenario', 'What-If 场景模拟')}</h3>
-        <div className="flex gap-3">
-          {[t('Baseline', '基线状态'), t('+ Base Stations', '+ 增加基站'), t('+ Power Tuning', '+ 功率调优')].map((label, i) => (
-            <button key={i} onClick={() => setScenario(i)} className={`px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all ${scenario === i ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/40' : 'bg-bg-primary text-text-secondary border border-border hover:border-accent-cyan/30'}`}>{label}</button>
+    <div className="space-y-3">
+      {/* Control bar */}
+      <div className="flex items-center gap-3">
+        <div className="flex gap-2">
+          {[t('Baseline', '基线'), t('+ New Site', '+ 新增站点'), t('+ Power Opt', '+ 功率优化')].map((label, i) => (
+            <button key={i} onClick={() => setScenario(i)} className={`px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all ${scenario === i ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/40' : 'bg-bg-card text-text-secondary border border-border hover:border-accent-cyan/30'}`}>{label}</button>
           ))}
         </div>
-        {scenario > 0 && (
-          <div className="mt-3 flex gap-4">
-            <div className="bg-status-green/10 rounded-lg px-3 py-2 border border-status-green/30"><p className="text-xs text-status-green font-medium">{t('Experience +15%', '体验提升 +15%')}</p></div>
-            <div className="bg-status-green/10 rounded-lg px-3 py-2 border border-status-green/30"><p className="text-xs text-status-green font-medium">{t('VIP Satisfaction 98%', 'VIP满意度 98%')}</p></div>
-            <div className="bg-accent-cyan/10 rounded-lg px-3 py-2 border border-accent-cyan/30"><p className="text-xs text-accent-cyan font-medium">{t('Avg MOS 4.58', '平均MOS 4.58')}</p></div>
-          </div>
-        )}
+        <button onClick={startOptimize} disabled={optimizing}
+          className="px-3 py-1.5 rounded-lg text-xs bg-status-green/10 text-status-green border border-status-green/30 cursor-pointer disabled:opacity-40 flex items-center gap-1.5">
+          <Play className="w-3 h-3" />{t('Run Optimization', '运行优化仿真')}
+        </button>
+        <div className="ml-auto flex gap-3 text-xs">
+          <span className="text-text-muted">{t('Coverage:', '覆盖率:')}<span className={`ml-1 font-semibold ${coverage > 90 ? 'text-status-green' : 'text-status-yellow'}`}>{coverage}%</span></span>
+          <span className="text-text-muted">{t('Avg RSRP:', '平均RSRP:')}<span className="ml-1 font-semibold text-text-primary">{avgRsrp.toFixed(0)} dBm</span></span>
+          <span className="text-text-muted">{t('Weak spots:', '弱覆盖:')}<span className={`ml-1 font-semibold ${weakSpots <= 2 ? 'text-status-green' : 'text-status-yellow'}`}>{weakSpots}</span></span>
+        </div>
       </div>
-      <div className="grid grid-cols-[1fr_320px] gap-4">
-        {/* Heat map */}
-        <div className="bg-bg-card rounded-xl border border-border p-4">
-          <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-3">{t('User Experience Heatmap', '用户体验热力图')}</h3>
-          <div className="grid grid-rows-6 gap-1">
-            {heat.map((row, ri) => (
-              <div key={ri} className="grid grid-cols-8 gap-1">
-                {row.map((v, ci) => (
-                  <div key={ci} className="aspect-square rounded-md flex items-center justify-center text-[10px] font-mono transition-all duration-500"
-                    style={{ backgroundColor: v >= 90 ? 'rgba(34,197,94,0.3)' : v >= 75 ? 'rgba(6,182,212,0.25)' : v >= 60 ? 'rgba(234,179,8,0.25)' : 'rgba(239,68,68,0.25)', color: v >= 90 ? '#22c55e' : v >= 75 ? '#06b6d4' : v >= 60 ? '#eab308' : '#ef4444' }}>
-                    {v}
+
+      <div className="grid grid-cols-[1fr_280px] gap-3">
+        {/* RF Coverage Map (CloudRF-style) */}
+        <div className="bg-bg-card rounded-xl border border-border p-3 overflow-hidden">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5">
+              <Radio className="w-3.5 h-3.5" />{t('RF Coverage Simulation', 'RF覆盖仿真')}
+            </h3>
+            <div className="flex items-center gap-2 text-[10px] text-text-muted">
+              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm" style={{ background: 'linear-gradient(90deg, #ef4444, #f97316)' }} />&gt;-70dBm</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm" style={{ background: 'linear-gradient(90deg, #f97316, #eab308)' }} />-70~-85</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm" style={{ background: 'linear-gradient(90deg, #eab308, #22c55e)' }} />-85~-95</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm" style={{ background: 'linear-gradient(90deg, #22c55e, #3b82f6)' }} />-95~-105</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm bg-[#1e3a5f]" />&lt;-105</span>
+            </div>
+          </div>
+          <svg viewBox="0 0 740 480" className="w-full rounded-lg" style={{ background: '#0c1222' }}>
+            <defs>
+              {/* Grid */}
+              <pattern id="rfgrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.3" />
+              </pattern>
+              {/* RF propagation gradients - warm to cool like CloudRF */}
+              {cells.map(c => (
+                <radialGradient key={`rfg-${c.id}`} id={`rfgrad-${c.id}`} cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
+                  <stop offset="25%" stopColor="#f97316" stopOpacity="0.35" />
+                  <stop offset="45%" stopColor="#eab308" stopOpacity="0.25" />
+                  <stop offset="65%" stopColor="#22c55e" stopOpacity="0.18" />
+                  <stop offset="85%" stopColor="#3b82f6" stopOpacity="0.1" />
+                  <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0" />
+                </radialGradient>
+              ))}
+              <filter id="rfBlur"><feGaussianBlur stdDeviation="8" /></filter>
+            </defs>
+            <rect width="740" height="480" fill="url(#rfgrid)" />
+
+            {/* Coverage zones - overlapping radial gradients like CloudRF heatmap */}
+            <g filter="url(#rfBlur)">
+              {cells.map(c => (
+                <circle key={`cov-${c.id}`} cx={c.x} cy={c.y} r={c.radius}
+                  fill={`url(#rfgrad-${c.id})`} className="transition-all duration-1000" />
+              ))}
+            </g>
+
+            {/* Coverage boundary contour lines */}
+            {cells.map(c => (
+              <g key={`contour-${c.id}`}>
+                <circle cx={c.x} cy={c.y} r={c.radius * 0.3} fill="none" stroke="#ef4444" strokeWidth="0.5" opacity="0.3" strokeDasharray="3 3" />
+                <circle cx={c.x} cy={c.y} r={c.radius * 0.6} fill="none" stroke="#eab308" strokeWidth="0.5" opacity="0.2" strokeDasharray="3 3" />
+                <circle cx={c.x} cy={c.y} r={c.radius * 0.9} fill="none" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" strokeDasharray="3 3" />
+              </g>
+            ))}
+
+            {/* Weak coverage indicators */}
+            {scenario === 0 && [
+              { x: 550, y: 200 }, { x: 100, y: 100 }, { x: 650, y: 420 },
+            ].map((p, i) => (
+              <g key={`weak-${i}`}>
+                <circle cx={p.x} cy={p.y} r={18} fill="none" stroke="#ef4444" strokeWidth="1" strokeDasharray="4 2" opacity="0.6">
+                  <animate attributeName="r" values="14;22;14" dur="2s" repeatCount="indefinite" />
+                </circle>
+                <text x={p.x} y={p.y + 4} textAnchor="middle" fill="#ef4444" fontSize="8" fontWeight="bold">!</text>
+              </g>
+            ))}
+
+            {/* Base station towers */}
+            {cells.map(c => {
+              const sel = selectedCell === c.id;
+              const isNew = c.id === 5;
+              return (
+                <g key={`bts-${c.id}`} onClick={() => setSelectedCell(sel ? null : c.id)} className="cursor-pointer">
+                  {/* Selection ring */}
+                  {sel && <circle cx={c.x} cy={c.y} r={20} fill="none" stroke="#06b6d4" strokeWidth="2" opacity="0.8">
+                    <animate attributeName="r" values="18;24;18" dur="1.5s" repeatCount="indefinite" />
+                  </circle>}
+                  {/* Tower icon */}
+                  <circle cx={c.x} cy={c.y} r={12} fill={isNew ? '#22c55e' : '#0f172a'} stroke={isNew ? '#22c55e' : '#06b6d4'} strokeWidth={2} />
+                  {/* Antenna symbol */}
+                  <line x1={c.x} y1={c.y + 6} x2={c.x} y2={c.y - 6} stroke={isNew ? '#fff' : '#06b6d4'} strokeWidth="2" />
+                  <line x1={c.x - 4} y1={c.y - 3} x2={c.x + 4} y2={c.y - 3} stroke={isNew ? '#fff' : '#06b6d4'} strokeWidth="1.5" />
+                  <line x1={c.x - 3} y1={c.y} x2={c.x + 3} y2={c.y} stroke={isNew ? '#fff' : '#06b6d4'} strokeWidth="1" />
+                  {/* Label */}
+                  <text x={c.x} y={c.y + 22} textAnchor="middle" fill="#94a3b8" fontSize="9">{c.name}</text>
+                  {/* RSRP badge */}
+                  <rect x={c.x + 10} y={c.y - 18} width={36} height={13} rx={3} fill="rgba(0,0,0,0.8)" stroke={c.rsrp > -80 ? '#22c55e' : c.rsrp > -90 ? '#eab308' : '#ef4444'} strokeWidth="0.5" />
+                  <text x={c.x + 28} y={c.y - 9} textAnchor="middle" fill={c.rsrp > -80 ? '#86efac' : c.rsrp > -90 ? '#fde047' : '#fca5a5'} fontSize="7" fontFamily="monospace">{c.rsrp}dBm</text>
+                </g>
+              );
+            })}
+
+            {/* Signal propagation wave animation */}
+            {cells.slice(0, 3).map(c => (
+              <circle key={`wave-${c.id}`} cx={c.x} cy={c.y} r="10" fill="none" stroke="#06b6d4" strokeWidth="0.5" opacity="0">
+                <animate attributeName="r" values="15;80" dur="3s" repeatCount="indefinite" begin={`${c.id * 0.8}s`} />
+                <animate attributeName="opacity" values="0.4;0" dur="3s" repeatCount="indefinite" begin={`${c.id * 0.8}s`} />
+              </circle>
+            ))}
+          </svg>
+        </div>
+
+        {/* Right panel: Cell inspector + optimization */}
+        <div className="space-y-3 overflow-auto max-h-[540px]">
+          {/* Selected cell inspector */}
+          {selectedCell !== null && (() => {
+            const c = cells.find(c => c.id === selectedCell);
+            if (!c) return null;
+            return (
+              <div className="bg-bg-card rounded-xl border border-accent-cyan/30 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-semibold text-text-primary flex items-center gap-1.5"><Radio className="w-3.5 h-3.5 text-accent-cyan" />{c.name}</h4>
+                  <button onClick={() => setSelectedCell(null)} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-3.5 h-3.5" /></button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  {[
+                    { l: t('Frequency', '频段'), v: c.freq },
+                    { l: t('Power', '功率'), v: `${c.power} dBm` },
+                    { l: t('Azimuth', '方位角'), v: `${c.azimuth}°` },
+                    { l: t('Tilt', '下倾角'), v: `${c.tilt}°` },
+                    { l: 'RSRP', v: `${c.rsrp} dBm` },
+                    { l: t('Radius', '覆盖半径'), v: `${(c.radius * 3).toFixed(0)}m` },
+                  ].map(item => (
+                    <div key={item.l} className="bg-bg-primary rounded px-2 py-1.5">
+                      <span className="text-text-muted block">{item.l}</span>
+                      <span className="text-text-primary font-mono">{item.v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Optimization process */}
+          {optimizing && (
+            <div className="bg-bg-card rounded-xl border border-accent-cyan/30 p-3">
+              <h4 className="text-xs font-semibold text-accent-cyan mb-2">{t('RF Optimization', 'RF优化仿真')}</h4>
+              <div className="space-y-1.5">
+                {optSteps.map((step, i) => (
+                  <div key={i} className={`flex items-center gap-2 text-[10px] transition-all ${i <= optStep ? 'opacity-100' : 'opacity-30'}`}>
+                    {i < optStep ? <CheckCircle2 className="w-3 h-3 text-status-green shrink-0" /> :
+                      i === optStep ? <Activity className="w-3 h-3 text-accent-cyan animate-pulse shrink-0" /> :
+                      <div className="w-3 h-3 rounded-full border border-border shrink-0" />}
+                    <span className={i <= optStep ? 'text-text-primary' : 'text-text-muted'}>{step}</span>
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
-          <div className="flex items-center gap-3 mt-2 text-[10px] text-text-muted">
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{ backgroundColor: 'rgba(239,68,68,0.3)' }} />&lt;60</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{ backgroundColor: 'rgba(234,179,8,0.3)' }} />60-75</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{ backgroundColor: 'rgba(6,182,212,0.3)' }} />75-90</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{ backgroundColor: 'rgba(34,197,94,0.3)' }} />&gt;90</span>
-          </div>
-        </div>
-        {/* VIP tracking */}
-        <div className="bg-bg-card rounded-xl border border-border p-4">
-          <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-3">{t('VIP User Tracking', 'VIP用户追踪')}</h3>
-          <div className="space-y-2">{vips.map((v, i) => (
-            <div key={i} className="bg-bg-primary rounded-lg p-2.5">
-              <div className="flex items-center justify-between mb-1"><span className="text-xs font-medium text-text-primary">{v.name}</span><span className={`text-xs font-medium ${v.mos >= 4.0 ? 'text-status-green' : 'text-status-yellow'}`}>MOS {v.mos}</span></div>
-              <div className="flex gap-3 text-[10px] text-text-muted"><span>{v.throughput}</span><span>{v.latency}</span></div>
             </div>
-          ))}</div>
+          )}
+
+          {/* VIP Experience Tracking */}
+          <div className="bg-bg-card rounded-xl border border-border p-3">
+            <h4 className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-2">{t('VIP Experience', 'VIP用户体验')}</h4>
+            <div className="space-y-1.5">
+              {[
+                { name: 'VIP-张总', rsrp: scenario > 0 ? -72 : -88, sinr: scenario > 0 ? 18 : 8, rate: scenario > 0 ? '256Mbps' : '67Mbps' },
+                { name: 'VIP-李总', rsrp: scenario > 0 ? -68 : -82, sinr: scenario > 0 ? 22 : 12, rate: scenario > 0 ? '312Mbps' : '145Mbps' },
+                { name: 'VIP-王总', rsrp: scenario > 0 ? -75 : -95, sinr: scenario > 0 ? 15 : 5, rate: scenario > 0 ? '198Mbps' : '32Mbps' },
+              ].map((v, i) => (
+                <div key={i} className="bg-bg-primary rounded-lg p-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-medium text-text-primary">{v.name}</span>
+                    <span className={`text-[10px] font-mono ${v.rsrp > -80 ? 'text-status-green' : v.rsrp > -90 ? 'text-status-yellow' : 'text-status-red'}`}>{v.rsrp}dBm</span>
+                  </div>
+                  <div className="flex gap-3 text-[10px] text-text-muted">
+                    <span>SINR {v.sinr}dB</span>
+                    <span>{v.rate}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Coverage improvement metrics */}
+          {scenario > 0 && (
+            <div className="bg-bg-card rounded-xl border border-status-green/30 p-3">
+              <h4 className="text-xs font-medium text-status-green mb-2">{t('Improvement', '优化效果')}</h4>
+              <div className="space-y-1.5 text-[10px]">
+                {[
+                  { l: t('Coverage', '覆盖率'), before: '85.2%', after: scenario > 1 ? '96.8%' : '92.4%', delta: scenario > 1 ? '+11.6%' : '+7.2%' },
+                  { l: t('Avg RSRP', '平均RSRP'), before: '-84dBm', after: scenario > 1 ? '-74dBm' : '-80dBm', delta: scenario > 1 ? '+10dB' : '+4dB' },
+                  { l: t('Weak spots', '弱覆盖区'), before: '7', after: scenario > 1 ? '1' : '3', delta: scenario > 1 ? '-6' : '-4' },
+                ].map((m, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-bg-primary rounded px-2 py-1.5">
+                    <span className="text-text-muted w-16">{m.l}</span>
+                    <span className="text-text-muted">{m.before}</span>
+                    <span className="text-text-muted">→</span>
+                    <span className="text-text-primary font-medium">{m.after}</span>
+                    <span className="text-status-green font-medium ml-auto">{m.delta}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
