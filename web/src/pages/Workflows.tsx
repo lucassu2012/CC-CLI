@@ -275,8 +275,13 @@ export default function Workflows() {
   // Agent selector for new nodes
   const [agentPicker, setAgentPicker] = useState<{ nodeId: string; x: number; y: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   // Zoom state
   const [zoom, setZoom] = useState(1);
+  // Canvas panning state
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [scrollStart, setScrollStart] = useState({ x: 0, y: 0 });
 
   const template = TEMPLATES[selectedTemplate];
   const nodes = isCustom ? customNodes : template.nodes;
@@ -448,7 +453,37 @@ export default function Workflows() {
 
   const handleZoomIn = useCallback(() => setZoom(z => Math.min(z + 0.15, 2.5)), []);
   const handleZoomOut = useCallback(() => setZoom(z => Math.max(z - 0.15, 0.3)), []);
-  const handleZoomFit = useCallback(() => setZoom(1), []);
+  const handleZoomFit = useCallback(() => {
+    setZoom(1);
+    if (canvasRef.current) { canvasRef.current.scrollLeft = 0; canvasRef.current.scrollTop = 0; }
+  }, []);
+
+  // Canvas panning (drag empty area to scroll)
+  const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
+    // Start pan on background elements only (div container, svg root, or background grid rect)
+    const tag = (e.target as HTMLElement).tagName?.toLowerCase();
+    const isBackground = e.target === canvasRef.current || e.target === svgRef.current
+      || (tag === 'rect' && (e.target as SVGRectElement).getAttribute('fill')?.includes('url(#grid)'))
+      || tag === 'div';
+    if (!isBackground) return;
+    const container = canvasRef.current;
+    if (!container) return;
+    setIsPanning(true);
+    setPanStart({ x: e.clientX, y: e.clientY });
+    setScrollStart({ x: container.scrollLeft, y: container.scrollTop });
+  }, []);
+
+  const handleCanvasMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isPanning) return;
+    const container = canvasRef.current;
+    if (!container) return;
+    container.scrollLeft = scrollStart.x - (e.clientX - panStart.x);
+    container.scrollTop = scrollStart.y - (e.clientY - panStart.y);
+  }, [isPanning, panStart, scrollStart]);
+
+  const handleCanvasMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
 
   const currentNodeId = activeNodeIdx >= 0 && activeNodeIdx < executionOrder.length
     ? executionOrder[activeNodeIdx] : null;
@@ -561,8 +596,10 @@ export default function Workflows() {
         </div>
 
         {/* Center: SVG Canvas */}
-        <div className="flex-1 overflow-auto bg-bg-primary relative"
-          onDragOver={e => e.preventDefault()} onDrop={handleCanvasDrop}>
+        <div ref={canvasRef} className="flex-1 overflow-auto bg-bg-primary relative"
+          style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
+          onDragOver={e => e.preventDefault()} onDrop={handleCanvasDrop}
+          onMouseDown={handleCanvasMouseDown} onMouseMove={handleCanvasMouseMove} onMouseUp={handleCanvasMouseUp} onMouseLeave={handleCanvasMouseUp}>
           <div style={{ transform: `scale(${zoom})`, transformOrigin: '0 0', width: bounds.w, height: bounds.h }}>
           <svg ref={svgRef}
             width={bounds.w} height={bounds.h}

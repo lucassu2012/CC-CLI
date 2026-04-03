@@ -53,7 +53,11 @@ export default function Dashboard() {
       setLiveKpis(prev => prev.map(kpi => {
         const jitter = (Math.random() - 0.5) * 2;
         const scale = kpi.id === 'throughput' ? 5 : kpi.id === 'alarm-count' ? 2 : kpi.id === 'mttr' ? 0.3 : 0.1;
-        const newVal = Math.round((kpi.value + jitter * scale) * 100) / 100;
+        let newVal = Math.round((kpi.value + jitter * scale) * 100) / 100;
+        // Clamp percentage KPIs to valid range
+        if (kpi.unit === '%') newVal = Math.min(newVal, 99.99);
+        if (kpi.id === 'alarm-count') newVal = Math.max(0, Math.round(newVal));
+        if (kpi.id === 'mttr') newVal = Math.max(0.1, newVal);
         const newHist = [...kpi.history.slice(1), newVal];
         return { ...kpi, value: newVal, history: newHist };
       }));
