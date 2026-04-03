@@ -332,11 +332,10 @@ export default function Workflows() {
     const svg = svgRef.current;
     if (!svg) return { x: e.clientX, y: e.clientY };
     const rect = svg.getBoundingClientRect();
-    // Convert screen coords to SVG viewBox coords
-    const x = (e.clientX - rect.left) * (bounds.w / rect.width);
-    const y = (e.clientY - rect.top) * (bounds.h / rect.height);
+    const x = (e.clientX - rect.left) / zoom;
+    const y = (e.clientY - rect.top) / zoom;
     return { x, y };
-  }, [bounds]);
+  }, [zoom]);
 
   const handlePaletteDragStart = useCallback((e: React.DragEvent, type: WfNode['type'], agentType?: string) => {
     e.dataTransfer.setData('nodeType', type);
@@ -351,8 +350,8 @@ export default function Workflows() {
     const svg = svgRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
-    const x = e.clientX - rect.left - NODE_W / 2;
-    const y = e.clientY - rect.top - NODE_H / 2;
+    const x = (e.clientX - rect.left) / zoom - NODE_W / 2;
+    const y = (e.clientY - rect.top) / zoom - NODE_H / 2;
     const id = `n${_nextId++}`;
     const names: Record<string, string> = { trigger: '新触发器', agent: agentType ? (SUB_AGENTS[agentType]?.name || 'Agent') : 'Agent', condition: '新条件', action: '新动作', merge: '合并', split: '拆分', transform: '转换' };
     const newNode: WfNode = { id, type, name: names[type] || type, agentType, x: Math.max(0, x), y: Math.max(0, y) };
@@ -486,7 +485,7 @@ export default function Workflows() {
                 {TEMPLATES.map((tmpl, i) => (
                   <button
                     key={tmpl.id}
-                    onClick={() => { setSelectedTemplate(i); setDropdownOpen(false); setSelectedNode(null); stopRun(); }}
+                    onClick={() => { setSelectedTemplate(i); setDropdownOpen(false); setSelectedNode(null); setIsCustom(false); stopRun(); }}
                     className={`w-full text-left px-4 py-2.5 text-sm hover:bg-bg-primary transition-colors cursor-pointer first:rounded-t-lg last:rounded-b-lg ${
                       i === selectedTemplate ? 'text-accent-cyan bg-bg-primary' : 'text-text-secondary'
                     }`}
@@ -564,10 +563,10 @@ export default function Workflows() {
         {/* Center: SVG Canvas */}
         <div className="flex-1 overflow-auto bg-bg-primary relative"
           onDragOver={e => e.preventDefault()} onDrop={handleCanvasDrop}>
+          <div style={{ transform: `scale(${zoom})`, transformOrigin: '0 0', width: bounds.w, height: bounds.h }}>
           <svg ref={svgRef}
-            width={bounds.w * zoom} height={bounds.h * zoom}
-            viewBox={`0 0 ${bounds.w} ${bounds.h}`}
-            className="min-w-full min-h-full"
+            width={bounds.w} height={bounds.h}
+            className="block"
             onMouseMove={handleSvgMouseMove} onMouseUp={handleSvgMouseUp}
             onClick={() => { if (connectingFrom) setConnectingFrom(null); setAgentPicker(null); }}>
             <defs>
@@ -701,8 +700,8 @@ export default function Workflows() {
               );
             })}
           </svg>
+          </div>
 
-          {/* Minimap */}
           {/* Agent picker popup */}
           {agentPicker && (() => {
             const svg = svgRef.current;
