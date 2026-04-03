@@ -47,17 +47,17 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf1', name: '网络故障自动诊断与修复',
     description: '接收告警→分类→严重程度判断→跨域分析/自动修复→验证',
     nodes: [
-      { id: 't1', type: 'trigger', name: '告警接收', x: 400, y: 40 },
-      { id: 'a1', type: 'agent', name: '告警分类', agentType: 'ops', x: 400, y: 140 },
-      { id: 'c1', type: 'condition', name: '严重程度', x: 400, y: 250 },
-      { id: 'a2', type: 'agent', name: '跨域分析', agentType: 'ops', x: 200, y: 360 },
-      { id: 'a3', type: 'agent', name: '数字孪生仿真', agentType: 'optimization', x: 200, y: 470 },
-      { id: 'c2', type: 'condition', name: '安全检查', x: 200, y: 580 },
-      { id: 'a4', type: 'action', name: '执行修复', x: 100, y: 690 },
-      { id: 'a5', type: 'action', name: '验证结果', x: 100, y: 790 },
-      { id: 'a6', type: 'action', name: '人工审核', x: 340, y: 690 },
-      { id: 'a7', type: 'agent', name: '自动修复', agentType: 'ops', x: 600, y: 360 },
-      { id: 'a8', type: 'action', name: '关闭工单', x: 600, y: 470 },
+      { id: 't1', type: 'trigger', name: '告警接收', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '告警分类', agentType: 'ops', x: 300, y: 200 },
+      { id: 'c1', type: 'condition', name: '严重程度', x: 550, y: 200 },
+      { id: 'a2', type: 'agent', name: '跨域分析', agentType: 'ops', x: 800, y: 80 },
+      { id: 'a3', type: 'agent', name: '数字孪生仿真', agentType: 'optimization', x: 1050, y: 80 },
+      { id: 'c2', type: 'condition', name: '安全检查', x: 1300, y: 80 },
+      { id: 'a4', type: 'action', name: '执行修复', x: 1550, y: 30 },
+      { id: 'a5', type: 'action', name: '验证结果', x: 1800, y: 30 },
+      { id: 'a6', type: 'action', name: '人工审核', x: 1550, y: 160 },
+      { id: 'a7', type: 'agent', name: '自动修复', agentType: 'ops', x: 800, y: 320 },
+      { id: 'a8', type: 'action', name: '关闭工单', x: 1050, y: 320 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 'a1' },
@@ -76,17 +76,17 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf2', name: '用户投诉闭环处理',
     description: '接收投诉→体验分析→网络检查→优化或套餐推荐→通知用户',
     nodes: [
-      { id: 't1', type: 'trigger', name: '投诉接收', x: 400, y: 40 },
-      { id: 'a1', type: 'agent', name: '体验分析', agentType: 'experience', x: 400, y: 140 },
-      { id: 'a2', type: 'agent', name: '网络检查', agentType: 'ops', x: 400, y: 250 },
-      { id: 'c1', type: 'condition', name: '网络问题?', x: 400, y: 360 },
-      { id: 'a3', type: 'agent', name: '参数优化', agentType: 'optimization', x: 200, y: 470 },
-      { id: 'a4', type: 'agent', name: '效果验证', agentType: 'experience', x: 200, y: 580 },
-      { id: 'a5', type: 'action', name: '通知已修复', x: 200, y: 690 },
-      { id: 'a6', type: 'agent', name: '套餐检查', agentType: 'marketing', x: 600, y: 470 },
-      { id: 'c2', type: 'condition', name: '需升级?', x: 600, y: 580 },
-      { id: 'a7', type: 'action', name: '推荐升级', x: 500, y: 690 },
-      { id: 'a8', type: 'action', name: '通知已处理', x: 700, y: 690 },
+      { id: 't1', type: 'trigger', name: '投诉接收', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '体验分析', agentType: 'experience', x: 300, y: 200 },
+      { id: 'a2', type: 'agent', name: '网络检查', agentType: 'ops', x: 550, y: 200 },
+      { id: 'c1', type: 'condition', name: '网络问题?', x: 800, y: 200 },
+      { id: 'a3', type: 'agent', name: '参数优化', agentType: 'optimization', x: 1050, y: 100 },
+      { id: 'a4', type: 'agent', name: '效果验证', agentType: 'experience', x: 1300, y: 100 },
+      { id: 'a5', type: 'action', name: '通知已修复', x: 1550, y: 100 },
+      { id: 'a6', type: 'agent', name: '套餐检查', agentType: 'marketing', x: 1050, y: 310 },
+      { id: 'c2', type: 'condition', name: '需升级?', x: 1300, y: 310 },
+      { id: 'a7', type: 'action', name: '推荐升级', x: 1550, y: 260 },
+      { id: 'a8', type: 'action', name: '通知已处理', x: 1550, y: 370 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 'a1' },
@@ -105,13 +105,13 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf3', name: '新站开通优化',
     description: '新站激活→覆盖验证→工程优化→体验监控→KPI达标检查',
     nodes: [
-      { id: 't1', type: 'trigger', name: '新站激活', x: 400, y: 40 },
-      { id: 'a1', type: 'agent', name: '覆盖验证', agentType: 'planning', x: 400, y: 150 },
-      { id: 'a2', type: 'agent', name: '工程优化', agentType: 'optimization', x: 400, y: 260 },
-      { id: 'a3', type: 'agent', name: '体验监控', agentType: 'experience', x: 400, y: 370 },
-      { id: 'c1', type: 'condition', name: 'KPI达标?', x: 400, y: 480 },
-      { id: 'a4', type: 'action', name: '标记完成', x: 250, y: 590 },
-      { id: 'a5', type: 'agent', name: '重新优化', agentType: 'optimization', x: 550, y: 590 },
+      { id: 't1', type: 'trigger', name: '新站激活', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '覆盖验证', agentType: 'planning', x: 300, y: 200 },
+      { id: 'a2', type: 'agent', name: '工程优化', agentType: 'optimization', x: 550, y: 200 },
+      { id: 'a3', type: 'agent', name: '体验监控', agentType: 'experience', x: 800, y: 200 },
+      { id: 'c1', type: 'condition', name: 'KPI达标?', x: 1050, y: 200 },
+      { id: 'a4', type: 'action', name: '标记完成', x: 1300, y: 140 },
+      { id: 'a5', type: 'agent', name: '重新优化', agentType: 'optimization', x: 1300, y: 280 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 'a1' },
@@ -127,15 +127,15 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf4', name: '突发事件保障',
     description: '事件检测→容量扩充→体验监控→稳定性监控→汇总→问题处理',
     nodes: [
-      { id: 't1', type: 'trigger', name: '事件检测', x: 400, y: 40 },
-      { id: 's1', type: 'split', name: '并行保障', x: 400, y: 150 },
-      { id: 'a1', type: 'agent', name: '容量扩充', agentType: 'optimization', x: 200, y: 280 },
-      { id: 'a2', type: 'agent', name: '体验监控', agentType: 'experience', x: 400, y: 280 },
-      { id: 'a3', type: 'agent', name: '稳定性监控', agentType: 'ops', x: 600, y: 280 },
-      { id: 'm1', type: 'merge', name: '汇总报告', x: 400, y: 400 },
-      { id: 'c1', type: 'condition', name: '有问题?', x: 400, y: 510 },
-      { id: 'a4', type: 'action', name: '升级处理', x: 250, y: 620 },
-      { id: 'a5', type: 'action', name: '保障结束', x: 550, y: 620 },
+      { id: 't1', type: 'trigger', name: '事件检测', x: 50, y: 200 },
+      { id: 's1', type: 'split', name: '并行保障', x: 300, y: 200 },
+      { id: 'a1', type: 'agent', name: '容量扩充', agentType: 'optimization', x: 550, y: 80 },
+      { id: 'a2', type: 'agent', name: '体验监控', agentType: 'experience', x: 550, y: 200 },
+      { id: 'a3', type: 'agent', name: '稳定性监控', agentType: 'ops', x: 550, y: 320 },
+      { id: 'm1', type: 'merge', name: '汇总报告', x: 800, y: 200 },
+      { id: 'c1', type: 'condition', name: '有问题?', x: 1050, y: 200 },
+      { id: 'a4', type: 'action', name: '升级处理', x: 1300, y: 140 },
+      { id: 'a5', type: 'action', name: '保障结束', x: 1300, y: 280 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 's1' },
@@ -154,14 +154,14 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf5', name: '精准营销活动',
     description: '营销创建→潜客识别→容量评估→执行营销→效果监控→报告',
     nodes: [
-      { id: 't1', type: 'trigger', name: '营销创建', x: 400, y: 40 },
-      { id: 'a1', type: 'agent', name: '潜客识别', agentType: 'marketing', x: 400, y: 150 },
-      { id: 'a2', type: 'agent', name: '容量评估', agentType: 'planning', x: 400, y: 260 },
-      { id: 'c1', type: 'condition', name: '容量充足?', x: 400, y: 370 },
-      { id: 'a3', type: 'agent', name: '执行营销', agentType: 'marketing', x: 250, y: 480 },
-      { id: 'a4', type: 'agent', name: '效果监控', agentType: 'experience', x: 250, y: 590 },
-      { id: 'a5', type: 'action', name: '生成报告', x: 250, y: 700 },
-      { id: 'a6', type: 'action', name: '暂停营销', x: 550, y: 480 },
+      { id: 't1', type: 'trigger', name: '营销创建', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '潜客识别', agentType: 'marketing', x: 300, y: 200 },
+      { id: 'a2', type: 'agent', name: '容量评估', agentType: 'planning', x: 550, y: 200 },
+      { id: 'c1', type: 'condition', name: '容量充足?', x: 800, y: 200 },
+      { id: 'a3', type: 'agent', name: '执行营销', agentType: 'marketing', x: 1050, y: 130 },
+      { id: 'a4', type: 'agent', name: '效果监控', agentType: 'experience', x: 1300, y: 130 },
+      { id: 'a5', type: 'action', name: '生成报告', x: 1550, y: 130 },
+      { id: 'a6', type: 'action', name: '暂停营销', x: 1050, y: 300 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 'a1' },
@@ -177,15 +177,15 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf6', name: '全网健康巡检',
     description: '定时触发→分区域巡检→汇总→异常处理→生成报告',
     nodes: [
-      { id: 't1', type: 'trigger', name: '定时触发', x: 400, y: 40 },
-      { id: 's1', type: 'split', name: '分区巡检', x: 400, y: 150 },
-      { id: 'a1', type: 'agent', name: '广东巡检', agentType: 'ops', x: 200, y: 280 },
-      { id: 'a2', type: 'agent', name: '浙江巡检', agentType: 'ops', x: 400, y: 280 },
-      { id: 'a3', type: 'agent', name: '北京巡检', agentType: 'ops', x: 600, y: 280 },
-      { id: 'm1', type: 'merge', name: '汇总结果', x: 400, y: 400 },
-      { id: 'c1', type: 'condition', name: '发现异常?', x: 400, y: 510 },
-      { id: 'a4', type: 'agent', name: '创建工单', agentType: 'ops', x: 250, y: 620 },
-      { id: 'a5', type: 'action', name: '生成报告', x: 400, y: 730 },
+      { id: 't1', type: 'trigger', name: '定时触发', x: 50, y: 200 },
+      { id: 's1', type: 'split', name: '分区巡检', x: 300, y: 200 },
+      { id: 'a1', type: 'agent', name: '广东巡检', agentType: 'ops', x: 550, y: 80 },
+      { id: 'a2', type: 'agent', name: '浙江巡检', agentType: 'ops', x: 550, y: 200 },
+      { id: 'a3', type: 'agent', name: '北京巡检', agentType: 'ops', x: 550, y: 320 },
+      { id: 'm1', type: 'merge', name: '汇总结果', x: 800, y: 200 },
+      { id: 'c1', type: 'condition', name: '发现异常?', x: 1050, y: 200 },
+      { id: 'a4', type: 'agent', name: '创建工单', agentType: 'ops', x: 1300, y: 130 },
+      { id: 'a5', type: 'action', name: '生成报告', x: 1300, y: 290 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 's1' },
@@ -207,8 +207,8 @@ const TEMPLATES: WfTemplate[] = [
 /*  Visual constants                                                  */
 /* ------------------------------------------------------------------ */
 
-const NODE_W = 140;
-const NODE_H = 48;
+const NODE_W = 170;
+const NODE_H = 64;
 const COLORS: Record<string, { bg: string; border: string; text: string }> = {
   trigger:   { bg: '#7c2d12', border: '#f97316', text: '#fed7aa' },
   agent:     { bg: '#1e3a5f', border: '#3b82f6', text: '#bfdbfe' },
@@ -242,12 +242,13 @@ function nodeIcon(type: string) {
 /* ------------------------------------------------------------------ */
 
 function edgePath(src: WfNode, tgt: WfNode): string {
-  const sx = src.x + NODE_W / 2;
-  const sy = src.y + NODE_H;
-  const tx = tgt.x + NODE_W / 2;
-  const ty = tgt.y;
-  const midY = (sy + ty) / 2;
-  return `M ${sx} ${sy} C ${sx} ${midY}, ${tx} ${midY}, ${tx} ${ty}`;
+  // n8n-style horizontal bezier: from right port to left port
+  const sx = src.x + NODE_W;
+  const sy = src.y + NODE_H / 2;
+  const tx = tgt.x;
+  const ty = tgt.y + NODE_H / 2;
+  const dx = Math.abs(tx - sx) * 0.5;
+  return `M ${sx} ${sy} C ${sx + dx} ${sy}, ${tx - dx} ${ty}, ${tx} ${ty}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -549,8 +550,8 @@ export default function Workflows() {
                 <polygon points="0 0, 8 3, 0 6" fill="#22c55e" />
               </marker>
               {/* Grid pattern */}
-              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" strokeWidth="0.5" />
+              <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+                <circle cx="12" cy="12" r="0.8" fill="#1e293b" />
               </pattern>
               {/* Glow filter */}
               <filter id="glow">
@@ -572,8 +573,10 @@ export default function Workflows() {
             {connectingFrom && (() => {
               const fromNode = nodes.find(n => n.id === connectingFrom);
               if (!fromNode) return null;
-              return <line x1={fromNode.x + NODE_W / 2} y1={fromNode.y + NODE_H}
-                x2={mousePos.x} y2={mousePos.y} stroke="#06b6d4" strokeWidth={2} strokeDasharray="6 3" />;
+              const sx = fromNode.x + NODE_W; const sy = fromNode.y + NODE_H / 2;
+              const dx = Math.abs(mousePos.x - sx) * 0.5;
+              return <path d={`M ${sx} ${sy} C ${sx + dx} ${sy}, ${mousePos.x - dx} ${mousePos.y}, ${mousePos.x} ${mousePos.y}`}
+                fill="none" stroke="#06b6d4" strokeWidth={2} strokeDasharray="6 3" />;
             })()}
 
             {/* Edges */}
@@ -596,9 +599,9 @@ export default function Workflows() {
                     style={{ transition: 'stroke 0.3s' }}
                   />
                   {edge.label && (
-                    <text x={(src.x + NODE_W/2 + tgt.x + NODE_W/2) / 2 + 8}
-                          y={(src.y + NODE_H + tgt.y) / 2}
-                          fill="#94a3b8" fontSize="10" textAnchor="start">
+                    <text x={(src.x + NODE_W + tgt.x) / 2}
+                          y={(src.y + NODE_H/2 + tgt.y + NODE_H/2) / 2 - 8}
+                          fill="#94a3b8" fontSize="9" textAnchor="middle">
                       {edge.label}
                     </text>
                   )}
@@ -621,51 +624,48 @@ export default function Workflows() {
                   {/* Glow behind active node */}
                   {isCurrent && (
                     <rect x={node.x - 4} y={node.y - 4} width={NODE_W + 8} height={NODE_H + 8}
-                      rx={10} fill="none" stroke="#22c55e" strokeWidth={2}
+                      rx={12} fill="none" stroke="#22c55e" strokeWidth={2}
                       className="node-active-glow" filter="url(#glow)" />
                   )}
                   {/* Selection outline */}
                   {isSelected && !isCurrent && (
                     <rect x={node.x - 3} y={node.y - 3} width={NODE_W + 6} height={NODE_H + 6}
-                      rx={9} fill="none" stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 2" />
+                      rx={11} fill="none" stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 2" />
                   )}
-                  {/* Node body */}
-                  <rect x={node.x} y={node.y} width={NODE_W} height={NODE_H} rx={8}
-                    fill={isDone ? '#14532d' : c.bg}
+                  {/* n8n-style node body */}
+                  <rect x={node.x} y={node.y} width={NODE_W} height={NODE_H} rx={10}
+                    fill={isDone ? '#14532d' : '#111827'}
                     stroke={isDone ? '#22c55e' : (agentColor || c.border)}
                     strokeWidth={isCurrent ? 2.5 : 1.5}
                     style={{ transition: 'all 0.3s' }}
                   />
-                  {/* Agent type indicator */}
-                  {agentColor && (
-                    <rect x={node.x} y={node.y} width={4} height={NODE_H} rx={2}
-                      fill={agentColor} />
-                  )}
-                  {/* Icon */}
-                  <text x={node.x + 14} y={node.y + NODE_H/2 + 1}
-                    fill={isDone ? '#bbf7d0' : c.text} fontSize="12" dominantBaseline="middle">
+                  {/* n8n-style icon circle on left */}
+                  <circle cx={node.x + 26} cy={node.y + NODE_H / 2} r={18}
+                    fill={isDone ? '#22c55e20' : (agentColor ? `${agentColor}20` : `${c.border}20`)}
+                    stroke={isDone ? '#22c55e40' : (agentColor ? `${agentColor}40` : `${c.border}40`)}
+                    strokeWidth={1} />
+                  <text x={node.x + 26} y={node.y + NODE_H / 2 + 1}
+                    fill={isDone ? '#bbf7d0' : (agentColor || c.text)} fontSize="14" textAnchor="middle" dominantBaseline="middle">
                     {isDone ? '✓' : nodeIcon(node.type)}
                   </text>
-                  {/* Label */}
-                  <text x={node.x + 28} y={node.y + NODE_H/2 + 1}
-                    fill={isDone ? '#bbf7d0' : c.text} fontSize="12" dominantBaseline="middle"
-                    fontWeight={500}>
+                  {/* Name (right of icon) */}
+                  <text x={node.x + 52} y={node.y + NODE_H / 2 - 6}
+                    fill={isDone ? '#bbf7d0' : '#e2e8f0'} fontSize="12" dominantBaseline="middle"
+                    fontWeight={600}>
                     {node.name}
                   </text>
-                  {/* Sub-agent label */}
-                  {node.subAgent && (
-                    <text x={node.x + NODE_W / 2} y={node.y + NODE_H + 14}
-                      fill="#94a3b8" fontSize="9" textAnchor="middle">
-                      {node.subAgent}
-                    </text>
-                  )}
-                  {/* Input port (top) */}
-                  <circle cx={node.x + NODE_W / 2} cy={node.y} r={4}
+                  {/* Subtitle: agent type or node type */}
+                  <text x={node.x + 52} y={node.y + NODE_H / 2 + 10}
+                    fill="#64748b" fontSize="9" dominantBaseline="middle">
+                    {node.subAgent || (node.agentType ? SUB_AGENTS[node.agentType]?.name : node.type)}
+                  </text>
+                  {/* n8n-style left port (input) */}
+                  <circle cx={node.x} cy={node.y + NODE_H / 2} r={5}
                     fill="#1e293b" stroke={connectingFrom ? '#06b6d4' : '#475569'} strokeWidth={1.5}
                     onClick={e => handlePortClick(e, node.id)}
                     style={{ cursor: 'crosshair' }} />
-                  {/* Output port (bottom) */}
-                  <circle cx={node.x + NODE_W / 2} cy={node.y + NODE_H} r={4}
+                  {/* n8n-style right port (output) */}
+                  <circle cx={node.x + NODE_W} cy={node.y + NODE_H / 2} r={5}
                     fill="#1e293b" stroke={connectingFrom === node.id ? '#06b6d4' : '#475569'} strokeWidth={1.5}
                     onClick={e => handlePortClick(e, node.id)}
                     style={{ cursor: 'crosshair' }} />
@@ -709,7 +709,7 @@ export default function Workflows() {
                 const src = nodes.find(n => n.id === e.source)!;
                 const tgt = nodes.find(n => n.id === e.target)!;
                 if (!src || !tgt) return null;
-                return <line key={e.id} x1={src.x+NODE_W/2} y1={src.y+NODE_H/2} x2={tgt.x+NODE_W/2} y2={tgt.y+NODE_H/2} stroke="#334155" strokeWidth="3" />;
+                return <line key={e.id} x1={src.x+NODE_W} y1={src.y+NODE_H/2} x2={tgt.x} y2={tgt.y+NODE_H/2} stroke="#334155" strokeWidth="3" />;
               })}
               {nodes.map(n => (
                 <rect key={n.id} x={n.x} y={n.y} width={NODE_W} height={NODE_H} rx={4}
