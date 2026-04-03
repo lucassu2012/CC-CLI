@@ -18,11 +18,11 @@ interface WfNode {
 }
 
 const SUB_AGENTS: Record<string, { name: string; subs: string[] }> = {
-  planning:     { name: '规划Agent', subs: ['规划评估', '站点选址', '容量预测'] },
-  optimization: { name: '优化Agent', subs: ['参数优化', '覆盖优化', '干扰消除'] },
-  experience:   { name: '体验Agent', subs: ['VIP保障', '投诉分析', '体验评估'] },
-  ops:          { name: '运维Agent', subs: ['故障诊断', '巡检监控', '工单管理'] },
-  marketing:    { name: '运营Agent', subs: ['潜客识别', '精准营销', '离网维挽'] },
+  planning:     { name: '规划Agent', subs: ['价值洞察', '网络仿真', '市场收益预测', '收益预估'] },
+  optimization: { name: '网络优化Agent', subs: ['实时优化', '工程优化', '事件保障'] },
+  experience:   { name: '体验保障Agent', subs: ['投诉预警', '差异化体验', '确定性体验'] },
+  ops:          { name: '网络运维Agent', subs: ['运维监控', '故障分析', '上站维护'] },
+  marketing:    { name: '运营支撑Agent', subs: ['潜客识别', '实时营销', '离网维挽'] },
 };
 
 let _nextId = 100;
@@ -584,7 +584,7 @@ export default function Workflows() {
           })}
           <div className="border-t border-border mt-3 pt-3">
             <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t('Agents', '领域Agent')}</h3>
-            {[['planning','规划'],['optimization','优化'],['experience','体验'],['ops','运维'],['marketing','运营']].map(([key, label]) => (
+            {[['planning','规划'],['optimization','网络优化'],['experience','体验保障'],['ops','网络运维'],['marketing','运营支撑']].map(([key, label]) => (
               <div key={key} draggable onDragStart={e => handlePaletteDragStart(e, 'agent', key)}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-bg-primary transition-colors mb-1 cursor-grab active:cursor-grabbing">
                 <GripVertical className="w-3 h-3 text-text-muted/40" />
@@ -825,7 +825,7 @@ export default function Workflows() {
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: AGENT_COLORS[selectedNode.agentType] }} />
                     <span className="text-sm text-text-secondary">
-                      {selectedNode.agentType === 'ops' ? '运维' : selectedNode.agentType === 'optimization' ? '优化' : selectedNode.agentType === 'experience' ? '体验' : selectedNode.agentType === 'planning' ? '规划' : '运营'}Agent
+                      {selectedNode.agentType === 'ops' ? '网络运维' : selectedNode.agentType === 'optimization' ? '网络优化' : selectedNode.agentType === 'experience' ? '体验保障' : selectedNode.agentType === 'planning' ? '规划' : '运营支撑'}Agent
                     </span>
                   </div>
                 </div>

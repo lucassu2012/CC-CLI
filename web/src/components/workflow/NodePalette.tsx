@@ -46,8 +46,8 @@ const PALETTE_ITEMS: PaletteItem[] = [
   },
   {
     type: 'agent',
-    label: '优化智能体',
-    labelEn: 'Optimization Agent',
+    label: '网络优化智能体',
+    labelEn: 'Network Optimization Agent',
     color: '#0EA5E9',
     iconBg: '#F0F9FF',
     agentType: 'optimization',
@@ -59,8 +59,8 @@ const PALETTE_ITEMS: PaletteItem[] = [
   },
   {
     type: 'agent',
-    label: '体验智能体',
-    labelEn: 'Experience Agent',
+    label: '体验保障智能体',
+    labelEn: 'Experience Assurance Agent',
     color: '#EC4899',
     iconBg: '#FDF2F8',
     agentType: 'experience',
@@ -72,8 +72,8 @@ const PALETTE_ITEMS: PaletteItem[] = [
   },
   {
     type: 'agent',
-    label: '运维智能体',
-    labelEn: 'Ops Agent',
+    label: '网络运维智能体',
+    labelEn: 'Network O&M Agent',
     color: '#F59E0B',
     iconBg: '#FFFBEB',
     agentType: 'ops',
@@ -85,8 +85,8 @@ const PALETTE_ITEMS: PaletteItem[] = [
   },
   {
     type: 'agent',
-    label: '营销智能体',
-    labelEn: 'Marketing Agent',
+    label: '运营支撑智能体',
+    labelEn: 'Marketing Support Agent',
     color: '#10B981',
     iconBg: '#ECFDF5',
     agentType: 'marketing',
