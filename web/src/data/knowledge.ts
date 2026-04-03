@@ -16,6 +16,24 @@ export interface KnowledgeEntry {
   relatedIds: string[];
 }
 
+export interface Skill {
+  id: string;
+  name: string;
+  nameZh: string;
+  description: string;
+  descriptionZh: string;
+  sourceKnowledgeIds: string[];
+  triggerConditions: string[];
+  triggerConditionsZh: string[];
+  actions: string[];
+  actionsZh: string[];
+  applicableAgents: string[];
+  confidence: number;
+  usageCount: number;
+  lastUsed: string;
+  status: 'active' | 'draft' | 'deprecated';
+}
+
 export const knowledgeEntries: KnowledgeEntry[] = [
   {
     id: 'KB-001',
@@ -152,5 +170,304 @@ export const knowledgeEntries: KnowledgeEntry[] = [
     lastSeen: '2026-03-31',
     tags: ['firmware', 'rollback', 'update', 'maintenance'],
     relatedIds: ['KB-004'],
+  },
+];
+
+export const generatedSkills: Skill[] = [
+  {
+    id: 'SK-001',
+    name: 'Auto Fiber Recovery',
+    nameZh: '光纤中断自动恢复',
+    description: 'Automatically detects trunk fiber cuts and executes a recovery sequence: activates backup links, reroutes traffic, and dispatches repair teams without human intervention.',
+    descriptionZh: '自动检测干线光纤中断并执行恢复序列：激活备用链路、重路由流量、派遣修复团队，全程无需人工干预。',
+    sourceKnowledgeIds: ['KB-001'],
+    triggerConditions: [
+      'Trunk link optical power drops below -28 dBm',
+      'OTDR alarm received from monitoring system',
+      'Traffic loss > 80% on primary fiber segment',
+    ],
+    triggerConditionsZh: [
+      '干线链路光功率低于 -28 dBm',
+      '监控系统收到OTDR告警',
+      '主光纤段流量损失超过80%',
+    ],
+    actions: [
+      'Activate standby microwave / satellite backup link',
+      'Reroute all affected LSPs via redundant ring topology',
+      'Create field-dispatch ticket for fiber repair crew',
+      'Send real-time restoration status to NOC dashboard',
+      'Update network topology database after repair confirmed',
+    ],
+    actionsZh: [
+      '激活备用微波/卫星链路',
+      '通过冗余环形拓扑重路由所有受影响LSP',
+      '为光纤修复团队创建现场派单',
+      '向NOC大屏发送实时恢复状态',
+      '修复确认后更新网络拓扑数据库',
+    ],
+    applicableAgents: ['NetworkAgent', 'NOCAgent'],
+    confidence: 0.96,
+    usageCount: 28,
+    lastUsed: '2026-03-28',
+    status: 'active',
+  },
+  {
+    id: 'SK-002',
+    name: 'BTS Power Failover',
+    nameZh: '基站电源故障转移',
+    description: 'Executes an automated power-failure response at cell sites: validates battery backup, starts generators, sheds non-critical loads, and offloads traffic to adjacent cells.',
+    descriptionZh: '在基站站点执行自动化电源故障响应：验证电池备份、启动发电机、削减非关键负载、将流量转移至相邻小区。',
+    sourceKnowledgeIds: ['KB-003'],
+    triggerConditions: [
+      'BTS main power feed alarm (AC/DC failure)',
+      'Battery backup voltage < 46 V',
+      'Generator start-fail alarm after 3 retries',
+    ],
+    triggerConditionsZh: [
+      '基站主电源告警（AC/DC故障）',
+      '电池备份电压低于46V',
+      '发电机启动失败告警（3次重试后）',
+    ],
+    actions: [
+      'Confirm battery backup is online and healthy',
+      'Issue remote generator start command',
+      'Disable non-critical ancillary equipment (HVAC, lighting)',
+      'Transfer RRC-connected UEs to neighbouring cells via X2 handover',
+      'Dispatch power maintenance team with urgency level P1',
+    ],
+    actionsZh: [
+      '确认电池备份在线且健康',
+      '发送远程发电机启动指令',
+      '关闭非关键辅助设备（空调、照明）',
+      '通过X2切换将已连接UE转移至相邻小区',
+      '以P1优先级派遣电力维修团队',
+    ],
+    applicableAgents: ['InfraAgent', 'NetworkAgent'],
+    confidence: 0.98,
+    usageCount: 54,
+    lastUsed: '2026-04-01',
+    status: 'active',
+  },
+  {
+    id: 'SK-003',
+    name: 'Core Router CPU Overload Handler',
+    nameZh: '核心路由器CPU过载处理',
+    description: 'Detects CPU overload on core routers, isolates the root cause (BGP flap vs. software bug), applies route dampening or traffic diversion, and schedules patching if needed.',
+    descriptionZh: '检测核心路由器CPU过载，定位根因（BGP抖动或软件缺陷），应用路由抑制或流量转移，并在需要时安排补丁维护。',
+    sourceKnowledgeIds: ['KB-004'],
+    triggerConditions: [
+      'Core router CPU utilisation > 85% for 5 consecutive minutes',
+      'BGP session flap count > 10 in 60 seconds',
+      'Process scheduler latency alarm triggered',
+    ],
+    triggerConditionsZh: [
+      '核心路由器CPU使用率连续5分钟超过85%',
+      'BGP会话抖动次数60秒内超过10次',
+      '进程调度延迟告警触发',
+    ],
+    actions: [
+      'Collect top-process snapshot via SNMP/gRPC telemetry',
+      'Detect BGP route flapping and apply route dampening policy',
+      'Divert transit traffic to alternative path if CPU > 95%',
+      'Correlate with known software defect CVE database',
+      'Schedule maintenance window and push vendor patch',
+    ],
+    actionsZh: [
+      '通过SNMP/gRPC遥测采集进程快照',
+      '检测BGP路由抖动并应用路由抑制策略',
+      'CPU超过95%时将过境流量切换至备用路径',
+      '与已知软件缺陷CVE数据库关联分析',
+      '安排维护窗口并推送供应商补丁',
+    ],
+    applicableAgents: ['NetworkAgent', 'AutomationAgent'],
+    confidence: 0.91,
+    usageCount: 17,
+    lastUsed: '2026-04-01',
+    status: 'active',
+  },
+  {
+    id: 'SK-004',
+    name: 'SLA Breach Prevention',
+    nameZh: 'SLA违约预防',
+    description: 'Monitors SLA budget consumption in real-time, triggers escalation workflows and protective traffic prioritisation before the SLA threshold is breached.',
+    descriptionZh: '实时监控SLA预算消耗，在违约阈值触发前启动升级工作流并执行保护性流量优先化。',
+    sourceKnowledgeIds: ['KB-006'],
+    triggerConditions: [
+      'Remaining SLA availability budget < 20% of monthly allowance',
+      'Enterprise VIP customer impacted by active incident',
+      'Cumulative downtime projection exceeds contracted SLA',
+    ],
+    triggerConditionsZh: [
+      '剩余SLA可用预算低于月度配额的20%',
+      '活跃故障影响到企业VIP客户',
+      '累计停机时间预测超过合同SLA',
+    ],
+    actions: [
+      'Calculate real-time SLA exposure for all impacted contracts',
+      'Elevate incident priority to P1 for affected enterprise services',
+      'Notify account management team with impact summary',
+      'Pre-populate SLA credit calculation for customer communication',
+      'Generate compliance timeline document for audit trail',
+    ],
+    actionsZh: [
+      '实时计算所有受影响合同的SLA风险敞口',
+      '将受影响企业服务的故障优先级升级至P1',
+      '向客户经理团队发送影响摘要通知',
+      '预生成SLA信用额计算供客户沟通使用',
+      '生成合规时间线文档用于审计追踪',
+    ],
+    applicableAgents: ['ServiceAgent', 'MarketAgent'],
+    confidence: 0.93,
+    usageCount: 12,
+    lastUsed: '2026-03-29',
+    status: 'active',
+  },
+  {
+    id: 'SK-005',
+    name: 'AI Energy-Saving Cell Sleep',
+    nameZh: 'AI节能小区休眠',
+    description: 'Uses AI traffic prediction to identify cells eligible for sleep mode during low-demand windows, achieving 15-25% energy reduction while preserving coverage via digital-twin validation.',
+    descriptionZh: '利用AI流量预测识别低需求时段可进入休眠模式的小区，通过数字孪生验证覆盖后实现15-25%节能。',
+    sourceKnowledgeIds: ['KB-007'],
+    triggerConditions: [
+      'Cell traffic load < 8% of peak capacity for 30 minutes',
+      'Adjacent cells have sufficient capacity to absorb offloaded UEs',
+      'Time window within configured energy-saving schedule',
+    ],
+    triggerConditionsZh: [
+      '小区流量负荷低于峰值容量的8%且持续30分钟',
+      '相邻小区有足够容量承载迁移的UE',
+      '当前时间处于配置的节能计划窗口内',
+    ],
+    actions: [
+      'Run digital-twin coverage simulation to confirm no coverage gap',
+      'Migrate active UEs via ANR-assisted handover to neighbours',
+      'Execute cell sleep command via O-RAN RIC xApp',
+      'Monitor coverage quality continuously during sleep period',
+      'Wake cell automatically if traffic demand recovers',
+    ],
+    actionsZh: [
+      '运行数字孪生覆盖仿真确认无覆盖缺口',
+      '通过ANR辅助切换将活跃UE迁移至相邻小区',
+      '通过O-RAN RIC xApp执行小区休眠指令',
+      '休眠期间持续监控覆盖质量',
+      '流量需求恢复时自动唤醒小区',
+    ],
+    applicableAgents: ['InfraAgent', 'AutomationAgent'],
+    confidence: 0.85,
+    usageCount: 3,
+    lastUsed: '2026-03-20',
+    status: 'active',
+  },
+  {
+    id: 'SK-006',
+    name: 'Firmware Rollback',
+    nameZh: '固件回滚操作',
+    description: 'Automatically detects post-upgrade instability and executes a safe firmware rollback procedure within a maintenance window, including config backup and vendor defect reporting.',
+    descriptionZh: '自动检测升级后设备不稳定，并在维护窗口内执行安全的固件回滚流程，含配置备份和供应商缺陷报告。',
+    sourceKnowledgeIds: ['KB-008'],
+    triggerConditions: [
+      'Device error-rate > 5x baseline within 2 hours of firmware update',
+      'Feature regression detected by automated smoke-test suite',
+      'Operator manual trigger from change management portal',
+    ],
+    triggerConditionsZh: [
+      '固件更新后2小时内设备错误率超过基线5倍',
+      '自动冒烟测试套件检测到功能回退',
+      '运营商通过变更管理门户手动触发',
+    ],
+    actions: [
+      'Backup running configuration to secure vault',
+      'Verify rollback image integrity (MD5/SHA256)',
+      'Execute firmware downgrade in scheduled maintenance window',
+      'Run full service validation test suite post-rollback',
+      'Submit structured defect report to vendor support portal',
+    ],
+    actionsZh: [
+      '将运行配置备份至安全存储库',
+      '验证回滚镜像完整性（MD5/SHA256）',
+      '在计划维护窗口内执行固件降级',
+      '回滚后运行完整服务验证测试套件',
+      '向供应商支持门户提交结构化缺陷报告',
+    ],
+    applicableAgents: ['NetworkAgent', 'AutomationAgent'],
+    confidence: 0.95,
+    usageCount: 11,
+    lastUsed: '2026-03-31',
+    status: 'active',
+  },
+  {
+    id: 'SK-007',
+    name: 'High-Value Customer Churn Alert',
+    nameZh: '高价值用户流失预警',
+    description: 'Correlates network quality KPIs with high-value customer behaviour signals to predict churn risk and trigger proactive retention actions before customers cancel.',
+    descriptionZh: '将网络质量KPI与高价值客户行为信号关联，在客户取消前预测流失风险并触发主动留存行动。',
+    sourceKnowledgeIds: ['KB-005'],
+    triggerConditions: [
+      'High-value customer segment NPS drops > 15 points in 7 days',
+      'Network quality score in customer home-cell below threshold for 48h',
+      'Complaint ticket rate for a geographic cluster increases > 200%',
+    ],
+    triggerConditionsZh: [
+      '高价值客户群体NPS 7天内下降超过15分',
+      '客户归属小区网络质量评分48小时低于阈值',
+      '某地理集群投诉工单率增加超过200%',
+    ],
+    actions: [
+      'Identify affected high-value customers by ARPU tier and location',
+      'Correlate network KPIs (RSRP, latency, packet loss) with churn signals',
+      'Trigger personalised retention offer via CRM system',
+      'Escalate network investment request to planning team for affected area',
+      'Establish automated weekly cross-domain quality report',
+    ],
+    actionsZh: [
+      '按ARPU层级和位置识别受影响高价值客户',
+      '将网络KPI（RSRP、时延、丢包）与流失信号关联',
+      '通过CRM系统触发个性化留存优惠',
+      '向规划团队上报受影响区域网络投资请求',
+      '建立自动化每周跨域质量报告',
+    ],
+    applicableAgents: ['MarketAgent', 'ServiceAgent'],
+    confidence: 0.88,
+    usageCount: 6,
+    lastUsed: '2026-03-25',
+    status: 'active',
+  },
+  {
+    id: 'SK-008',
+    name: 'Network Quality Correlation Analysis',
+    nameZh: '网络质量关联分析',
+    description: 'Cross-domain skill that links BTS power events and fiber outages with downstream customer quality degradation, enabling root-cause attribution across infrastructure and service layers.',
+    descriptionZh: '跨域技能，将基站电源事件和光纤中断与下游客户质量退化关联，实现跨基础设施和服务层的根因归属。',
+    sourceKnowledgeIds: ['KB-005', 'KB-003'],
+    triggerConditions: [
+      'Customer quality complaint spike not directly mapped to a known alarm',
+      'Cross-domain anomaly score exceeds 0.7 on correlation engine',
+      'Multiple domain agents report independent minor degradations simultaneously',
+    ],
+    triggerConditionsZh: [
+      '客户质量投诉激增且未直接映射到已知告警',
+      '关联引擎跨域异常分数超过0.7',
+      '多个域Agent同时报告独立的轻微退化',
+    ],
+    actions: [
+      'Pull KPI streams from all affected domain agents',
+      'Run temporal correlation analysis across infrastructure and service layers',
+      'Generate causal graph linking root infrastructure event to customer impact',
+      'Recommend prioritised remediation actions ranked by customer impact',
+      'Feed findings back to knowledge base for future skill refinement',
+    ],
+    actionsZh: [
+      '从所有受影响域Agent拉取KPI数据流',
+      '跨基础设施和服务层运行时序关联分析',
+      '生成将基础设施根因事件与客户影响关联的因果图',
+      '按客户影响优先级排序推荐修复行动',
+      '将结论反馈知识库用于未来技能优化',
+    ],
+    applicableAgents: ['NetworkAgent', 'InfraAgent', 'MarketAgent'],
+    confidence: 0.87,
+    usageCount: 4,
+    lastUsed: '2026-03-27',
+    status: 'draft',
   },
 ];

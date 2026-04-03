@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Play, Pause, Square, ChevronDown, GitBranch, ArrowRight, RefreshCw, X } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Play, Pause, Square, ChevronDown, GitBranch, ArrowRight, RefreshCw, X, Plus, Trash2, GripVertical } from 'lucide-react';
 import { useText } from '../hooks/useText';
 
 /* ------------------------------------------------------------------ */
@@ -11,10 +11,21 @@ interface WfNode {
   type: 'trigger' | 'agent' | 'condition' | 'action' | 'merge' | 'split' | 'transform';
   name: string;
   agentType?: string;
+  subAgent?: string;
   x: number;
   y: number;
   config?: Record<string, any>;
 }
+
+const SUB_AGENTS: Record<string, { name: string; subs: string[] }> = {
+  planning:     { name: '规划Agent', subs: ['规划评估', '站点选址', '容量预测'] },
+  optimization: { name: '优化Agent', subs: ['参数优化', '覆盖优化', '干扰消除'] },
+  experience:   { name: '体验Agent', subs: ['VIP保障', '投诉分析', '体验评估'] },
+  ops:          { name: '运维Agent', subs: ['故障诊断', '巡检监控', '工单管理'] },
+  marketing:    { name: '运营Agent', subs: ['潜客识别', '精准营销', '离网维挽'] },
+};
+
+let _nextId = 100;
 
 interface WfEdge {
   id: string;
@@ -250,16 +261,31 @@ export default function Workflows() {
   const [running, setRunning] = useState(false);
   const [activeNodeIdx, setActiveNodeIdx] = useState(-1);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  // Custom workflow state
+  const [customNodes, setCustomNodes] = useState<WfNode[]>([]);
+  const [customEdges, setCustomEdges] = useState<WfEdge[]>([]);
+  const [isCustom, setIsCustom] = useState(false);
+  // Drag state
+  const [draggingNode, setDraggingNode] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  // Connection state
+  const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  // Agent selector for new nodes
+  const [agentPicker, setAgentPicker] = useState<{ nodeId: string; x: number; y: number } | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   const template = TEMPLATES[selectedTemplate];
+  const nodes = isCustom ? customNodes : template.nodes;
+  const edges = isCustom ? customEdges : template.edges;
 
   // Topological execution order
   const executionOrder = useMemo(() => {
     const order: string[] = [];
     const visited = new Set<string>();
     const adj = new Map<string, string[]>();
-    template.nodes.forEach(n => adj.set(n.id, []));
-    template.edges.forEach(e => adj.get(e.source)?.push(e.target));
+    nodes.forEach(n => adj.set(n.id, []));
+    edges.forEach(e => adj.get(e.source)?.push(e.target));
 
     function dfs(id: string) {
       if (visited.has(id)) return;
@@ -267,9 +293,9 @@ export default function Workflows() {
       adj.get(id)?.forEach(dfs);
       order.unshift(id);
     }
-    template.nodes.forEach(n => dfs(n.id));
+    nodes.forEach(n => dfs(n.id));
     return order;
-  }, [template]);
+  }, [nodes, edges]);
 
   // Demo run animation
   useEffect(() => {
@@ -298,18 +324,127 @@ export default function Workflows() {
     return new Set(executionOrder.slice(0, activeNodeIdx + 1));
   }, [activeNodeIdx, executionOrder]);
 
+  // --- Drag & Drop handlers ---
+  const getSvgPoint = useCallback((e: React.MouseEvent) => {
+    const svg = svgRef.current;
+    if (!svg) return { x: e.clientX, y: e.clientY };
+    const rect = svg.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }, []);
+
+  const handlePaletteDragStart = useCallback((e: React.DragEvent, type: WfNode['type'], agentType?: string) => {
+    e.dataTransfer.setData('nodeType', type);
+    if (agentType) e.dataTransfer.setData('agentType', agentType);
+  }, []);
+
+  const handleCanvasDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const type = e.dataTransfer.getData('nodeType') as WfNode['type'];
+    if (!type) return;
+    const agentType = e.dataTransfer.getData('agentType') || undefined;
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const x = e.clientX - rect.left - NODE_W / 2;
+    const y = e.clientY - rect.top - NODE_H / 2;
+    const id = `n${_nextId++}`;
+    const names: Record<string, string> = { trigger: '新触发器', agent: agentType ? (SUB_AGENTS[agentType]?.name || 'Agent') : 'Agent', condition: '新条件', action: '新动作', merge: '合并', split: '拆分', transform: '转换' };
+    const newNode: WfNode = { id, type, name: names[type] || type, agentType, x: Math.max(0, x), y: Math.max(0, y) };
+    if (!isCustom) {
+      setCustomNodes([...template.nodes, newNode]);
+      setCustomEdges([...template.edges]);
+      setIsCustom(true);
+    } else {
+      setCustomNodes(prev => [...prev, newNode]);
+    }
+    // Open agent picker for agent nodes
+    if (type === 'agent') {
+      setAgentPicker({ nodeId: id, x: e.clientX, y: e.clientY });
+    }
+    setSelectedNode(newNode);
+  }, [isCustom, template]);
+
+  const handleNodeMouseDown = useCallback((e: React.MouseEvent, nodeId: string) => {
+    if (!isCustom && !connectingFrom) return;
+    if (connectingFrom) {
+      // Complete connection
+      if (connectingFrom !== nodeId) {
+        const edgeId = `ce${_nextId++}`;
+        setCustomEdges(prev => [...prev, { id: edgeId, source: connectingFrom, target: nodeId }]);
+      }
+      setConnectingFrom(null);
+      return;
+    }
+    e.stopPropagation();
+    const pt = getSvgPoint(e);
+    const node = customNodes.find(n => n.id === nodeId);
+    if (!node) return;
+    setDragOffset({ x: pt.x - node.x, y: pt.y - node.y });
+    setDraggingNode(nodeId);
+  }, [isCustom, connectingFrom, customNodes, getSvgPoint]);
+
+  const handleSvgMouseMove = useCallback((e: React.MouseEvent) => {
+    const pt = getSvgPoint(e);
+    setMousePos(pt);
+    if (draggingNode && isCustom) {
+      setCustomNodes(prev => prev.map(n => n.id === draggingNode ? { ...n, x: Math.max(0, pt.x - dragOffset.x), y: Math.max(0, pt.y - dragOffset.y) } : n));
+    }
+  }, [draggingNode, isCustom, dragOffset, getSvgPoint]);
+
+  const handleSvgMouseUp = useCallback(() => {
+    setDraggingNode(null);
+  }, []);
+
+  const handlePortClick = useCallback((e: React.MouseEvent, nodeId: string) => {
+    e.stopPropagation();
+    if (!isCustom) {
+      setCustomNodes([...template.nodes]);
+      setCustomEdges([...template.edges]);
+      setIsCustom(true);
+    }
+    if (connectingFrom) {
+      if (connectingFrom !== nodeId) {
+        const edgeId = `ce${_nextId++}`;
+        setCustomEdges(prev => [...prev, { id: edgeId, source: connectingFrom, target: nodeId }]);
+      }
+      setConnectingFrom(null);
+    } else {
+      setConnectingFrom(nodeId);
+    }
+  }, [connectingFrom, isCustom, template]);
+
+  const handleDeleteNode = useCallback((nodeId: string) => {
+    if (!isCustom) return;
+    setCustomNodes(prev => prev.filter(n => n.id !== nodeId));
+    setCustomEdges(prev => prev.filter(e => e.source !== nodeId && e.target !== nodeId));
+    if (selectedNode?.id === nodeId) setSelectedNode(null);
+  }, [isCustom, selectedNode]);
+
+  const handleNewWorkflow = useCallback(() => {
+    setCustomNodes([{ id: 'start', type: 'trigger', name: '开始', x: 400, y: 40 }]);
+    setCustomEdges([]);
+    setIsCustom(true);
+    setSelectedNode(null);
+    stopRun();
+  }, [stopRun]);
+
+  const handleSelectAgent = useCallback((nodeId: string, agentType: string, subAgent: string) => {
+    setCustomNodes(prev => prev.map(n => n.id === nodeId ? { ...n, agentType, subAgent, name: subAgent } : n));
+    setAgentPicker(null);
+  }, []);
+
   const currentNodeId = activeNodeIdx >= 0 && activeNodeIdx < executionOrder.length
     ? executionOrder[activeNodeIdx] : null;
 
   // Canvas bounds
   const bounds = useMemo(() => {
     let maxX = 0, maxY = 0;
-    template.nodes.forEach(n => {
+    nodes.forEach(n => {
       if (n.x + NODE_W > maxX) maxX = n.x + NODE_W;
       if (n.y + NODE_H > maxY) maxY = n.y + NODE_H;
     });
-    return { w: maxX + 100, h: maxY + 60 };
-  }, [template]);
+    return { w: Math.max(maxX + 100, 900), h: Math.max(maxY + 60, 600) };
+  }, [nodes]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -342,14 +477,17 @@ export default function Workflows() {
               </div>
             )}
           </div>
-          <span className="text-xs text-text-muted">v1.0</span>
+          <span className="text-xs text-text-muted">{isCustom ? t('Custom', '自定义') : 'v1.0'}</span>
           <span className={`text-xs px-2 py-0.5 rounded-full ${
-            running ? 'bg-status-green/20 text-status-green' : 'bg-bg-primary text-text-muted'
+            running ? 'bg-status-green/20 text-status-green' : connectingFrom ? 'bg-accent-cyan/20 text-accent-cyan' : 'bg-bg-primary text-text-muted'
           }`}>
-            {running ? t('Running', '运行中') : t('Ready', '就绪')}
+            {running ? t('Running', '运行中') : connectingFrom ? t('Connecting...', '连线中...') : t('Ready', '就绪')}
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={handleNewWorkflow} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-cyan/20 text-accent-cyan text-sm font-medium hover:bg-accent-cyan/30 transition-colors cursor-pointer">
+            <Plus className="w-4 h-4" /> {t('New', '新建')}
+          </button>
           {!running ? (
             <button onClick={startRun} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-status-green/20 text-status-green text-sm font-medium hover:bg-status-green/30 transition-colors cursor-pointer">
               <Play className="w-4 h-4" /> {t('Run', '运行')}
@@ -374,7 +512,9 @@ export default function Workflows() {
           {(['trigger', 'agent', 'condition', 'action', 'merge', 'split', 'transform'] as const).map(type => {
             const c = COLORS[type];
             return (
-              <div key={type} className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-bg-primary transition-colors mb-1 cursor-grab">
+              <div key={type} draggable onDragStart={e => handlePaletteDragStart(e, type)}
+                className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-bg-primary transition-colors mb-1 cursor-grab active:cursor-grabbing">
+                <GripVertical className="w-3 h-3 text-text-muted/40" />
                 <div className="w-7 h-7 rounded-md flex items-center justify-center text-xs" style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}>
                   {nodeIcon(type)}
                 </div>
@@ -385,7 +525,9 @@ export default function Workflows() {
           <div className="border-t border-border mt-3 pt-3">
             <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t('Agents', '领域Agent')}</h3>
             {[['planning','规划'],['optimization','优化'],['experience','体验'],['ops','运维'],['marketing','运营']].map(([key, label]) => (
-              <div key={key} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-bg-primary transition-colors mb-1">
+              <div key={key} draggable onDragStart={e => handlePaletteDragStart(e, 'agent', key)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-bg-primary transition-colors mb-1 cursor-grab active:cursor-grabbing">
+                <GripVertical className="w-3 h-3 text-text-muted/40" />
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: AGENT_COLORS[key] }} />
                 <span className="text-xs text-text-secondary">{label}Agent</span>
               </div>
@@ -394,8 +536,11 @@ export default function Workflows() {
         </div>
 
         {/* Center: SVG Canvas */}
-        <div className="flex-1 overflow-auto bg-bg-primary relative">
-          <svg width={bounds.w} height={bounds.h} className="min-w-full min-h-full">
+        <div className="flex-1 overflow-auto bg-bg-primary relative"
+          onDragOver={e => e.preventDefault()} onDrop={handleCanvasDrop}>
+          <svg ref={svgRef} width={bounds.w} height={bounds.h} className="min-w-full min-h-full"
+            onMouseMove={handleSvgMouseMove} onMouseUp={handleSvgMouseUp}
+            onClick={() => { if (connectingFrom) setConnectingFrom(null); setAgentPicker(null); }}>
             <defs>
               <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
                 <polygon points="0 0, 8 3, 0 6" fill="#475569" />
@@ -423,10 +568,19 @@ export default function Workflows() {
 
             <rect width="100%" height="100%" fill="url(#grid)" />
 
+            {/* Connection preview line */}
+            {connectingFrom && (() => {
+              const fromNode = nodes.find(n => n.id === connectingFrom);
+              if (!fromNode) return null;
+              return <line x1={fromNode.x + NODE_W / 2} y1={fromNode.y + NODE_H}
+                x2={mousePos.x} y2={mousePos.y} stroke="#06b6d4" strokeWidth={2} strokeDasharray="6 3" />;
+            })()}
+
             {/* Edges */}
-            {template.edges.map(edge => {
-              const src = template.nodes.find(n => n.id === edge.source)!;
-              const tgt = template.nodes.find(n => n.id === edge.target)!;
+            {edges.map(edge => {
+              const src = nodes.find(n => n.id === edge.source)!;
+              const tgt = nodes.find(n => n.id === edge.target)!;
+              if (!src || !tgt) return null;
               const path = edgePath(src, tgt);
               const srcDone = activeNodeIds.has(edge.source);
               const tgtDone = activeNodeIds.has(edge.target);
@@ -453,7 +607,7 @@ export default function Workflows() {
             })}
 
             {/* Nodes */}
-            {template.nodes.map(node => {
+            {nodes.map(node => {
               const c = COLORS[node.type];
               const isDone = activeNodeIds.has(node.id);
               const isCurrent = currentNodeId === node.id;
@@ -461,7 +615,9 @@ export default function Workflows() {
               const agentColor = node.agentType ? AGENT_COLORS[node.agentType] : undefined;
 
               return (
-                <g key={node.id} onClick={() => setSelectedNode(node)} style={{ cursor: 'pointer' }}>
+                <g key={node.id} onClick={() => setSelectedNode(node)}
+                  onMouseDown={e => handleNodeMouseDown(e, node.id)}
+                  style={{ cursor: isCustom ? (draggingNode === node.id ? 'grabbing' : 'grab') : 'pointer' }}>
                   {/* Glow behind active node */}
                   {isCurrent && (
                     <rect x={node.x - 4} y={node.y - 4} width={NODE_W + 8} height={NODE_H + 8}
@@ -496,20 +652,66 @@ export default function Workflows() {
                     fontWeight={500}>
                     {node.name}
                   </text>
+                  {/* Sub-agent label */}
+                  {node.subAgent && (
+                    <text x={node.x + NODE_W / 2} y={node.y + NODE_H + 14}
+                      fill="#94a3b8" fontSize="9" textAnchor="middle">
+                      {node.subAgent}
+                    </text>
+                  )}
+                  {/* Input port (top) */}
+                  <circle cx={node.x + NODE_W / 2} cy={node.y} r={4}
+                    fill="#1e293b" stroke={connectingFrom ? '#06b6d4' : '#475569'} strokeWidth={1.5}
+                    onClick={e => handlePortClick(e, node.id)}
+                    style={{ cursor: 'crosshair' }} />
+                  {/* Output port (bottom) */}
+                  <circle cx={node.x + NODE_W / 2} cy={node.y + NODE_H} r={4}
+                    fill="#1e293b" stroke={connectingFrom === node.id ? '#06b6d4' : '#475569'} strokeWidth={1.5}
+                    onClick={e => handlePortClick(e, node.id)}
+                    style={{ cursor: 'crosshair' }} />
                 </g>
               );
             })}
           </svg>
 
           {/* Minimap */}
+          {/* Agent picker popup */}
+          {agentPicker && (() => {
+            const svg = svgRef.current;
+            if (!svg) return null;
+            const rect = svg.getBoundingClientRect();
+            return (
+              <div className="absolute z-50 bg-bg-card border border-border rounded-lg shadow-xl p-2 w-48"
+                style={{ left: agentPicker.x - rect.left, top: agentPicker.y - rect.top }}
+                onClick={e => e.stopPropagation()}>
+                <p className="text-xs text-text-muted mb-1 px-2">选择Agent和子Agent</p>
+                {Object.entries(SUB_AGENTS).map(([key, val]) => (
+                  <div key={key}>
+                    <p className="text-xs font-medium text-text-secondary px-2 py-1 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: AGENT_COLORS[key] }} />
+                      {val.name}
+                    </p>
+                    {val.subs.map(sub => (
+                      <button key={sub} onClick={() => handleSelectAgent(agentPicker.nodeId, key, sub)}
+                        className="w-full text-left text-xs text-text-secondary hover:bg-bg-primary px-4 py-1 rounded cursor-pointer">
+                        {sub}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
           <div className="absolute bottom-3 right-3 w-32 h-20 bg-bg-card/80 border border-border rounded-lg overflow-hidden">
             <svg viewBox={`0 0 ${bounds.w} ${bounds.h}`} width="100%" height="100%">
-              {template.edges.map(e => {
-                const src = template.nodes.find(n => n.id === e.source)!;
-                const tgt = template.nodes.find(n => n.id === e.target)!;
+              {edges.map(e => {
+                const src = nodes.find(n => n.id === e.source)!;
+                const tgt = nodes.find(n => n.id === e.target)!;
+                if (!src || !tgt) return null;
                 return <line key={e.id} x1={src.x+NODE_W/2} y1={src.y+NODE_H/2} x2={tgt.x+NODE_W/2} y2={tgt.y+NODE_H/2} stroke="#334155" strokeWidth="3" />;
               })}
-              {template.nodes.map(n => (
+              {nodes.map(n => (
                 <rect key={n.id} x={n.x} y={n.y} width={NODE_W} height={NODE_H} rx={4}
                   fill={activeNodeIds.has(n.id) ? '#22c55e' : COLORS[n.type].border} opacity={0.6} />
               ))}
@@ -565,11 +767,39 @@ export default function Workflows() {
                 </span>
               </div>
 
+              {/* Agent/Sub-Agent selector for custom mode */}
+              {isCustom && selectedNode.type === 'agent' && (
+                <div>
+                  <label className="text-xs text-text-muted block mb-1">{t('Domain Agent', '领域Agent')}</label>
+                  <select value={selectedNode.agentType || ''} onChange={e => {
+                    const val = e.target.value;
+                    setCustomNodes(prev => prev.map(n => n.id === selectedNode.id ? { ...n, agentType: val || undefined } : n));
+                    setSelectedNode({ ...selectedNode, agentType: val || undefined });
+                  }} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm text-text-primary">
+                    <option value="">选择...</option>
+                    {Object.entries(SUB_AGENTS).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                  </select>
+                </div>
+              )}
+              {isCustom && selectedNode.agentType && SUB_AGENTS[selectedNode.agentType] && (
+                <div>
+                  <label className="text-xs text-text-muted block mb-1">{t('Sub-Agent', '子Agent')}</label>
+                  <select value={selectedNode.subAgent || ''} onChange={e => {
+                    const val = e.target.value;
+                    setCustomNodes(prev => prev.map(n => n.id === selectedNode.id ? { ...n, subAgent: val, name: val || SUB_AGENTS[selectedNode.agentType!].name } : n));
+                    setSelectedNode({ ...selectedNode, subAgent: val, name: val || SUB_AGENTS[selectedNode.agentType!].name });
+                  }} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm text-text-primary">
+                    <option value="">选择子Agent...</option>
+                    {SUB_AGENTS[selectedNode.agentType].subs.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              )}
+
               {/* Connections */}
               <div className="border-t border-border pt-3">
                 <label className="text-xs text-text-muted block mb-2">{t('Connections', '连接')}</label>
-                {template.edges.filter(e => e.source === selectedNode.id).map(e => {
-                  const tgt = template.nodes.find(n => n.id === e.target);
+                {edges.filter(e => e.source === selectedNode.id).map(e => {
+                  const tgt = nodes.find(n => n.id === e.target);
                   return (
                     <div key={e.id} className="flex items-center gap-2 text-xs text-text-secondary mb-1">
                       <ArrowRight className="w-3 h-3 text-text-muted" />
@@ -578,8 +808,8 @@ export default function Workflows() {
                     </div>
                   );
                 })}
-                {template.edges.filter(e => e.target === selectedNode.id).map(e => {
-                  const src = template.nodes.find(n => n.id === e.source);
+                {edges.filter(e => e.target === selectedNode.id).map(e => {
+                  const src = nodes.find(n => n.id === e.source);
                   return (
                     <div key={e.id} className="flex items-center gap-2 text-xs text-text-secondary mb-1">
                       <RefreshCw className="w-3 h-3 text-text-muted" />
@@ -588,6 +818,16 @@ export default function Workflows() {
                   );
                 })}
               </div>
+
+              {/* Delete button for custom mode */}
+              {isCustom && (
+                <div className="border-t border-border pt-3">
+                  <button onClick={() => handleDeleteNode(selectedNode.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-status-red/20 text-status-red text-xs font-medium hover:bg-status-red/30 transition-colors cursor-pointer w-full justify-center">
+                    <Trash2 className="w-3 h-3" /> {t('Delete Node', '删除节点')}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
