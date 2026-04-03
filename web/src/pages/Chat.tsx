@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Paperclip, Image, Brain, Wrench, CheckCircle2, Loader2, MessageSquare, Lightbulb, ThumbsUp, Pencil, Search, XCircle } from 'lucide-react';
 import { useText } from '../hooks/useText';
-import { demoConversations, type Suggestion } from '../data/chat';
+import { demoConversations, type ChatMessage, type Suggestion } from '../data/chat';
 
 const phaseColors: Record<string, string> = {
   Think: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -27,38 +27,76 @@ const suggestionColors: Record<string, string> = {
 export default function Chat() {
   const { t } = useText();
   const [activeConv, setActiveConv] = useState(0);
-  const [visibleMsgs, setVisibleMsgs] = useState(1);
+  const [displayedMessages, setDisplayedMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [thinkingIdx, setThinkingIdx] = useState(-1);
-  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
+  const [pendingResponse, setPendingResponse] = useState<ChatMessage | null>(null);
+  const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
   const conv = demoConversations[activeConv];
-  const messages = conv.messages.slice(0, visibleMsgs);
 
-  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }); }, [visibleMsgs, thinkingIdx]);
-  useEffect(() => { setVisibleMsgs(1); setIsTyping(false); setThinkingIdx(-1); setSelectedSuggestion(null); }, [activeConv]);
+  // Initialize with first message
+  useEffect(() => {
+    setDisplayedMessages([conv.messages[0]]);
+    setIsTyping(false);
+    setThinkingIdx(-1);
+    setPendingResponse(null);
+    setSelectedSuggestions(new Set());
+  }, [activeConv]);
 
-  const advanceConversation = () => {
-    if (visibleMsgs >= conv.messages.length || isTyping) return;
+  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }); }, [displayedMessages, thinkingIdx]);
+
+  const animateResponse = useCallback((msg: ChatMessage) => {
+    if (isTyping) return;
     setIsTyping(true);
     setThinkingIdx(0);
-    setSelectedSuggestion(null);
-    const nextMsg = conv.messages[visibleMsgs];
-    const steps = nextMsg.thinkingSteps?.length || 0;
+    setPendingResponse(msg);
+    const steps = msg.thinkingSteps?.length || 0;
     let step = 0;
     const iv = setInterval(() => {
       step++;
       if (step < steps) { setThinkingIdx(step); }
-      else { clearInterval(iv); setTimeout(() => { setIsTyping(false); setThinkingIdx(-1); setVisibleMsgs(v => v + 1); }, 500); }
+      else {
+        clearInterval(iv);
+        setTimeout(() => {
+          setIsTyping(false);
+          setThinkingIdx(-1);
+          setDisplayedMessages(prev => [...prev, msg]);
+          setPendingResponse(null);
+        }, 500);
+      }
     }, 800);
-  };
+  }, [isTyping]);
 
-  const handleSuggestion = (s: Suggestion) => {
-    setSelectedSuggestion(s.id);
-    setTimeout(() => { if (visibleMsgs < conv.messages.length) advanceConversation(); }, 300);
-  };
+  const advanceConversation = useCallback(() => {
+    if (isTyping) return;
+    // Find the next main message not yet displayed
+    const displayedIds = new Set(displayedMessages.map(m => m.id));
+    const nextMsg = conv.messages.find(m => !displayedIds.has(m.id));
+    if (nextMsg) animateResponse(nextMsg);
+  }, [isTyping, displayedMessages, conv.messages, animateResponse]);
 
-  const currentThinkingMsg = isTyping && visibleMsgs < conv.messages.length ? conv.messages[visibleMsgs] : null;
+  const handleSuggestion = useCallback((parentMsg: ChatMessage, s: Suggestion) => {
+    if (isTyping || selectedSuggestions.has(parentMsg.id)) return;
+    setSelectedSuggestions(prev => new Set(prev).add(parentMsg.id));
+    const response = parentMsg.suggestionResponses?.[s.id];
+    if (response) {
+      // Add user echo message then animate the response
+      const userEcho: ChatMessage = {
+        id: `echo-${s.id}`,
+        role: 'user',
+        content: s.textZh || s.text,
+        timestamp: response.timestamp,
+      };
+      setDisplayedMessages(prev => [...prev, userEcho]);
+      setTimeout(() => animateResponse(response), 300);
+    } else {
+      // Fallback: advance to next main message
+      setTimeout(() => advanceConversation(), 300);
+    }
+  }, [isTyping, selectedSuggestions, animateResponse, advanceConversation]);
+
+  const currentThinkingMsg = pendingResponse;
 
   return (
     <div className="h-full flex overflow-hidden">
@@ -96,7 +134,9 @@ export default function Chat() {
         </div>
 
         <div ref={scrollRef} className="flex-1 overflow-auto p-5 space-y-4">
-          {messages.map(msg => (
+          {displayedMessages.map(msg => {
+            const isMsgSelected = selectedSuggestions.has(msg.id);
+            return (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[75%] ${msg.role === 'user' ? 'bg-accent-cyan/15 border border-accent-cyan/20' : 'bg-bg-card border border-border'} rounded-2xl px-4 py-3`}>
                 <div className="flex items-center gap-2 mb-2">
@@ -127,11 +167,10 @@ export default function Chat() {
                     <div className="text-[10px] text-text-muted uppercase tracking-wider flex items-center gap-1"><Lightbulb className="w-3 h-3 text-status-yellow" /> {t('Suggested Actions', '建议操作')}</div>
                     <div className="space-y-1">
                       {msg.suggestions.map(s => (
-                        <button key={s.id} onClick={() => handleSuggestion(s)} disabled={selectedSuggestion !== null}
-                          className={`w-full text-left flex items-center gap-2 text-xs rounded-lg px-3 py-2 border transition-all cursor-pointer ${selectedSuggestion === s.id ? 'bg-accent-cyan/20 border-accent-cyan text-accent-cyan' : selectedSuggestion ? 'opacity-40 border-border text-text-muted' : suggestionColors[s.type]}`}>
+                        <button key={s.id} onClick={() => handleSuggestion(msg, s)} disabled={isMsgSelected || isTyping}
+                          className={`w-full text-left flex items-center gap-2 text-xs rounded-lg px-3 py-2 border transition-all cursor-pointer ${isMsgSelected ? 'opacity-40 border-border text-text-muted' : suggestionColors[s.type]}`}>
                           {suggestionIcons[s.type]}
                           <span>{t(s.text, s.textZh)}</span>
-                          {selectedSuggestion === s.id && <CheckCircle2 className="w-3 h-3 ml-auto" />}
                         </button>
                       ))}
                     </div>
@@ -139,7 +178,8 @@ export default function Chat() {
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
           {isTyping && (
             <div className="flex justify-start">
               <div className="bg-bg-card border border-border rounded-2xl px-4 py-3"><div className="flex items-center gap-2 text-xs text-accent-cyan"><Loader2 className="w-3.5 h-3.5 animate-spin" />{t('Agent thinking...', 'Agent思考中...')}</div></div>
@@ -152,9 +192,9 @@ export default function Chat() {
             <button className="p-2 text-text-muted hover:text-text-primary cursor-pointer"><Paperclip className="w-4 h-4" /></button>
             <button className="p-2 text-text-muted hover:text-text-primary cursor-pointer"><Image className="w-4 h-4" /></button>
             <div className="flex-1 bg-bg-primary rounded-xl border border-border px-4 py-2.5 text-sm text-text-muted cursor-pointer" onClick={advanceConversation}>
-              {visibleMsgs < conv.messages.length ? t('Click to continue...', '点击继续对话...') : t('Conversation complete.', '对话结束。')}
+              {t('Select a suggested action above to continue...', '请选择上方建议操作继续对话...')}
             </div>
-            <button onClick={advanceConversation} disabled={visibleMsgs >= conv.messages.length || isTyping}
+            <button onClick={advanceConversation} disabled={isTyping}
               className="p-2.5 bg-accent-cyan text-bg-primary rounded-xl hover:bg-accent-cyan/80 disabled:opacity-30 cursor-pointer"><Send className="w-4 h-4" /></button>
           </div>
         </div>
@@ -168,7 +208,7 @@ export default function Chat() {
         </div>
         <div className="flex-1 overflow-auto p-3 space-y-2">
           {(() => {
-            const steps = currentThinkingMsg?.thinkingSteps?.slice(0, thinkingIdx + 1) || messages.filter(m => m.role === 'assistant').pop()?.thinkingSteps || [];
+            const steps = currentThinkingMsg?.thinkingSteps?.slice(0, thinkingIdx + 1) || displayedMessages.filter(m => m.role === 'assistant').pop()?.thinkingSteps || [];
             return steps.length > 0 ? steps.map((step, i) => (
               <div key={i} className={`border rounded-lg p-2.5 transition-all duration-300 ${phaseColors[step.phase]} ${isTyping && i === thinkingIdx ? 'ring-1 ring-accent-cyan/50' : ''}`}>
                 <div className="flex items-center gap-2 mb-1">

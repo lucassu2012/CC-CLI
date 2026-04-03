@@ -15,33 +15,36 @@ const statusColors: Record<string, string> = {
   deprecated: 'bg-bg-tertiary text-text-muted border-border',
 };
 
-const agentDots: Record<string, string> = {
-  OpsAgent: '#ef4444', OptimizationAgent: '#3b82f6', ExperienceAgent: '#8b5cf6',
-  PlanningAgent: '#f59e0b', MarketAgent: '#10b981', NetworkAgent: '#06b6d4', InfraAgent: '#f97316',
+
+const SKILL_DOMAINS = [
+  { key: 'all' as const, label: 'All', labelZh: '全部', color: 'text-accent-cyan' },
+  { key: 'planning' as const, label: 'Planning', labelZh: '规划', color: 'text-[#f59e0b]' },
+  { key: 'optimization' as const, label: 'Optimization', labelZh: '优化', color: 'text-[#3b82f6]' },
+  { key: 'experience' as const, label: 'Experience', labelZh: '体验', color: 'text-[#8b5cf6]' },
+  { key: 'ops' as const, label: 'O&M', labelZh: '运维', color: 'text-[#ef4444]' },
+  { key: 'marketing' as const, label: 'Marketing', labelZh: '运营', color: 'text-[#10b981]' },
+];
+
+const DOMAIN_COLORS: Record<string, string> = {
+  planning: '#f59e0b', optimization: '#3b82f6', experience: '#8b5cf6', ops: '#ef4444', marketing: '#10b981',
 };
 
-/* ─── Skill Card ─── */
+/* ─── Compact Skill Card (grid layout) ─── */
 function SkillCard({ skill, selected, onClick }: { skill: Skill; selected: boolean; onClick: () => void }) {
   const { t } = useText();
+  const domainColor = DOMAIN_COLORS[skill.domain] || '#06b6d4';
   return (
     <button onClick={onClick}
-      className={`min-w-[220px] text-left bg-bg-card rounded-xl border p-4 transition-all cursor-pointer shrink-0 ${selected ? 'border-accent-cyan shadow-lg shadow-accent-cyan/10' : 'border-border hover:border-accent-cyan/30'}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <Zap className="w-4 h-4 text-accent-cyan" />
-        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusColors[skill.status]}`}>{skill.status}</span>
+      className={`text-left bg-bg-card rounded-lg border p-3 transition-all cursor-pointer ${selected ? 'border-accent-cyan shadow-lg shadow-accent-cyan/10' : 'border-border hover:border-accent-cyan/30'}`}>
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: domainColor }} />
+        <h4 className="text-xs font-medium text-text-primary truncate">{t(skill.name, skill.nameZh)}</h4>
+        <span className={`text-[9px] px-1 py-0 rounded border ml-auto shrink-0 ${statusColors[skill.status]}`}>{skill.status}</span>
       </div>
-      <h4 className="text-sm font-medium text-text-primary mb-1">{t(skill.name, skill.nameZh)}</h4>
-      <p className="text-xs text-text-muted line-clamp-2 mb-2">{t(skill.description, skill.descriptionZh)}</p>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          {skill.applicableAgents.map(a => (
-            <div key={a} className="w-2 h-2 rounded-full" style={{ backgroundColor: agentDots[a] || '#6b7280' }} title={a} />
-          ))}
-        </div>
-        <div className="flex items-center gap-2 text-[10px] text-text-muted">
-          <span>{skill.sourceKnowledgeIds.length} {t('sources', '来源')}</span>
-          <span>{skill.usageCount} {t('uses', '次使用')}</span>
-        </div>
+      <p className="text-[10px] text-text-muted line-clamp-1 mb-1.5">{t(skill.description, skill.descriptionZh)}</p>
+      <div className="flex items-center gap-2 text-[9px] text-text-muted">
+        <span>{skill.usageCount}{t(' uses', '次')}</span>
+        <span className="font-mono">{(skill.confidence * 100).toFixed(0)}%</span>
       </div>
     </button>
   );
@@ -109,40 +112,39 @@ function SkillDetail({ skill, onClose }: { skill: Skill; onClose: () => void }) 
 }
 
 const NEW_GENERATED_SKILL: Skill = {
-  id: 'SK-009',
-  name: 'DDoS Rapid Containment',
-  nameZh: 'DDoS快速封堵',
-  description: 'Auto-generated skill combining DDoS mitigation playbook patterns with firmware rollback safeguards to contain volumetric attacks while protecting device stability.',
-  descriptionZh: '自动生成的技能，结合DDoS缓解手册模式与固件回滚保障措施，在保护设备稳定性的同时快速封堵容量型攻击。',
-  sourceKnowledgeIds: ['KB-002', 'KB-008'],
+  id: 'SK-011',
+  name: 'Cross-Domain Experience-Driven Optimization',
+  nameZh: '跨域体验驱动优化',
+  domain: 'optimization',
+  description: 'Auto-generated skill that combines proactive complaint monitoring with real-time parameter optimization, preemptively optimizing cells where user experience trends downward.',
+  descriptionZh: '自动生成的技能，结合投诉主动监控与实时参数优化，在用户体验下降趋势区域预先优化小区参数。',
+  sourceKnowledgeIds: ['KB-004', 'KB-008'],
   triggerConditions: [
-    'Inbound traffic volume exceeds 10x baseline on edge interfaces',
-    'DNS query rate > 500k/s from a single source subnet',
-    'BGP next-hop reachability alarm triggered simultaneously',
+    'User experience score declining trend detected across 5+ cells',
+    'Parameter conflict alert between optimization tasks',
+    'Complaint rate rising in specific geographic cluster',
   ],
   triggerConditionsZh: [
-    '边缘接口入向流量超过基线10倍',
-    '单一源子网DNS查询速率超过50万/秒',
-    'BGP下一跳可达性告警同时触发',
+    '检测到5+小区用户体验评分下降趋势',
+    '优化任务间参数冲突告警',
+    '特定地理集群投诉率上升',
   ],
   actions: [
-    'Activate upstream traffic scrubbing centre within 60 seconds',
-    'Apply rate-limiting ACLs on all edge router interfaces',
-    'Enable DNS Response Rate Limiting (RRL) cluster-wide',
-    'Blackhole top-10 attacking source subnets',
-    'Notify upstream transit providers via NOC hotline',
-    'Verify no firmware update is in-flight; defer if active',
+    'Correlate experience scores with network parameter changes',
+    'Identify conflicting optimization task parameters',
+    'Apply unified multi-objective optimization',
+    'Trigger proactive user care for impacted users',
+    'Monitor post-optimization stability for 24 hours',
   ],
   actionsZh: [
-    '60秒内激活上游流量清洗中心',
-    '在所有边缘路由器接口应用速率限制ACL',
-    '全集群启用DNS响应速率限制（RRL）',
-    '黑洞化Top-10攻击源子网',
-    '通过NOC热线通知上游过境供应商',
-    '确认无固件升级正在进行，若有则延迟',
+    '关联体验评分与网络参数变更',
+    '识别冲突的优化任务参数',
+    '应用统一多目标优化',
+    '对受影响用户触发主动关怀',
+    '监控优化后24小时稳定性',
   ],
-  applicableAgents: ['NetworkAgent', 'NOCAgent', 'AutomationAgent'],
-  confidence: 0.82,
+  applicableAgents: ['OptimizationAgent', 'ExperienceAgent'],
+  confidence: 0.85,
   usageCount: 0,
   lastUsed: '—',
   status: 'draft',
@@ -153,7 +155,7 @@ function GenerateSkill({ onDone }: { onDone: (skill: Skill) => void }) {
   const { t } = useText();
   const [step, setStep] = useState(0);
   const STEPS = [
-    { label: t('Scanning knowledge entries (KB-002, KB-008)...', '扫描知识条目 (KB-002, KB-008)...'), dur: 1200 },
+    { label: t('Scanning knowledge entries (KB-004, KB-008)...', '扫描知识条目 (KB-004, KB-008)...'), dur: 1200 },
     { label: t('Analyzing patterns & correlations...', '分析模式与关联关系...'), dur: 1500 },
     { label: t('Extracting trigger conditions...', '提取触发条件...'), dur: 1000 },
     { label: t('Generating action sequence...', '生成动作序列...'), dur: 1200 },
@@ -176,7 +178,7 @@ function GenerateSkill({ onDone }: { onDone: (skill: Skill) => void }) {
         <h3 className="text-sm font-semibold text-text-primary">{t('Auto-Generating Skill from Knowledge Base', '从知识库自动生成Skill')}</h3>
       </div>
       <p className="text-xs text-text-muted mb-3">
-        {t('Analysing: KB-002 (DDoS Mitigation Playbook) + KB-008 (Firmware Rollback Procedure)', '分析: KB-002 (DDoS缓解手册) + KB-008 (固件回滚流程)')}
+        {t('Analysing: KB-004 (Parameter Conflict Resolution) + KB-008 (Complaint Prevention)', '分析: KB-004 (参数冲突消解) + KB-008 (投诉主动预防)')}
       </p>
       <div className="space-y-2">
         {STEPS.map((s, i) => (
@@ -191,7 +193,7 @@ function GenerateSkill({ onDone }: { onDone: (skill: Skill) => void }) {
       {step === STEPS.length - 1 && (
         <div className="mt-3 p-3 bg-status-green/10 border border-status-green/30 rounded-lg">
           <p className="text-xs text-status-green font-medium">
-            {t('New skill "DDoS Rapid Containment" (SK-009) created as draft', '新Skill "DDoS快速封堵"（SK-009）已创建为草稿')}
+            {t('New skill "Cross-Domain Experience-Driven Optimization" (SK-011) created as draft', '新Skill "跨域体验驱动优化"（SK-011）已创建为草稿')}
           </p>
         </div>
       )}
@@ -277,6 +279,9 @@ export default function Knowledge() {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [generating, setGenerating] = useState(false);
   const [skills, setSkills] = useState<Skill[]>(generatedSkills);
+  const [skillDomain, setSkillDomain] = useState<string>('all');
+
+  const filteredSkills = skillDomain === 'all' ? skills : skills.filter(s => s.domain === skillDomain);
 
   const filtered = knowledgeEntries.filter(e => {
     const matchSearch = search === '' || e.title.toLowerCase().includes(search.toLowerCase()) || e.titleZh.includes(search) || e.tags.some(tag => tag.includes(search.toLowerCase()));
@@ -301,14 +306,22 @@ export default function Knowledge() {
 
       {/* ── SECTION 1: Skill Gallery ── */}
       <div className="mb-5">
-        <h2 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
+        <div className="flex items-center gap-3 mb-3">
           <Zap className="w-4 h-4 text-accent-cyan" />
-          {t('Skill Gallery', 'Skill库')}
+          <h2 className="text-sm font-semibold text-text-primary">{t('Skill Gallery', 'Skill库')}</h2>
           <span className="text-xs bg-bg-tertiary text-text-muted px-1.5 py-0.5 rounded-full">{skills.length}</span>
-          <span className="text-xs text-text-muted font-normal">— {t('reusable skills auto-derived from knowledge', '从知识自动提炼的可复用技能')}</span>
-        </h2>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {skills.map(skill => (
+          <div className="flex items-center gap-1 ml-auto">
+            {SKILL_DOMAINS.map(d => (
+              <button key={d.key} onClick={() => setSkillDomain(d.key)}
+                className={`px-2.5 py-1 rounded-md text-[11px] transition-colors cursor-pointer ${skillDomain === d.key ? `bg-bg-card border border-border ${d.color} font-medium` : 'text-text-muted hover:text-text-secondary'}`}>
+                {t(d.label, d.labelZh)}
+                {d.key !== 'all' && <span className="ml-1 text-[9px] opacity-60">{skills.filter(s => s.domain === d.key).length}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-5 gap-2">
+          {filteredSkills.map(skill => (
             <SkillCard key={skill.id} skill={skill} selected={selectedSkill?.id === skill.id}
               onClick={() => { setSelectedSkill(prev => prev?.id === skill.id ? null : skill); setSelected(null); setGenerating(false); }} />
           ))}
