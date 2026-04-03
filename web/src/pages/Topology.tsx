@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
-import { Radio, Server, Database, Wifi, X, Activity, Users, BarChart3, Wrench, Zap, AlertTriangle, CheckCircle2, Play, RotateCcw } from 'lucide-react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Radio, Server, Database, Wifi, X, Activity, Users, BarChart3, Wrench, Zap, AlertTriangle, CheckCircle2, Play, RotateCcw, Search, Filter, Layers, Eye, EyeOff, ZoomIn, ZoomOut, Maximize2, Terminal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { topoNodes, topoLinks, type TopoNode } from '../data/topology';
 import StatusBadge from '../components/StatusBadge';
@@ -11,6 +11,14 @@ const TABS: { id: TabId; icon: typeof Radio; label: string; labelZh: string }[] 
   { id: 'capacity', icon: BarChart3, label: 'Capacity Twin', labelZh: '容量规划孪生' },
   { id: 'ops', icon: Wrench, label: 'O&M Twin', labelZh: '智能运维孪生' },
 ];
+
+const NODE_LAYERS = ['data-center', 'core', 'aggregation', 'bts'] as const;
+const LAYER_LABELS: Record<string, { en: string; zh: string }> = {
+  'data-center': { en: 'Data Center', zh: '数据中心' },
+  'core': { en: 'Core', zh: '核心层' },
+  'aggregation': { en: 'Aggregation', zh: '汇聚层' },
+  'bts': { en: 'BTS', zh: '基站' },
+};
 
 const nodeIcons: Record<string, typeof Server> = {
   'core': Server,
@@ -105,6 +113,44 @@ function NodeDetail({ node, onClose }: { node: TopoNode; onClose: () => void }) 
             <p className="text-xs text-text-primary">{node.details.subscribers.toLocaleString()}</p>
           </div>
         )}
+      </div>
+
+      {/* Relationships (Azure DT Explorer style) */}
+      <div className="mt-3 border-t border-border pt-3">
+        <h4 className="text-[10px] font-medium text-text-secondary uppercase tracking-wider mb-2">{t('Relationships', '关联关系')}</h4>
+        <div className="space-y-1">
+          {topoLinks.filter(l => l.source === node.id || l.target === node.id).map(l => {
+            const peer = topoNodes.find(n => n.id === (l.source === node.id ? l.target : l.source));
+            if (!peer) return null;
+            const isSource = l.source === node.id;
+            return (
+              <div key={l.id} className="flex items-center gap-1.5 text-[10px] bg-bg-primary rounded px-2 py-1">
+                <span className={`w-1.5 h-1.5 rounded-full ${l.status === 'normal' ? 'bg-status-green' : l.status === 'degraded' ? 'bg-status-yellow' : 'bg-status-red'}`} />
+                <span className="text-text-muted">{isSource ? '→' : '←'}</span>
+                <span className="text-text-primary font-medium">{peer.name}</span>
+                <span className="text-text-muted ml-auto">{l.status}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Live Telemetry (Azure DT style property inspector) */}
+      <div className="mt-3 border-t border-border pt-3">
+        <h4 className="text-[10px] font-medium text-text-secondary uppercase tracking-wider mb-2">{t('Live Telemetry', '实时遥测')}</h4>
+        <div className="space-y-1 text-[10px]">
+          {[
+            { key: 'throughput', label: t('Throughput','吞吐量'), value: `${(Math.random() * 50 + 20).toFixed(1)} Gbps` },
+            { key: 'latency', label: t('Latency','时延'), value: `${(Math.random() * 5 + 0.5).toFixed(1)} ms` },
+            { key: 'packetLoss', label: t('Packet Loss','丢包率'), value: `${(Math.random() * 0.5).toFixed(3)}%` },
+            { key: 'temperature', label: t('Temperature','温度'), value: `${(Math.random() * 20 + 30).toFixed(1)}°C` },
+          ].map(t => (
+            <div key={t.key} className="flex items-center justify-between bg-bg-primary rounded px-2 py-1">
+              <span className="text-text-muted">{t.label}</span>
+              <span className="text-text-primary font-mono">{t.value}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -334,16 +380,69 @@ function OpsTwin({ t }: { t: (en: string, zh: string) => string }) {
   );
 }
 
+/* ─── Simulation Log Entry ─── */
+interface LogEntry { time: string; level: 'info' | 'warn' | 'error'; msg: string; }
+const INITIAL_LOGS: LogEntry[] = [
+  { time: '01:04:32', level: 'info', msg: '[Twin] 数字孪生引擎初始化完成' },
+  { time: '01:04:33', level: 'info', msg: '[Sync] 同步网络拓扑数据: 15节点, 18链路' },
+  { time: '01:04:35', level: 'warn', msg: '[Alert] BTS-GD-005 PRB利用率 92% 超过阈值' },
+  { time: '01:04:36', level: 'info', msg: '[Sim] 启动容量预测仿真 (正常增长模式)' },
+  { time: '01:04:38', level: 'error', msg: '[Fault] Link GZ-SZ-03 BER告警: 1.2E-6' },
+  { time: '01:04:40', level: 'info', msg: '[TAOR] Think: 分析BER上升根因 → Act: 查询历史数据' },
+  { time: '01:04:42', level: 'info', msg: '[Recovery] 自动切换至备份路径, 业务无损' },
+];
+
 /* ─── Main Component ─── */
 export default function Topology() {
   const { t } = useText();
   const [activeTab, setActiveTab] = useState<TabId>('network');
   const [selectedNode, setSelectedNode] = useState<TopoNode | null>(null);
   const [simRunning, setSimRunning] = useState(true);
+  // Graph Explorer enhancements
+  const [searchQuery, setSearchQuery] = useState('');
+  const [visibleLayers, setVisibleLayers] = useState<Set<string>>(new Set(NODE_LAYERS));
+  const [zoom, setZoom] = useState(1);
+  const [showOverlay, setShowOverlay] = useState(true);
+  const [consoleOpen, setConsoleOpen] = useState(true);
+  const [logs, setLogs] = useState<LogEntry[]>(INITIAL_LOGS);
+  const svgContainerRef = useRef<HTMLDivElement>(null);
 
   const handleNodeClick = useCallback((node: TopoNode) => {
     setSelectedNode((prev) => (prev?.id === node.id ? null : node));
   }, []);
+
+  const toggleLayer = useCallback((layer: string) => {
+    setVisibleLayers(prev => {
+      const next = new Set(prev);
+      if (next.has(layer)) next.delete(layer); else next.add(layer);
+      return next;
+    });
+  }, []);
+
+  // Filtered nodes/links based on search and layer visibility
+  const filteredNodes = topoNodes.filter(n =>
+    visibleLayers.has(n.type) &&
+    (searchQuery === '' || n.name.toLowerCase().includes(searchQuery.toLowerCase()) || n.nameZh?.includes(searchQuery))
+  );
+  const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
+  const filteredLinks = topoLinks.filter(l => filteredNodeIds.has(l.source) && filteredNodeIds.has(l.target));
+
+  // Live log generation
+  useEffect(() => {
+    if (!simRunning) return;
+    const msgs = [
+      '[Telemetry] 更新15节点实时遥测数据', '[Sim] 体验评分计算完成: 平均87.3',
+      '[Twin] 拓扑状态同步: 13/15节点正常', '[TAOR] Observe: KPI达标率 96.7%',
+      '[Predict] BTS-GD-007电池寿命预测: 剩余89天',
+    ];
+    const timer = setInterval(() => {
+      const now = new Date();
+      const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+      const msg = msgs[Math.floor(Math.random() * msgs.length)];
+      setLogs(prev => [...prev.slice(-20), { time, level: Math.random() > 0.85 ? 'warn' : 'info', msg }]);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [simRunning]);
 
   const svgWidth = 920;
   const svgHeight = 500;
@@ -383,34 +482,106 @@ export default function Topology() {
       {activeTab === 'ops' && <OpsTwin t={t} />}
 
       {activeTab === 'network' && (
-      <div className="grid grid-cols-[1fr_300px] gap-5">
+      <div className="space-y-3">
+        {/* Query bar (Azure DT Explorer style) */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 flex items-center gap-2 bg-bg-card rounded-lg border border-border px-3 py-2 focus-within:border-accent-cyan/60 transition-colors">
+            <Search className="w-4 h-4 text-text-muted" />
+            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+              placeholder={t('Search twins by name...', '按名称搜索孪生实例...')}
+              className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-muted outline-none" />
+          </div>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setShowOverlay(!showOverlay)}
+              className={`p-2 rounded-lg border text-xs cursor-pointer transition-all ${showOverlay ? 'bg-accent-cyan/10 border-accent-cyan/40 text-accent-cyan' : 'bg-bg-card border-border text-text-muted'}`}
+              title={t('Toggle KPI Overlay', '切换KPI叠加')}>
+              {showOverlay ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </button>
+          </div>
+          <div className="flex items-center gap-3 text-xs text-text-muted">
+            <span>{filteredNodes.length}/{topoNodes.length} {t('twins','孪生实例')}</span>
+            <span>{filteredLinks.length} {t('relationships','关系')}</span>
+          </div>
+        </div>
+
         {/* Stats bar */}
-        <div className="col-span-2 grid grid-cols-4 gap-3">
-          {[{ l: t('Nodes','节点'), v: topoNodes.length }, { l: t('Active Links','活跃链路'), v: topoLinks.filter(l => l.status === 'normal').length }, { l: t('Avg Latency','平均时延'), v: '2.3ms' }, { l: t('Total Throughput','总吞吐'), v: '48.7Tbps' }].map((s, i) => (
+        <div className="grid grid-cols-5 gap-3">
+          {[
+            { l: t('Twins','孪生实例'), v: filteredNodes.length, c: 'text-accent-cyan' },
+            { l: t('Relationships','关系'), v: filteredLinks.length, c: 'text-text-primary' },
+            { l: t('Active','活跃'), v: filteredLinks.filter(l => l.status === 'normal').length, c: 'text-status-green' },
+            { l: t('Avg Latency','平均时延'), v: '2.3ms', c: 'text-text-primary' },
+            { l: t('Throughput','总吞吐'), v: '48.7Tbps', c: 'text-text-primary' },
+          ].map((s, i) => (
             <div key={i} className="bg-bg-card rounded-lg border border-border px-3 py-2 flex items-center justify-between">
               <span className="text-xs text-text-muted">{s.l}</span>
-              <span className="text-sm font-semibold text-text-primary">{s.v}</span>
+              <span className={`text-sm font-semibold ${s.c}`}>{s.v}</span>
             </div>
           ))}
         </div>
-        {/* SVG Topology */}
-        <div className="bg-bg-card rounded-xl border border-border p-4 overflow-hidden">
+
+        <div className="grid grid-cols-[auto_1fr_300px] gap-3">
+        {/* Layer filter panel (Azure DT Explorer model viewer) */}
+        <div className="bg-bg-card rounded-xl border border-border p-3 w-40">
+          <h4 className="text-[10px] font-medium text-text-secondary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <Layers className="w-3 h-3" />{t('Layers', '层级')}
+          </h4>
+          {NODE_LAYERS.map(layer => {
+            const count = topoNodes.filter(n => n.type === layer).length;
+            const visible = visibleLayers.has(layer);
+            return (
+              <button key={layer} onClick={() => toggleLayer(layer)}
+                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs mb-1 transition-all cursor-pointer ${visible ? 'bg-bg-primary text-text-primary' : 'text-text-muted opacity-50'}`}>
+                {visible ? <Eye className="w-3 h-3 text-accent-cyan" /> : <EyeOff className="w-3 h-3" />}
+                <span className="flex-1 text-left">{t(LAYER_LABELS[layer].en, LAYER_LABELS[layer].zh)}</span>
+                <span className="text-[10px] text-text-muted">{count}</span>
+              </button>
+            );
+          })}
+          <div className="mt-2 pt-2 border-t border-border">
+            <h4 className="text-[10px] font-medium text-text-secondary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Filter className="w-3 h-3" />{t('Status','状态')}
+            </h4>
+            {['normal','warning','fault'].map(s => {
+              const count = filteredNodes.filter(n => n.status === s).length;
+              return (
+                <div key={s} className="flex items-center gap-2 px-2 py-1 text-xs">
+                  <span className={`w-2 h-2 rounded-full ${s === 'normal' ? 'bg-status-green' : s === 'warning' ? 'bg-status-yellow' : 'bg-status-red'}`} />
+                  <span className="text-text-secondary capitalize">{s}</span>
+                  <span className="text-text-muted ml-auto">{count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* SVG Graph Viewer (enhanced) */}
+        <div ref={svgContainerRef} className="bg-bg-card rounded-xl border border-border p-2 overflow-hidden relative">
+          {/* Zoom controls */}
+          <div className="absolute top-3 right-3 z-10 flex flex-col gap-1">
+            <button onClick={() => setZoom(z => Math.min(2, z + 0.2))} className="w-7 h-7 bg-bg-primary/80 backdrop-blur border border-border rounded flex items-center justify-center text-text-muted hover:text-text-primary cursor-pointer"><ZoomIn className="w-3.5 h-3.5" /></button>
+            <button onClick={() => setZoom(z => Math.max(0.4, z - 0.2))} className="w-7 h-7 bg-bg-primary/80 backdrop-blur border border-border rounded flex items-center justify-center text-text-muted hover:text-text-primary cursor-pointer"><ZoomOut className="w-3.5 h-3.5" /></button>
+            <button onClick={() => setZoom(1)} className="w-7 h-7 bg-bg-primary/80 backdrop-blur border border-border rounded flex items-center justify-center text-text-muted hover:text-text-primary cursor-pointer"><Maximize2 className="w-3.5 h-3.5" /></button>
+          </div>
+          <div className="absolute top-3 left-3 z-10 text-[10px] text-text-muted bg-bg-primary/60 backdrop-blur rounded px-2 py-0.5">{(zoom * 100).toFixed(0)}%</div>
           <svg
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-            className="w-full h-auto"
+            className="w-full h-auto transition-transform"
+            style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
           >
             {/* Grid background */}
             <defs>
               <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
                 <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.5" />
               </pattern>
+              <filter id="nodeShadow"><feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3" /></filter>
             </defs>
             <rect width={svgWidth} height={svgHeight} fill="url(#grid)" />
 
             {/* Links */}
-            {topoLinks.map((link) => {
-              const src = topoNodes.find((n) => n.id === link.source);
-              const tgt = topoNodes.find((n) => n.id === link.target);
+            {filteredLinks.map((link) => {
+              const src = filteredNodes.find((n) => n.id === link.source);
+              const tgt = filteredNodes.find((n) => n.id === link.target);
               if (!src || !tgt) return null;
               return (
                 <g key={link.id}>
@@ -438,7 +609,7 @@ export default function Topology() {
             })}
 
             {/* Nodes */}
-            {topoNodes.map((node) => {
+            {filteredNodes.map((node) => {
               const size = nodeSize[node.type];
               const isSelected = selectedNode?.id === node.id;
 
@@ -513,52 +684,85 @@ export default function Topology() {
                   >
                     {node.name}
                   </text>
+                  {/* KPI overlay (Azure DT telemetry style) */}
+                  {showOverlay && (
+                    <g>
+                      <rect x={node.x + size - 2} y={node.y - size - 4} width={38} height={14} rx={3}
+                        fill="rgba(0,0,0,0.7)" stroke={node.details.load > 80 ? '#ef4444' : '#334155'} strokeWidth={0.5} />
+                      <text x={node.x + size + 17} y={node.y - size + 6} textAnchor="middle" fill={node.details.load > 80 ? '#fca5a5' : '#94a3b8'} fontSize="8" fontFamily="monospace">
+                        {node.details.load}%
+                      </text>
+                    </g>
+                  )}
                 </g>
               );
             })}
           </svg>
         </div>
 
-        {/* Detail Panel */}
-        <div>
+        {/* Property Inspector (Azure DT Explorer style) */}
+        <div className="overflow-auto max-h-[500px]">
           {selectedNode ? (
             <NodeDetail node={selectedNode} onClose={() => setSelectedNode(null)} />
           ) : (
-            <div className="bg-bg-card rounded-xl border border-border flex items-center justify-center h-64">
+            <div className="bg-bg-card rounded-xl border border-border flex items-center justify-center h-48">
               <div className="text-center">
-                <Radio className="w-8 h-8 text-text-muted mx-auto mb-2" />
-                <p className="text-sm text-text-muted">{t('Click a node to view details', '点击节点查看详情')}</p>
+                <Radio className="w-6 h-6 text-text-muted mx-auto mb-1.5" />
+                <p className="text-xs text-text-muted">{t('Select a twin instance', '选择孪生实例')}</p>
               </div>
             </div>
           )}
 
           {/* Simulation Results */}
-          <div className="mt-4 bg-bg-card rounded-xl border border-border p-4">
-            <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-3">
+          <div className="mt-3 bg-bg-card rounded-xl border border-border p-3">
+            <h3 className="text-[10px] font-medium text-text-secondary uppercase tracking-wider mb-2">
               {t('Simulation Results', '仿真结果')}
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-text-muted">{t('Network Resilience Score', '网络韧性评分')}</span>
+                <span className="text-text-muted">{t('Resilience Score', '韧性评分')}</span>
                 <span className="text-text-primary font-medium">87/100</span>
               </div>
-              <div className="h-2 bg-bg-tertiary rounded-full overflow-hidden">
+              <div className="h-1.5 bg-bg-tertiary rounded-full overflow-hidden">
                 <div className="h-full bg-accent-cyan rounded-full" style={{ width: '87%' }} />
               </div>
-              <div className="flex items-center justify-between text-xs mt-3">
-                <span className="text-text-muted">{t('Single Point of Failure', '单点故障')}</span>
-                <span className="text-status-yellow font-medium">2 {t('detected', '已检测')}</span>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-text-muted">{t('SPOF', '单点故障')}</span>
+                <span className="text-status-yellow font-medium">2</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-text-muted">{t('Redundancy Coverage', '冗余覆盖率')}</span>
+                <span className="text-text-muted">{t('Redundancy', '冗余率')}</span>
                 <span className="text-status-green font-medium">94.2%</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-text-muted">{t('Failover Time (avg)', '故障切换时间(平均)')}</span>
+                <span className="text-text-muted">{t('Failover', '故障切换')}</span>
                 <span className="text-text-primary font-medium">1.8s</span>
               </div>
             </div>
           </div>
+        </div>
+        </div>
+
+        {/* Console/Output panel (Azure DT Explorer style) */}
+        <div className="bg-bg-card rounded-xl border border-border overflow-hidden">
+          <button onClick={() => setConsoleOpen(!consoleOpen)}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs cursor-pointer hover:bg-bg-primary transition-colors">
+            <span className="flex items-center gap-1.5 text-text-secondary font-medium">
+              <Terminal className="w-3.5 h-3.5" />{t('Simulation Console', '仿真控制台')}
+              <span className="text-text-muted">({logs.length})</span>
+            </span>
+            {consoleOpen ? <ChevronDown className="w-3.5 h-3.5 text-text-muted" /> : <ChevronUp className="w-3.5 h-3.5 text-text-muted" />}
+          </button>
+          {consoleOpen && (
+            <div className="border-t border-border px-3 py-2 max-h-32 overflow-auto font-mono text-[10px] space-y-0.5">
+              {logs.map((log, i) => (
+                <div key={i} className={`flex gap-2 ${log.level === 'error' ? 'text-status-red' : log.level === 'warn' ? 'text-status-yellow' : 'text-text-muted'}`}>
+                  <span className="text-text-muted/60 shrink-0">{log.time}</span>
+                  <span>{log.msg}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       )}
