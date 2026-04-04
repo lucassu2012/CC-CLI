@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, XCircle,
   Clock, Loader2, Activity, X, ChevronRight, Zap, Radio, Plug, Users, ChevronDown,
+  Terminal, Database, Server, ArrowRightLeft, Shield, Wrench, RefreshCw, Play,
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { useText } from '../hooks/useText';
@@ -641,75 +642,104 @@ export default function Dashboard() {
   );
 }
 
-/* ─── System Architecture Modal ─── */
-const SYSTEM_ARCH: Record<string, {
+/* ─── System Architecture Data ─── */
+type McpTool = { name: string; desc: string; descEn: string; protocol: string; permission: string };
+type ArchLayer = { label: string; labelEn: string; components: string[] };
+type DataFlow = { from: string; to: string; protocol: string; rate: string; direction: 'inbound' | 'outbound' | 'bidirectional' };
+type SystemArch = {
   name: string; nameEn: string; color: string;
+  ioeLayer: ArchLayer; adapterLayer: ArchLayer; systemLayer: ArchLayer;
   protocols: { name: string; type: string; latency: string; mode: string }[];
-  dataFlows: { from: string; to: string; protocol: string; rate: string }[];
-  interfaces: { name: string; direction: string; desc: string; descEn: string }[];
-}> = {
+  dataFlows: DataFlow[];
+  mcpTools: McpTool[];
+};
+const SYSTEM_ARCH: Record<string, SystemArch> = {
   oss: {
     name: 'OSS平台', nameEn: 'OSS Platform', color: '#f97316',
+    ioeLayer: { label: 'IOE 智能运维层', labelEn: 'IOE Intelligent Ops Layer', components: ['Ops Agent', 'Optimization Agent', 'Alarm Correlator', 'Config Validator', 'Topology Engine'] },
+    adapterLayer: { label: 'OSS 适配层', labelEn: 'OSS Adapter Layer', components: ['CORBA/MTOSI Gateway', 'SNMP Collector', 'NETCONF Proxy', 'Kafka Connector', 'Mediation Engine'] },
+    systemLayer: { label: 'OSS 核心系统', labelEn: 'OSS Core Systems', components: ['Fault Mgmt (FM)', 'Performance Mgmt (PM)', 'Config Mgmt (CM)', 'Inventory/Topology', 'Service Activation'] },
     protocols: [
       { name: 'CORBA/MTOSI', type: 'Northbound', latency: '<50ms', mode: 'Real-time' },
-      { name: 'SNMP v2c/v3', type: 'Monitoring', latency: '<100ms', mode: 'Polling (30s)' },
+      { name: 'SNMP v2c/v3', type: 'Monitoring', latency: '<100ms', mode: 'Polling 30s' },
       { name: 'NETCONF/YANG', type: 'Config', latency: '<200ms', mode: 'On-demand' },
-      { name: 'Kafka', type: 'Streaming', latency: '<10ms', mode: 'Real-time stream' },
-      { name: 'REST API', type: 'Integration', latency: '<30ms', mode: 'Request/Response' },
+      { name: 'Kafka', type: 'Streaming', latency: '<10ms', mode: 'Real-time' },
+      { name: 'REST API', type: 'Integration', latency: '<30ms', mode: 'Req/Resp' },
     ],
     dataFlows: [
-      { from: 'OSS', to: 'IOE Data Lake', protocol: 'Kafka', rate: '12K msg/s' },
-      { from: 'IOE Agent', to: 'OSS', protocol: 'NETCONF', rate: '450 ops/min' },
-      { from: 'NE/BTS', to: 'OSS', protocol: 'SNMP', rate: '8K traps/min' },
-      { from: 'OSS', to: 'Alarm Engine', protocol: 'CORBA', rate: '2K events/min' },
+      { from: 'OSS FM', to: 'IOE Alarm Correlator', protocol: 'CORBA/Kafka', rate: '2K events/min', direction: 'inbound' },
+      { from: 'OSS PM', to: 'IOE Data Lake', protocol: 'Kafka', rate: '12K msg/s', direction: 'inbound' },
+      { from: 'IOE Config Validator', to: 'OSS CM', protocol: 'NETCONF', rate: '450 ops/min', direction: 'outbound' },
+      { from: 'NE/BTS', to: 'OSS Collector', protocol: 'SNMP', rate: '8K traps/min', direction: 'inbound' },
+      { from: 'IOE Topology Engine', to: 'OSS Inventory', protocol: 'REST', rate: '60 syncs/hr', direction: 'bidirectional' },
     ],
-    interfaces: [
-      { name: 'PM Interface', direction: 'IN', desc: '性能指标采集（15min粒度）', descEn: 'Performance metrics collection (15min granularity)' },
-      { name: 'FM Interface', direction: 'IN', desc: '故障告警实时接入', descEn: 'Real-time fault alarm ingestion' },
-      { name: 'CM Interface', direction: 'OUT', desc: '配置下发与参数变更', descEn: 'Configuration deployment & parameter changes' },
-      { name: 'Topology Interface', direction: 'IN', desc: '网络拓扑同步', descEn: 'Network topology synchronization' },
+    mcpTools: [
+      { name: 'oss_get_alarms', desc: '查询活动告警列表（按严重级别/区域/网元过滤）', descEn: 'Query active alarms (filter by severity/region/NE)', protocol: 'MCP → CORBA', permission: 'L1' },
+      { name: 'oss_acknowledge_alarm', desc: '确认告警并标记处理状态', descEn: 'Acknowledge alarm and mark handling status', protocol: 'MCP → REST', permission: 'L2' },
+      { name: 'oss_get_pm_counters', desc: '获取网元性能计数器（15min/1hr粒度）', descEn: 'Get NE performance counters (15min/1hr granularity)', protocol: 'MCP → Kafka', permission: 'L1' },
+      { name: 'oss_push_config', desc: '向网元下发配置变更（带回滚方案）', descEn: 'Push config change to NE (with rollback plan)', protocol: 'MCP → NETCONF', permission: 'L3' },
+      { name: 'oss_get_topology', desc: '获取网络拓扑及资源清单', descEn: 'Get network topology and resource inventory', protocol: 'MCP → REST', permission: 'L1' },
+      { name: 'oss_create_maintenance_window', desc: '创建维护窗口并冻结告警', descEn: 'Create maintenance window and freeze alarms', protocol: 'MCP → REST', permission: 'L3' },
+      { name: 'oss_run_diagnostic', desc: '对指定网元执行诊断测试', descEn: 'Run diagnostic test on specified NE', protocol: 'MCP → SNMP', permission: 'L2' },
     ],
   },
   ticket: {
     name: '工单系统', nameEn: 'Ticket/ITSM', color: '#8b5cf6',
+    ioeLayer: { label: 'IOE 流程编排层', labelEn: 'IOE Process Orchestration Layer', components: ['Ops Agent', 'SLA Monitor', 'Escalation Engine', 'Workload Balancer', 'Resolution KB'] },
+    adapterLayer: { label: 'ITSM 适配层', labelEn: 'ITSM Adapter Layer', components: ['REST Gateway', 'gRPC Bridge', 'Kafka Event Bus', 'DB Connector (PostgreSQL)', 'Webhook Handler'] },
+    systemLayer: { label: 'ITSM 核心', labelEn: 'ITSM Core', components: ['Incident Mgmt', 'Problem Mgmt', 'Change Mgmt', 'Service Catalog', 'CMDB'] },
     protocols: [
-      { name: 'REST API', type: 'CRUD', latency: '<20ms', mode: 'Request/Response' },
-      { name: 'gRPC', type: 'Streaming', latency: '<5ms', mode: 'Bidirectional stream' },
+      { name: 'REST API', type: 'CRUD', latency: '<20ms', mode: 'Req/Resp' },
+      { name: 'gRPC', type: 'Streaming', latency: '<5ms', mode: 'Bidirectional' },
       { name: 'Kafka', type: 'Events', latency: '<10ms', mode: 'Event-driven' },
-      { name: 'Database', type: 'PostgreSQL', latency: '<3ms', mode: 'Direct query' },
+      { name: 'PostgreSQL', type: 'Database', latency: '<3ms', mode: 'Direct' },
     ],
     dataFlows: [
-      { from: 'IOE Agent', to: 'ITSM', protocol: 'REST', rate: '120 tickets/hr' },
-      { from: 'ITSM', to: 'IOE', protocol: 'Kafka', rate: '500 events/hr' },
-      { from: 'ITSM', to: 'Field Eng App', protocol: 'gRPC', rate: '2K msg/hr' },
+      { from: 'IOE Ops Agent', to: 'ITSM Incident', protocol: 'REST', rate: '120 tickets/hr', direction: 'outbound' },
+      { from: 'ITSM Events', to: 'IOE Event Bus', protocol: 'Kafka', rate: '500 events/hr', direction: 'inbound' },
+      { from: 'IOE Escalation', to: 'ITSM Change Mgmt', protocol: 'gRPC', rate: '80 changes/hr', direction: 'outbound' },
+      { from: 'ITSM CMDB', to: 'IOE Resolution KB', protocol: 'PostgreSQL', rate: '2K queries/hr', direction: 'inbound' },
     ],
-    interfaces: [
-      { name: 'Ticket CRUD', direction: 'OUT', desc: '工单创建/更新/关闭', descEn: 'Ticket create/update/close' },
-      { name: 'Status Webhook', direction: 'IN', desc: '工单状态变更回调', descEn: 'Ticket status change callback' },
-      { name: 'SLA Monitor', direction: 'IN', desc: 'SLA超时预警', descEn: 'SLA timeout early warning' },
+    mcpTools: [
+      { name: 'itsm_create_incident', desc: '创建故障工单（含优先级/影响范围/关联CI）', descEn: 'Create incident ticket (with priority/impact/related CI)', protocol: 'MCP → REST', permission: 'L2' },
+      { name: 'itsm_update_ticket', desc: '更新工单状态/备注/分配', descEn: 'Update ticket status/notes/assignment', protocol: 'MCP → REST', permission: 'L2' },
+      { name: 'itsm_query_tickets', desc: '按条件查询工单列表', descEn: 'Query tickets by conditions (status/assignee/SLA)', protocol: 'MCP → REST', permission: 'L1' },
+      { name: 'itsm_create_change', desc: '创建变更请求（含影响评估和审批链）', descEn: 'Create change request (with impact assessment & approval chain)', protocol: 'MCP → gRPC', permission: 'L3' },
+      { name: 'itsm_get_cmdb_ci', desc: '查询CMDB配置项及关联关系', descEn: 'Query CMDB CI and relationships', protocol: 'MCP → PostgreSQL', permission: 'L1' },
+      { name: 'itsm_escalate', desc: '升级工单到上级处理组', descEn: 'Escalate ticket to higher support group', protocol: 'MCP → REST', permission: 'L2' },
     ],
   },
   smartcare: {
     name: 'SmartCare', nameEn: 'Huawei SmartCare CEM', color: '#ec4899',
+    ioeLayer: { label: 'IOE 用户体验层', labelEn: 'IOE Customer Experience Layer', components: ['Experience Agent', 'QoE Analyzer', 'Churn Predictor', 'VIP Protector', 'Journey Mapper'] },
+    adapterLayer: { label: 'CEM 适配层', labelEn: 'CEM Adapter Layer', components: ['Northbound REST Client', 'Kafka XDR Consumer', 'Hive/Spark Connector', 'gRPC Stream Client', 'Data Normalizer'] },
+    systemLayer: { label: 'SmartCare 核心', labelEn: 'SmartCare Core', components: ['XDR Probe & Parser', 'KQI/KPI Engine', 'User Profiling', 'Network Insight', 'Service Quality Mgmt'] },
     protocols: [
-      { name: 'Northbound API', type: 'REST', latency: '<100ms', mode: 'Request/Response' },
-      { name: 'Kafka', type: 'XDR Stream', latency: '<500ms', mode: 'Near real-time' },
-      { name: 'Database', type: 'Hive/Spark', latency: '<5s', mode: 'Batch query' },
+      { name: 'Northbound API', type: 'REST', latency: '<100ms', mode: 'Req/Resp' },
+      { name: 'Kafka', type: 'XDR Stream', latency: '<500ms', mode: 'Near-RT' },
+      { name: 'Hive/Spark', type: 'Batch', latency: '<5s', mode: 'Batch' },
       { name: 'gRPC', type: 'Streaming', latency: '<10ms', mode: 'Bidirectional' },
     ],
     dataFlows: [
-      { from: 'SmartCare', to: 'IOE', protocol: 'Kafka', rate: '50K XDR/s' },
-      { from: 'IOE', to: 'SmartCare', protocol: 'REST', rate: '800 queries/hr' },
-      { from: 'SmartCare', to: 'User Profile DB', protocol: 'Hive', rate: 'Batch 4x/day' },
+      { from: 'SmartCare XDR', to: 'IOE QoE Analyzer', protocol: 'Kafka', rate: '50K XDR/s', direction: 'inbound' },
+      { from: 'IOE Experience Agent', to: 'SmartCare NBI', protocol: 'REST', rate: '800 queries/hr', direction: 'outbound' },
+      { from: 'SmartCare Profiling', to: 'IOE Churn Predictor', protocol: 'Hive', rate: 'Batch 4x/day', direction: 'inbound' },
+      { from: 'IOE VIP Protector', to: 'SmartCare SQM', protocol: 'gRPC', rate: '200 alerts/hr', direction: 'outbound' },
     ],
-    interfaces: [
-      { name: 'CEM Dashboard', direction: 'IN', desc: '用户体验指标聚合', descEn: 'User experience metrics aggregation' },
-      { name: 'XDR Feed', direction: 'IN', desc: '详单数据实时流', descEn: 'Call detail record real-time stream' },
-      { name: 'User Insight', direction: 'IN', desc: '用户画像与行为分析', descEn: 'User profiling & behavior analytics' },
+    mcpTools: [
+      { name: 'cem_get_user_qoe', desc: '查询用户实时QoE评分（语音/数据/视频）', descEn: 'Query user real-time QoE score (voice/data/video)', protocol: 'MCP → REST', permission: 'L1' },
+      { name: 'cem_get_cell_kqi', desc: '获取小区级KQI指标（覆盖/容量/质量）', descEn: 'Get cell-level KQI metrics (coverage/capacity/quality)', protocol: 'MCP → REST', permission: 'L1' },
+      { name: 'cem_query_xdr', desc: '查询用户详单记录（时间段/业务类型）', descEn: 'Query user XDR records (time range/service type)', protocol: 'MCP → Kafka', permission: 'L2' },
+      { name: 'cem_get_user_profile', desc: '获取用户360°画像（套餐/终端/行为）', descEn: 'Get user 360° profile (plan/device/behavior)', protocol: 'MCP → Hive', permission: 'L1' },
+      { name: 'cem_set_vip_protection', desc: '设置VIP用户体验保障策略', descEn: 'Set VIP user experience protection policy', protocol: 'MCP → gRPC', permission: 'L3' },
+      { name: 'cem_predict_churn', desc: '运行用户流失预测模型', descEn: 'Run user churn prediction model', protocol: 'MCP → Hive/Spark', permission: 'L2' },
     ],
   },
   autin: {
     name: 'AUTIN', nameEn: 'Huawei AUTIN ADN', color: '#06b6d4',
+    ioeLayer: { label: 'IOE 自智网络层', labelEn: 'IOE Autonomous Network Layer', components: ['Optimization Agent', 'Intent Translator', 'Closed-loop Controller', 'Telemetry Analyzer', 'RCA Engine'] },
+    adapterLayer: { label: 'ADN 适配层', labelEn: 'ADN Adapter Layer', components: ['Intent API Client', 'NETCONF Session Mgr', 'Kafka Telemetry Consumer', 'SNMP Manager', 'Model Translator'] },
+    systemLayer: { label: 'AUTIN 核心', labelEn: 'AUTIN Core', components: ['Intent Engine', 'Digital Twin', 'Auto-healing', 'Auto-optimization', 'Knowledge Graph'] },
     protocols: [
       { name: 'Intent API', type: 'REST/gRPC', latency: '<50ms', mode: 'Intent-driven' },
       { name: 'NETCONF', type: 'Config', latency: '<200ms', mode: 'Transaction' },
@@ -717,169 +747,291 @@ const SYSTEM_ARCH: Record<string, {
       { name: 'SNMP', type: 'Monitoring', latency: '<100ms', mode: 'Trap/Poll' },
     ],
     dataFlows: [
-      { from: 'IOE', to: 'AUTIN', protocol: 'Intent API', rate: '60 intents/hr' },
-      { from: 'AUTIN', to: 'IOE', protocol: 'Kafka', rate: '5K telemetry/s' },
-      { from: 'AUTIN', to: 'Network', protocol: 'NETCONF', rate: '200 configs/hr' },
+      { from: 'IOE Intent Translator', to: 'AUTIN Intent Engine', protocol: 'Intent API', rate: '60 intents/hr', direction: 'outbound' },
+      { from: 'AUTIN Telemetry', to: 'IOE Telemetry Analyzer', protocol: 'Kafka', rate: '5K msgs/s', direction: 'inbound' },
+      { from: 'IOE Closed-loop', to: 'AUTIN Auto-healing', protocol: 'NETCONF', rate: '200 configs/hr', direction: 'outbound' },
+      { from: 'AUTIN Knowledge Graph', to: 'IOE RCA Engine', protocol: 'REST', rate: '400 queries/hr', direction: 'inbound' },
     ],
-    interfaces: [
-      { name: 'Intent Interface', direction: 'OUT', desc: '意图下发与执行', descEn: 'Intent deployment & execution' },
-      { name: 'Closed-loop', direction: 'IN', desc: '闭环结果反馈', descEn: 'Closed-loop result feedback' },
-      { name: 'Telemetry', direction: 'IN', desc: '遥测数据实时采集', descEn: 'Real-time telemetry collection' },
+    mcpTools: [
+      { name: 'adn_submit_intent', desc: '提交网络意图（如"保障区域X覆盖>-95dBm"）', descEn: 'Submit network intent (e.g. "ensure area X coverage >-95dBm")', protocol: 'MCP → Intent API', permission: 'L3' },
+      { name: 'adn_get_intent_status', desc: '查询意图执行状态与闭环结果', descEn: 'Query intent execution status and closed-loop result', protocol: 'MCP → REST', permission: 'L1' },
+      { name: 'adn_get_telemetry', desc: '获取网元实时遥测数据（CPU/内存/接口）', descEn: 'Get NE real-time telemetry (CPU/memory/interface)', protocol: 'MCP → Kafka', permission: 'L1' },
+      { name: 'adn_trigger_rca', desc: '触发根因分析（关联告警+拓扑+历史）', descEn: 'Trigger root cause analysis (correlate alarms+topology+history)', protocol: 'MCP → gRPC', permission: 'L2' },
+      { name: 'adn_query_digital_twin', desc: '查询数字孪生模型状态', descEn: 'Query digital twin model state', protocol: 'MCP → REST', permission: 'L1' },
+      { name: 'adn_execute_optimization', desc: '执行参数优化方案（天线倾角/功率/邻区）', descEn: 'Execute parameter optimization (antenna tilt/power/neighbor)', protocol: 'MCP → NETCONF', permission: 'L4' },
     ],
   },
   crm: {
     name: 'CRM系统', nameEn: 'CRM System', color: '#10b981',
+    ioeLayer: { label: 'IOE 客户智能层', labelEn: 'IOE Customer Intelligence Layer', components: ['Marketing Agent', 'Segment Engine', 'Offer Optimizer', 'Retention Manager', 'Interaction Tracker'] },
+    adapterLayer: { label: 'CRM 适配层', labelEn: 'CRM Adapter Layer', components: ['REST API Gateway', 'Kafka Event Bridge', 'Oracle DB Connector', 'gRPC Notifier', 'ETL Pipeline'] },
+    systemLayer: { label: 'CRM 核心', labelEn: 'CRM Core', components: ['Customer Master', 'Campaign Mgmt', 'Order Mgmt', 'Service Request', 'Loyalty Program'] },
     protocols: [
-      { name: 'REST API', type: 'CRUD', latency: '<30ms', mode: 'Request/Response' },
+      { name: 'REST API', type: 'CRUD', latency: '<30ms', mode: 'Req/Resp' },
       { name: 'Kafka', type: 'Events', latency: '<10ms', mode: 'Event-driven' },
-      { name: 'Database', type: 'Oracle/MySQL', latency: '<5ms', mode: 'Direct query' },
+      { name: 'Oracle/MySQL', type: 'Database', latency: '<5ms', mode: 'Direct' },
       { name: 'gRPC', type: 'Real-time', latency: '<5ms', mode: 'Streaming' },
     ],
     dataFlows: [
-      { from: 'CRM', to: 'IOE', protocol: 'Kafka', rate: '3K events/hr' },
-      { from: 'IOE', to: 'CRM', protocol: 'REST', rate: '500 pushes/hr' },
-      { from: 'CRM', to: 'User DB', protocol: 'Oracle', rate: '10K queries/hr' },
+      { from: 'CRM Customer Master', to: 'IOE Segment Engine', protocol: 'Kafka', rate: '3K events/hr', direction: 'inbound' },
+      { from: 'IOE Offer Optimizer', to: 'CRM Campaign', protocol: 'REST', rate: '500 pushes/hr', direction: 'outbound' },
+      { from: 'CRM Order Mgmt', to: 'IOE Interaction Tracker', protocol: 'Kafka', rate: '1.2K orders/hr', direction: 'inbound' },
+      { from: 'IOE Marketing Agent', to: 'CRM Loyalty', protocol: 'gRPC', rate: '300 offers/hr', direction: 'outbound' },
     ],
-    interfaces: [
-      { name: 'Customer Profile', direction: 'IN', desc: '客户360°画像', descEn: 'Customer 360° profile' },
-      { name: 'Campaign Push', direction: 'OUT', desc: '营销活动推送', descEn: 'Marketing campaign push' },
-      { name: 'Interaction Log', direction: 'IN', desc: '客户交互记录', descEn: 'Customer interaction log' },
+    mcpTools: [
+      { name: 'crm_get_customer', desc: '查询客户360°画像（基本信息/套餐/消费/投诉）', descEn: 'Query customer 360° profile (info/plan/spend/complaints)', protocol: 'MCP → REST', permission: 'L1' },
+      { name: 'crm_search_customers', desc: '按条件检索客户群（区域/ARPU/套餐/标签）', descEn: 'Search customer segments (region/ARPU/plan/tags)', protocol: 'MCP → Oracle', permission: 'L1' },
+      { name: 'crm_create_campaign', desc: '创建精准营销活动（目标群体/渠道/内容）', descEn: 'Create targeted campaign (segment/channel/content)', protocol: 'MCP → REST', permission: 'L3' },
+      { name: 'crm_push_offer', desc: '推送个性化套餐推荐', descEn: 'Push personalized plan recommendation', protocol: 'MCP → gRPC', permission: 'L2' },
+      { name: 'crm_get_interaction_log', desc: '查询客户交互历史（通话/投诉/办理）', descEn: 'Query customer interaction history (call/complaint/order)', protocol: 'MCP → Oracle', permission: 'L1' },
+      { name: 'crm_update_service_request', desc: '更新服务请求状态', descEn: 'Update service request status', protocol: 'MCP → REST', permission: 'L2' },
     ],
   },
   bss: {
     name: 'BSS/计费', nameEn: 'BSS/Billing', color: '#eab308',
+    ioeLayer: { label: 'IOE 收入保障层', labelEn: 'IOE Revenue Assurance Layer', components: ['Planning Agent', 'Revenue Analyzer', 'Fraud Detector', 'Usage Auditor', 'Tariff Simulator'] },
+    adapterLayer: { label: 'BSS 适配层', labelEn: 'BSS Adapter Layer', components: ['SOAP/XML Wrapper', 'REST API Bridge', 'Kafka CDR Consumer', 'Oracle RAC Connector', 'Batch ETL Scheduler'] },
+    systemLayer: { label: 'BSS 核心', labelEn: 'BSS Core', components: ['Rating Engine', 'Billing Engine', 'Product Catalog', 'Payment Gateway', 'Revenue Assurance'] },
     protocols: [
-      { name: 'SOAP/XML', type: 'Legacy', latency: '<100ms', mode: 'Request/Response' },
-      { name: 'REST API', type: 'Modern', latency: '<30ms', mode: 'Request/Response' },
-      { name: 'Kafka', type: 'CDR Stream', latency: '<500ms', mode: 'Near real-time' },
-      { name: 'Database', type: 'Oracle RAC', latency: '<5ms', mode: 'Direct query' },
+      { name: 'SOAP/XML', type: 'Legacy', latency: '<100ms', mode: 'Req/Resp' },
+      { name: 'REST API', type: 'Modern', latency: '<30ms', mode: 'Req/Resp' },
+      { name: 'Kafka', type: 'CDR Stream', latency: '<500ms', mode: 'Near-RT' },
+      { name: 'Oracle RAC', type: 'Database', latency: '<5ms', mode: 'Direct' },
     ],
     dataFlows: [
-      { from: 'BSS', to: 'IOE', protocol: 'Kafka', rate: '20K CDR/s' },
-      { from: 'IOE', to: 'BSS', protocol: 'REST', rate: '200 queries/hr' },
-      { from: 'BSS', to: 'Revenue Engine', protocol: 'SOAP', rate: 'Batch 24x/day' },
+      { from: 'BSS CDR Stream', to: 'IOE Revenue Analyzer', protocol: 'Kafka', rate: '20K CDR/s', direction: 'inbound' },
+      { from: 'IOE Usage Auditor', to: 'BSS Rating Engine', protocol: 'REST', rate: '200 queries/hr', direction: 'outbound' },
+      { from: 'BSS Product Catalog', to: 'IOE Tariff Simulator', protocol: 'SOAP', rate: 'Batch 24x/day', direction: 'inbound' },
+      { from: 'IOE Fraud Detector', to: 'BSS Rev Assurance', protocol: 'Kafka', rate: '50 alerts/hr', direction: 'outbound' },
     ],
-    interfaces: [
-      { name: 'Billing Query', direction: 'IN', desc: '套餐/账单/余额查询', descEn: 'Plan/bill/balance query' },
-      { name: 'Product Catalog', direction: 'IN', desc: '产品目录与资费', descEn: 'Product catalog & tariff' },
-      { name: 'Provisioning', direction: 'OUT', desc: '业务开通/变更', descEn: 'Service provisioning/modification' },
+    mcpTools: [
+      { name: 'bss_query_balance', desc: '查询用户账户余额与信用额度', descEn: 'Query user account balance and credit limit', protocol: 'MCP → REST', permission: 'L1' },
+      { name: 'bss_get_bill', desc: '获取用户账单明细（月账单/实时话单）', descEn: 'Get user bill details (monthly bill/real-time CDR)', protocol: 'MCP → Oracle', permission: 'L1' },
+      { name: 'bss_query_product_catalog', desc: '查询产品目录与资费方案', descEn: 'Query product catalog and tariff plans', protocol: 'MCP → SOAP', permission: 'L1' },
+      { name: 'bss_provision_service', desc: '执行业务开通/套餐变更', descEn: 'Execute service provisioning/plan change', protocol: 'MCP → REST', permission: 'L3' },
+      { name: 'bss_detect_fraud', desc: '运行实时欺诈检测规则', descEn: 'Run real-time fraud detection rules', protocol: 'MCP → Kafka', permission: 'L2' },
+      { name: 'bss_simulate_tariff', desc: '模拟资费方案对收入的影响', descEn: 'Simulate tariff plan revenue impact', protocol: 'MCP → Oracle', permission: 'L2' },
     ],
   },
 };
 
 function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; onClose: () => void; t: (en: string, zh: string) => string }) {
   const [flowTick, setFlowTick] = useState(0);
+  const [activeTool, setActiveTool] = useState<number>(-1);
+  const [toolOutput, setToolOutput] = useState('');
   useEffect(() => {
     if (!systemId) return;
-    const iv = setInterval(() => setFlowTick(p => p + 1), 1500);
+    const iv = setInterval(() => setFlowTick(p => p + 1), 1800);
+    return () => clearInterval(iv);
+  }, [systemId]);
+
+  // Simulate MCP tool invocation
+  useEffect(() => {
+    if (!systemId) return;
+    const sys = SYSTEM_ARCH[systemId];
+    if (!sys) return;
+    const iv = setInterval(() => {
+      const idx = Math.floor(Math.random() * sys.mcpTools.length);
+      setActiveTool(idx);
+      setToolOutput(`> ${sys.mcpTools[idx].name}()\n  status: 200 OK  |  ${Math.floor(Math.random() * 40 + 5)}ms`);
+      setTimeout(() => setActiveTool(-1), 2500);
+    }, 4000);
     return () => clearInterval(iv);
   }, [systemId]);
 
   if (!systemId || !SYSTEM_ARCH[systemId]) return null;
   const sys = SYSTEM_ARCH[systemId];
+  const permColor: Record<string, string> = { L1: 'text-status-green', L2: 'text-accent-cyan', L3: 'text-status-yellow', L4: 'text-status-orange', L5: 'text-status-red' };
+  const dirIcon: Record<string, string> = { inbound: '←', outbound: '→', bidirectional: '⇄' };
+  const dirColor: Record<string, string> = { inbound: 'text-status-green', outbound: 'text-accent-cyan', bidirectional: 'text-status-yellow' };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-[800px] max-h-[85vh] overflow-auto" onClick={e => e.stopPropagation()}>
+      <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-[960px] max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: sys.color + '20' }}>
-              <Plug className="w-4 h-4" style={{ color: sys.color }} />
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: sys.color + '20' }}>
+              <Plug className="w-4.5 h-4.5" style={{ color: sys.color }} />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-text-primary">{t(sys.nameEn, sys.name)} — {t('System Architecture', '系统架构')}</h3>
-              <p className="text-xs text-text-muted">{t('Multi-protocol data integration · Real-time & batch', '多协议数据集成 · 实时与批量')}</p>
+              <h3 className="text-sm font-semibold text-text-primary">{t(sys.nameEn, sys.name)} — {t('Connection Architecture', '连接架构')}</h3>
+              <p className="text-xs text-text-muted">{t('Multi-protocol integration · MCP tool invocation · Real-time & batch', '多协议集成 · MCP工具调用 · 实时与批量')}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-4 h-4" /></button>
         </div>
+
         <div className="p-6 space-y-5">
-          {/* Protocol Support */}
+          {/* ① Architecture Diagram — 3-layer visual */}
           <div>
             <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Activity className="w-3 h-3" /> {t('Supported Protocols', '支持的协议')}
+              <Server className="w-3 h-3" /> {t('Connection Architecture Diagram', '连接架构图')}
             </h4>
-            <div className="grid grid-cols-5 gap-2">
-              {sys.protocols.map((p, i) => (
-                <div key={i} className="bg-bg-primary rounded-lg border border-border p-2.5 text-center hover:border-accent-cyan/30 transition-all">
-                  <div className="text-xs font-mono font-medium text-accent-cyan mb-1">{p.name}</div>
-                  <div className="text-[10px] text-text-muted">{p.type}</div>
-                  <div className="text-[10px] text-status-green mt-1">{p.latency}</div>
-                  <div className="text-[10px] text-text-muted">{p.mode}</div>
+            <div className="bg-bg-primary rounded-xl border border-border p-4 space-y-3">
+              {/* IOE Layer */}
+              <div className="rounded-lg border border-accent-cyan/40 bg-accent-cyan/5 p-3">
+                <div className="text-[10px] font-semibold text-accent-cyan uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Shield className="w-3 h-3" /> {t(sys.ioeLayer.labelEn, sys.ioeLayer.label)}
                 </div>
-              ))}
+                <div className="flex flex-wrap gap-1.5">
+                  {sys.ioeLayer.components.map((c, i) => (
+                    <span key={i} className="px-2 py-1 rounded bg-accent-cyan/10 border border-accent-cyan/20 text-[10px] text-accent-cyan font-medium">{c}</span>
+                  ))}
+                </div>
+              </div>
+              {/* Connection arrows */}
+              <div className="flex items-center justify-center gap-2 py-1">
+                {sys.protocols.map((p, i) => (
+                  <div key={i} className="flex flex-col items-center gap-0.5">
+                    <div className={`w-px h-4 transition-all duration-700 ${(flowTick + i) % sys.protocols.length === 0 ? 'bg-accent-cyan' : 'bg-border'}`} />
+                    <span className="text-[8px] font-mono text-text-muted px-1 py-0.5 rounded bg-bg-tertiary">{p.name}</span>
+                    <div className={`w-px h-4 transition-all duration-700 ${(flowTick + i) % sys.protocols.length === 0 ? 'bg-accent-cyan' : 'bg-border'}`} />
+                  </div>
+                ))}
+              </div>
+              {/* Adapter Layer */}
+              <div className="rounded-lg border border-status-yellow/30 bg-status-yellow/5 p-3">
+                <div className="text-[10px] font-semibold text-status-yellow uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <ArrowRightLeft className="w-3 h-3" /> {t(sys.adapterLayer.labelEn, sys.adapterLayer.label)}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {sys.adapterLayer.components.map((c, i) => (
+                    <span key={i} className="px-2 py-1 rounded bg-status-yellow/10 border border-status-yellow/20 text-[10px] text-status-yellow font-medium">{c}</span>
+                  ))}
+                </div>
+              </div>
+              {/* Connection arrows */}
+              <div className="flex items-center justify-center gap-2 py-1">
+                {sys.protocols.map((p, i) => (
+                  <div key={i} className="flex flex-col items-center gap-0.5">
+                    <div className={`w-px h-4 transition-all duration-700 ${(flowTick + i + 2) % sys.protocols.length === 0 ? 'bg-accent-cyan' : 'bg-border'}`} />
+                    <span className="text-[8px] font-mono text-text-muted">{p.latency}</span>
+                    <div className={`w-px h-4 transition-all duration-700 ${(flowTick + i + 2) % sys.protocols.length === 0 ? 'bg-accent-cyan' : 'bg-border'}`} />
+                  </div>
+                ))}
+              </div>
+              {/* System Layer */}
+              <div className="rounded-lg border p-3" style={{ borderColor: sys.color + '60', backgroundColor: sys.color + '08' }}>
+                <div className="text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: sys.color }}>
+                  <Database className="w-3 h-3" /> {t(sys.systemLayer.labelEn, sys.systemLayer.label)}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {sys.systemLayer.components.map((c, i) => (
+                    <span key={i} className="px-2 py-1 rounded border text-[10px] font-medium" style={{ backgroundColor: sys.color + '10', borderColor: sys.color + '30', color: sys.color }}>{c}</span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Data Flow Diagram */}
-          <div>
-            <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Radio className="w-3 h-3" /> {t('Data Flow', '数据流转')}
-              <span className="ml-1 w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
-              <span className="text-[10px] font-normal text-text-muted">{t('Live', '实时')}</span>
-            </h4>
-            <div className="space-y-2">
-              {sys.dataFlows.map((flow, i) => {
-                const active = (flowTick + i) % sys.dataFlows.length === 0;
-                return (
-                  <div key={i} className={`bg-bg-primary rounded-lg border p-3 flex items-center gap-3 transition-all duration-500 ${active ? 'border-accent-cyan/50 bg-accent-cyan/5' : 'border-border'}`}>
-                    <div className="text-xs font-medium text-text-primary w-24 shrink-0">{flow.from}</div>
-                    <div className="flex-1 flex items-center gap-2">
-                      <div className="flex-1 h-px bg-border relative">
-                        <div className={`absolute top-0 left-0 h-px bg-accent-cyan transition-all duration-1000 ${active ? 'w-full' : 'w-0'}`} />
-                      </div>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-bg-tertiary text-accent-cyan shrink-0">{flow.protocol}</span>
-                      <div className="flex-1 h-px bg-border relative">
-                        <div className={`absolute top-0 right-0 h-px bg-accent-cyan transition-all duration-1000 ${active ? 'w-full' : 'w-0'}`} />
-                      </div>
+          {/* ② Protocol Grid + Data Flow side by side */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Protocols */}
+            <div>
+              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <Activity className="w-3 h-3" /> {t('Protocols', '协议')}
+              </h4>
+              <div className="space-y-1.5">
+                {sys.protocols.map((p, i) => (
+                  <div key={i} className="bg-bg-primary rounded-lg border border-border p-2.5 flex items-center justify-between hover:border-accent-cyan/30 transition-all">
+                    <div>
+                      <div className="text-xs font-mono font-medium text-accent-cyan">{p.name}</div>
+                      <div className="text-[10px] text-text-muted">{p.type} · {p.mode}</div>
                     </div>
-                    <div className="text-xs font-medium text-text-primary w-24 shrink-0 text-right">{flow.to}</div>
-                    <div className="text-[10px] text-status-green font-mono w-24 text-right shrink-0">{flow.rate}</div>
+                    <span className="text-[10px] text-status-green font-mono">{p.latency}</span>
                   </div>
-                );
-              })}
+                ))}
+              </div>
+            </div>
+            {/* Data Flows */}
+            <div>
+              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <Radio className="w-3 h-3" /> {t('Data Flows', '数据流转')}
+                <span className="ml-1 w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
+              </h4>
+              <div className="space-y-1.5">
+                {sys.dataFlows.map((flow, i) => {
+                  const active = (flowTick + i) % sys.dataFlows.length === 0;
+                  return (
+                    <div key={i} className={`bg-bg-primary rounded-lg border p-2.5 transition-all duration-500 ${active ? 'border-accent-cyan/50 bg-accent-cyan/5' : 'border-border'}`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-medium text-text-primary truncate">{flow.from}</span>
+                        <span className={`text-xs font-bold ${dirColor[flow.direction]}`}>{dirIcon[flow.direction]}</span>
+                        <span className="text-[10px] font-medium text-text-primary truncate">{flow.to}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-bg-tertiary text-accent-cyan">{flow.protocol}</span>
+                        <span className="text-[9px] text-status-green font-mono">{flow.rate}</span>
+                      </div>
+                      {active && <div className="mt-1.5 h-0.5 rounded-full bg-accent-cyan/20 overflow-hidden"><div className="h-full bg-accent-cyan rounded-full animate-pulse" style={{ width: '70%' }} /></div>}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {/* Interfaces */}
+          {/* ③ MCP Tool Invocations — key new section */}
           <div>
             <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Plug className="w-3 h-3" /> {t('Interfaces', '接口')}
+              <Terminal className="w-3 h-3" /> {t('MCP Tool Invocations', 'MCP 工具调用')}
+              <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] font-mono bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20">MCP Protocol</span>
             </h4>
+            {/* Live terminal output */}
+            {toolOutput && (
+              <div className="mb-3 bg-[#0d1117] rounded-lg border border-border p-3 font-mono text-[10px]">
+                <div className="flex items-center gap-1.5 mb-1.5 text-text-muted">
+                  <Play className="w-3 h-3 text-status-green" />
+                  <span>{t('Live MCP Call', '实时MCP调用')}</span>
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
+                </div>
+                <pre className="text-status-green whitespace-pre-wrap">{toolOutput}</pre>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2">
-              {sys.interfaces.map((iface, i) => (
-                <div key={i} className="bg-bg-primary rounded-lg border border-border p-3 flex items-center gap-3">
-                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${iface.direction === 'IN' ? 'bg-status-green/10 text-status-green border-status-green/30' : 'bg-accent-cyan/10 text-accent-cyan border-accent-cyan/30'}`}>
-                    {iface.direction}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium text-text-primary">{iface.name}</div>
-                    <div className="text-[10px] text-text-muted truncate">{t(iface.descEn, iface.desc)}</div>
+              {sys.mcpTools.map((tool, i) => (
+                <div key={i} className={`bg-bg-primary rounded-lg border p-3 transition-all duration-500 ${activeTool === i ? 'border-accent-cyan/60 bg-accent-cyan/5 ring-1 ring-accent-cyan/20' : 'border-border hover:border-border'}`}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Wrench className="w-3 h-3 text-text-muted shrink-0" />
+                    <span className="text-[11px] font-mono font-semibold text-accent-cyan truncate">{tool.name}</span>
+                    {activeTool === i && <RefreshCw className="w-3 h-3 text-accent-cyan animate-spin ml-auto shrink-0" />}
+                  </div>
+                  <p className="text-[10px] text-text-secondary mb-2 leading-relaxed">{t(tool.descEn, tool.desc)}</p>
+                  <div className="flex items-center gap-2 text-[9px]">
+                    <span className="font-mono px-1.5 py-0.5 rounded bg-bg-tertiary text-text-muted">{tool.protocol}</span>
+                    <span className={`font-mono font-semibold ${permColor[tool.permission] || 'text-text-muted'}`}>
+                      <Shield className="w-2.5 h-2.5 inline mr-0.5" />{tool.permission}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Integration Summary */}
+          {/* ④ Integration Summary */}
           <div className="bg-bg-primary rounded-lg border border-border p-4">
             <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t('Integration Summary', '集成概要')}</h4>
-            <div className="grid grid-cols-4 gap-4 text-center">
+            <div className="grid grid-cols-5 gap-4 text-center">
               <div>
                 <p className="text-lg font-semibold text-text-primary">{sys.protocols.length}</p>
                 <p className="text-[10px] text-text-muted">{t('Protocols', '协议数')}</p>
               </div>
               <div>
                 <p className="text-lg font-semibold text-status-green">&lt;1s</p>
-                <p className="text-[10px] text-text-muted">{t('Sub-second latency', '亚秒级延迟')}</p>
+                <p className="text-[10px] text-text-muted">{t('Latency', '延迟')}</p>
               </div>
               <div>
                 <p className="text-lg font-semibold text-accent-cyan">{sys.dataFlows.length}</p>
-                <p className="text-[10px] text-text-muted">{t('Data flows', '数据流')}</p>
+                <p className="text-[10px] text-text-muted">{t('Data Flows', '数据流')}</p>
               </div>
               <div>
-                <p className="text-lg font-semibold text-text-primary">{sys.interfaces.length}</p>
-                <p className="text-[10px] text-text-muted">{t('Interfaces', '接口数')}</p>
+                <p className="text-lg font-semibold" style={{ color: sys.color }}>{sys.mcpTools.length}</p>
+                <p className="text-[10px] text-text-muted">{t('MCP Tools', 'MCP工具')}</p>
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-text-primary">3</p>
+                <p className="text-[10px] text-text-muted">{t('Arch Layers', '架构层')}</p>
               </div>
             </div>
           </div>
