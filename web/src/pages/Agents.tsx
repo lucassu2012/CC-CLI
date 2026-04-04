@@ -420,26 +420,28 @@ function AgentCard({ agent, onEdit }: { agent: DomainAgent; onEdit: (agent: Doma
   return (
     <div className="bg-bg-card rounded-xl border border-border overflow-hidden hover:border-accent-cyan/30 transition-all">
       <div className="flex items-center">
-        <button onClick={() => setExpanded(!expanded)} className="flex-1 text-left px-5 py-4 flex items-center gap-4 cursor-pointer">
+        <button onClick={() => setExpanded(!expanded)} className="flex-1 text-left px-5 py-4 flex items-center gap-4 cursor-pointer min-w-0">
           <div className="w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center shrink-0"><Bot className="w-5 h-5 text-accent-cyan" /></div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium text-text-primary">{t(agent.name, agent.nameZh)}</h3>
+              <h3 className="text-sm font-medium text-text-primary truncate">{t(agent.name, agent.nameZh)}</h3>
               <StatusBadge status={agent.status} />
             </div>
             <p className="text-xs text-text-muted mt-0.5 truncate">{t(agent.description, agent.descriptionZh)}</p>
           </div>
-          <div className="flex items-center gap-6 text-xs text-text-secondary shrink-0">
-            <div className="text-center"><p className="text-lg font-semibold text-text-primary">{agent.taskCount}</p><p className="text-text-muted">{t('Tasks', '任务')}</p></div>
-            <div className="text-center"><p className="text-lg font-semibold text-text-primary">{agent.successRate}%</p><p className="text-text-muted">{t('Success', '成功率')}</p></div>
-            <div className="text-center"><p className="text-lg font-semibold text-text-primary">{agent.subAgents.length}</p><p className="text-text-muted">{t('Sub-agents', '子Agent')}</p></div>
-            {expanded ? <ChevronDown className="w-4 h-4 text-text-muted" /> : <ChevronRight className="w-4 h-4 text-text-muted" />}
-          </div>
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onEdit(agent); }}
-          className="px-3 py-2 mr-3 text-text-muted hover:text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors cursor-pointer" title={t('Edit Agent', '编辑Agent')}>
-          <Settings className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-5 text-xs text-text-secondary shrink-0 pr-2">
+          <div className="text-center"><p className="text-lg font-semibold text-text-primary">{agent.taskCount}</p><p className="text-text-muted">{t('Tasks', '任务')}</p></div>
+          <div className="text-center"><p className="text-lg font-semibold text-text-primary">{agent.successRate}%</p><p className="text-text-muted">{t('Success', '成功率')}</p></div>
+          <div className="text-center"><p className="text-lg font-semibold text-text-primary">{agent.subAgents.length}</p><p className="text-text-muted">{t('Sub-agents', '子Agent')}</p></div>
+          <button onClick={() => setExpanded(!expanded)} className="cursor-pointer text-text-muted hover:text-text-primary">
+            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onEdit(agent); }}
+            className="px-2 py-2 text-text-muted hover:text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors cursor-pointer" title={t('Edit Agent', '编辑Agent')}>
+            <Settings className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {expanded && (

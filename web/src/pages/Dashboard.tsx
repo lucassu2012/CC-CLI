@@ -6,7 +6,7 @@ import {
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { useText } from '../hooks/useText';
 import { kpiMetrics as kpiBase, activeAlerts, recentTasks } from '../data/dashboard';
-import { domainAgents } from '../data/agents';
+import { domainAgents, type SubAgent } from '../data/agents';
 import StatusBadge from '../components/StatusBadge';
 
 /* ─── helpers ─── */
@@ -79,6 +79,7 @@ export default function Dashboard() {
   const [taskModal, setTaskModal] = useState<typeof recentTasks[0] | null>(null);
   const [alertModal, setAlertModal] = useState<typeof activeAlerts[0] | null>(null);
   const [agentModal, setAgentModal] = useState<typeof domainAgents[0] | null>(null);
+  const [subAgentModal, setSubAgentModal] = useState<SubAgent | null>(null);
 
   /* Pulse indicator */
   const pulseClass = tick % 2 === 0 ? 'opacity-100' : 'opacity-60';
@@ -281,17 +282,91 @@ export default function Dashboard() {
             </div>
             <div className="text-xs text-text-muted mb-2">{t('Sub-Agents', '子Agent列表')}:</div>
             {agentModal.subAgents.map((sub) => (
-              <div key={sub.id} className="bg-bg-primary rounded-lg border border-border p-3 flex items-center gap-3">
+              <div key={sub.id} onClick={() => setSubAgentModal(sub)}
+                className="bg-bg-primary rounded-lg border border-border p-3 flex items-center gap-3 hover:bg-bg-hover/50 hover:border-accent-cyan/30 cursor-pointer transition-colors group">
                 <StatusBadge status={sub.status || 'active'} size="sm" />
                 <div className="flex-1">
                   <div className="text-sm text-text-primary">{t(sub.name, sub.nameZh)}</div>
                   <div className="text-xs text-text-muted">{t(sub.currentTask, sub.currentTaskZh)}</div>
                 </div>
                 <div className="text-xs text-text-muted tabular-nums">{sub.toolCalls.toLocaleString()} {t('calls', '调用')}</div>
+                <ChevronRight className="w-3 h-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             ))}
           </div>
         )}
+      </Modal>
+
+      {/* ─── Sub-Agent drill-down modal ─── */}
+      <Modal open={!!subAgentModal} onClose={() => setSubAgentModal(null)} title={subAgentModal ? t(subAgentModal.name, subAgentModal.nameZh) : ''}>
+        {subAgentModal && (() => {
+          // Generate realistic task & alarm data based on the sub-agent
+          const subTasks = [
+            { id: 't1', status: 'running' as const, title: t(subAgentModal.currentTask, subAgentModal.currentTaskZh), start: '14:20:03', elapsed: '2m 15s' },
+            { id: 't2', status: 'completed' as const, title: subAgentModal.id.includes('opt') ? t('Parameter optimization batch #2847', '参数优化批次 #2847') : subAgentModal.id.includes('monitor') ? t('Routine health check - East Zone', '常规健康检查 - 东区') : subAgentModal.id.includes('complaint') ? t('Complaint trend analysis - Tianhe', '投诉趋势分析 - 天河区') : subAgentModal.id.includes('lead') ? t('Lead scoring refresh cycle', '潜客评分刷新周期') : t('Capacity simulation run #189', '容量仿真运行 #189'), start: '14:15:20', elapsed: '4m 43s' },
+            { id: 't3', status: 'completed' as const, title: subAgentModal.id.includes('fault') ? t('Root cause analysis BTS-GD-012', '根因分析 BTS-GD-012') : subAgentModal.id.includes('market') ? t('Real-time push campaign #56', '实时推送活动 #56') : t('KPI baseline comparison', 'KPI基线对比'), start: '14:08:11', elapsed: '7m 09s' },
+            { id: 't4', status: 'queued' as const, title: subAgentModal.id.includes('exp') ? t('Experience SLA verification', '体验SLA验证') : t('Scheduled maintenance check', '定时维护检查'), start: '—', elapsed: '—' },
+          ];
+          const subAlarms = [
+            { id: 'a1', severity: subAgentModal.status === 'active' ? 'warning' : 'major', title: subAgentModal.id.includes('opt') ? t('PRB utilization >85% on 3 cells', '3个小区PRB利用率>85%') : subAgentModal.id.includes('monitor') ? t('Temperature alert on BTS-GD-018', 'BTS-GD-018温度告警') : subAgentModal.id.includes('complaint') ? t('MOS degradation trend detected', '检测到MOS下降趋势') : t('Unusual traffic pattern detected', '检测到异常流量模式'), time: '14:18:30', status: 'processing' },
+            { id: 'a2', severity: 'minor', title: subAgentModal.id.includes('fault') ? t('Intermittent link flap GD-TN-009', 'GD-TN-009链路间歇性抖动') : t('Threshold approaching on cell GZ-045', '小区GZ-045指标接近阈值'), time: '14:05:12', status: 'resolved' },
+          ];
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <StatusBadge status={subAgentModal.status} size="md" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-text-primary">{t(subAgentModal.name, subAgentModal.nameZh)}</div>
+                  <div className="text-xs text-text-muted">{t('Permission', '权限')}: L{subAgentModal.permissionLevel} · {t('Success Rate', '成功率')}: {subAgentModal.successRate}% · {subAgentModal.toolCalls.toLocaleString()} {t('tool calls', '工具调用')}</div>
+                </div>
+              </div>
+
+              {/* Running Tasks */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Activity className="w-3 h-3" /> {t('Running Tasks', '运行中任务')}
+                </h4>
+                <div className="space-y-1.5">
+                  {subTasks.map(task => (
+                    <div key={task.id} className="bg-bg-primary rounded-lg border border-border px-3 py-2 flex items-center gap-2.5">
+                      {task.status === 'running' ? <Loader2 className="w-3.5 h-3.5 text-accent-cyan animate-spin shrink-0" />
+                        : task.status === 'completed' ? <CheckCircle2 className="w-3.5 h-3.5 text-status-green shrink-0" />
+                        : <Clock className="w-3.5 h-3.5 text-text-muted shrink-0" />}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-text-primary truncate">{task.title}</p>
+                      </div>
+                      <span className="text-[10px] text-text-muted shrink-0">{task.start}</span>
+                      <span className="text-[10px] text-text-muted shrink-0 w-12 text-right">{task.elapsed}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Related Alarms */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3 h-3" /> {t('Related Alarms', '关联告警')}
+                </h4>
+                <div className="space-y-1.5">
+                  {subAlarms.map(alarm => (
+                    <div key={alarm.id} className="bg-bg-primary rounded-lg border border-border px-3 py-2 flex items-center gap-2.5">
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${severityColor[alarm.severity] || severityColor['minor']}`}>
+                        {alarm.severity === 'major' ? 'MAJR' : alarm.severity === 'warning' ? 'WARN' : 'MINR'}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-text-primary truncate">{alarm.title}</p>
+                      </div>
+                      <span className="text-[10px] text-text-muted shrink-0">{alarm.time}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${alarm.status === 'processing' ? 'bg-accent-cyan/10 text-accent-cyan' : 'bg-status-green/10 text-status-green'}`}>
+                        {alarm.status === 'processing' ? t('Processing', '处理中') : t('Resolved', '已解决')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
 
       {/* ─── Task detail modal ─── */}
