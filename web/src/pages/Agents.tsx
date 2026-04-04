@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Bot, ChevronDown, ChevronRight, Shield, Wrench, BarChart3, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft } from 'lucide-react';
 import { useText } from '../hooks/useText';
-import { domainAgents, type DomainAgent } from '../data/agents';
+import { domainAgents, type DomainAgent, type SubAgent } from '../data/agents';
 import { generatedSkills } from '../data/knowledge';
 import StatusBadge from '../components/StatusBadge';
 
@@ -42,10 +42,10 @@ const DIGITAL_TWINS: Record<string, { name: string; nameEn: string; desc: string
 };
 
 const MEMORY_LAYERS = [
-  { key: 'system', label: '系统记忆', labelEn: 'System Memory', icon: '🏛️', desc: '全局规则/安全边界/操作规范', descEn: 'Global rules, safety boundaries, operational standards', color: 'text-status-red' },
+  { key: 'system', label: '系统记忆', labelEn: 'System Memory', icon: '🏛️', desc: '全局规则/安全边界/操作规范', descEn: 'Global rules, safety boundaries, operational standards', color: 'text-accent-cyan' },
   { key: 'domain', label: '领域记忆', labelEn: 'Domain Memory', icon: '🧠', desc: '领域知识/专业经验/最佳实践', descEn: 'Domain knowledge, expertise, best practices', color: 'text-accent-cyan' },
-  { key: 'session', label: '会话记忆', labelEn: 'Session Memory', icon: '💬', desc: '当前任务上下文/操作历史', descEn: 'Current task context, action history', color: 'text-status-green' },
-  { key: 'episode', label: '情景记忆', labelEn: 'Episode Memory', icon: '📖', desc: '历史案例/故障经验/成功模式', descEn: 'Historical cases, fault experiences, success patterns', color: 'text-status-yellow' },
+  { key: 'session', label: '会话记忆', labelEn: 'Session Memory', icon: '💬', desc: '当前任务上下文/操作历史', descEn: 'Current task context, action history', color: 'text-accent-cyan' },
+  { key: 'episode', label: '情景记忆', labelEn: 'Episode Memory', icon: '📖', desc: '历史案例/故障经验/成功模式', descEn: 'Historical cases, fault experiences, success patterns', color: 'text-accent-cyan' },
 ];
 
 const SOP_TEMPLATES: Record<string, { name: string; steps: string[] }[]> = {
@@ -88,11 +88,21 @@ const EDITOR_TABS = [
 
 type EditorTab = typeof EDITOR_TABS[number]['key'];
 
-function AgentEditor({ agent, onClose }: { agent: DomainAgent; onClose: () => void }) {
+function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgent?: SubAgent; onClose: () => void }) {
   const { t } = useText();
   const [tab, setTab] = useState<EditorTab>('memory');
   const [selectedModel, setSelectedModel] = useState('gts-llm');
   const [saved, setSaved] = useState(false);
+  const [editingSubAgent, setEditingSubAgent] = useState<SubAgent | undefined>(subAgent);
+
+  // The entity being edited — sub-agent or domain agent
+  const editName = editingSubAgent ? t(editingSubAgent.name, editingSubAgent.nameZh) : t(agent.name, agent.nameZh);
+  const editDesc = editingSubAgent
+    ? t(editingSubAgent.currentTask, editingSubAgent.currentTaskZh)
+    : t(agent.description, agent.descriptionZh);
+  const taskCount = editingSubAgent ? editingSubAgent.toolCalls : agent.taskCount;
+  const successRate = editingSubAgent ? editingSubAgent.successRate : agent.successRate;
+
   const [enabledSkills, setEnabledSkills] = useState<Set<string>>(() => {
     const domainSkills = generatedSkills.filter(s => s.domain === agent.id);
     return new Set(domainSkills.map(s => s.id));
@@ -100,9 +110,9 @@ function AgentEditor({ agent, onClose }: { agent: DomainAgent; onClose: () => vo
   const [enabledTwins, setEnabledTwins] = useState<Set<string>>(() => new Set((DIGITAL_TWINS[agent.id] || []).map(t => t.name)));
   const [memoryEdits, setMemoryEdits] = useState<Record<string, string>>({
     system: '# 安全边界\n- 禁止高峰期（9:00-22:00）执行核心网重启\n- 参数调整范围不超过基线±30%\n- L4+操作需人工审批\n\n# 操作规范\n- 所有操作需数字孪生预验证\n- 修复后自动验证KPI恢复',
-    domain: `# ${t(agent.name, agent.nameZh)} 领域知识\n- 华为设备MML命令集\n- 3GPP TS 28.xxx/TS 32.xxx标准\n- 历史故障案例库（${agent.taskCount}+条）\n- ${t(agent.domain, agent.domainZh)}最佳实践文档`,
+    domain: `# ${editName} 领域知识\n- 华为设备MML命令集\n- 3GPP TS 28.xxx/TS 32.xxx标准\n- 历史故障案例库（${taskCount}+条）\n- ${t(agent.domain, agent.domainZh)}最佳实践文档`,
     session: '# 当前会话上下文\n（运行时自动填充）\n- 当前任务链\n- 操作历史\n- 中间结果缓存',
-    episode: `# 历史情景\n- 成功案例：${Math.floor(agent.taskCount * agent.successRate / 100)}条\n- 失败案例：${Math.floor(agent.taskCount * (100 - agent.successRate) / 100)}条\n- 自动从知识库同步更新`,
+    episode: `# 历史情景\n- 成功案例：${Math.floor(taskCount * successRate / 100)}条\n- 失败案例：${Math.floor(taskCount * (100 - successRate) / 100)}条\n- 自动从知识库同步更新`,
   });
 
   const domainSkills = generatedSkills.filter(s => s.domain === agent.id);
@@ -132,16 +142,24 @@ function AgentEditor({ agent, onClose }: { agent: DomainAgent; onClose: () => vo
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-4 px-5 py-3 border-b border-border bg-bg-card shrink-0">
-        <button onClick={onClose} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover border border-border text-sm cursor-pointer">
+        <button onClick={() => { if (editingSubAgent) { setEditingSubAgent(undefined); setTab('memory'); } else { onClose(); } }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover border border-border text-sm cursor-pointer">
           <ArrowLeft className="w-4 h-4" /> {t('Back', '返回')}
         </button>
-        <div className="w-8 h-8 rounded-lg bg-accent-cyan/10 flex items-center justify-center"><Bot className="w-4 h-4 text-accent-cyan" /></div>
-        <div>
-          <h2 className="text-sm font-semibold text-text-primary">{t(agent.name, agent.nameZh)}</h2>
-          <p className="text-xs text-text-muted">{t(agent.description, agent.descriptionZh)}</p>
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${editingSubAgent ? 'bg-purple-500/10' : 'bg-accent-cyan/10'}`}>
+          {editingSubAgent ? <Wrench className="w-4 h-4 text-purple-400" /> : <Bot className="w-4 h-4 text-accent-cyan" />}
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <StatusBadge status={agent.status} />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-text-primary truncate">{editName}</h2>
+            {editingSubAgent && (
+              <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded shrink-0">{t('Sub-Agent', '子Agent')}</span>
+            )}
+          </div>
+          <p className="text-xs text-text-muted truncate">{editDesc}</p>
+        </div>
+        <div className="ml-auto flex items-center gap-2 shrink-0">
+          <StatusBadge status={editingSubAgent ? editingSubAgent.status : agent.status} />
           <button onClick={handleSave}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-accent-cyan text-bg-primary text-sm font-medium hover:bg-accent-cyan/80 cursor-pointer">
             {saved ? <><Check className="w-3.5 h-3.5" /> {t('Saved', '已保存')}</> : <><Save className="w-3.5 h-3.5" /> {t('Save', '保存')}</>}
@@ -165,12 +183,17 @@ function AgentEditor({ agent, onClose }: { agent: DomainAgent; onClose: () => vo
           })}
           <div className="border-t border-border mt-3 pt-3">
             <div className="px-3 text-[10px] text-text-muted uppercase tracking-wider mb-2">{t('Sub-Agents', '子Agent')}</div>
-            {agent.subAgents.map(sub => (
-              <div key={sub.id} className="flex items-center gap-2 px-3 py-1.5 text-xs text-text-secondary">
-                <StatusBadge status={sub.status} size="sm" />
-                <span className="truncate">{t(sub.name, sub.nameZh)}</span>
-              </div>
-            ))}
+            {agent.subAgents.map(sub => {
+              const isActive = editingSubAgent?.id === sub.id;
+              return (
+                <button key={sub.id} onClick={() => { setEditingSubAgent(sub); setTab('memory'); }}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg mb-0.5 cursor-pointer transition-all ${isActive ? 'bg-purple-500/15 text-purple-400' : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'}`}>
+                  <StatusBadge status={sub.status} size="sm" />
+                  <span className="truncate flex-1 text-left">{t(sub.name, sub.nameZh)}</span>
+                  {isActive && <Settings className="w-3 h-3 shrink-0" />}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -413,7 +436,7 @@ function AgentEditor({ agent, onClose }: { agent: DomainAgent; onClose: () => vo
   );
 }
 
-function AgentCard({ agent, onEdit }: { agent: DomainAgent; onEdit: (agent: DomainAgent) => void }) {
+function AgentCard({ agent, onEdit, onEditSub }: { agent: DomainAgent; onEdit: (agent: DomainAgent) => void; onEditSub: (agent: DomainAgent, sub: SubAgent) => void }) {
   const [expanded, setExpanded] = useState(false);
   const { t } = useText();
 
@@ -461,6 +484,11 @@ function AgentCard({ agent, onEdit }: { agent: DomainAgent; onEdit: (agent: Doma
                 <div className="flex items-center gap-1"><Wrench className="w-3 h-3" /><span>{sub.toolCalls.toLocaleString()}</span></div>
                 <div className="flex items-center gap-1"><BarChart3 className="w-3 h-3" /><span>{sub.successRate}%</span></div>
                 <div className="flex items-center gap-1"><Shield className="w-3 h-3" /><span>L{sub.permissionLevel}</span></div>
+                <button onClick={(e) => { e.stopPropagation(); onEditSub(agent, sub); }}
+                  className="px-1.5 py-1.5 text-text-muted hover:text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+                  title={t('Edit Sub-Agent', '编辑子Agent')}>
+                  <Settings className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           ))}
@@ -473,12 +501,13 @@ function AgentCard({ agent, onEdit }: { agent: DomainAgent; onEdit: (agent: Doma
 export default function Agents() {
   const { t } = useText();
   const [editingAgent, setEditingAgent] = useState<DomainAgent | null>(null);
+  const [editingSubAgent, setEditingSubAgent] = useState<SubAgent | undefined>(undefined);
   const totalAgents = domainAgents.length;
   const totalSubAgents = domainAgents.reduce((sum, a) => sum + a.subAgents.length, 0);
 
   // Full-page drill-down editor
   if (editingAgent) {
-    return <AgentEditor agent={editingAgent} onClose={() => setEditingAgent(null)} />;
+    return <AgentEditor agent={editingAgent} subAgent={editingSubAgent} onClose={() => { setEditingAgent(null); setEditingSubAgent(undefined); }} />;
   }
 
   return (
@@ -497,7 +526,7 @@ export default function Agents() {
         </div>
       </div>
       <div className="space-y-3">
-        {domainAgents.map(agent => <AgentCard key={agent.id} agent={agent} onEdit={setEditingAgent} />)}
+        {domainAgents.map(agent => <AgentCard key={agent.id} agent={agent} onEdit={setEditingAgent} onEditSub={(a, s) => { setEditingAgent(a); setEditingSubAgent(s); }} />)}
       </div>
     </div>
   );
