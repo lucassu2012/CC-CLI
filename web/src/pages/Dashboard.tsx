@@ -280,14 +280,14 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="text-xs text-text-muted mb-2">{t('Sub-Agents', '子Agent列表')}:</div>
-            {agentModal.subAgents.map((sub: any) => (
+            {agentModal.subAgents.map((sub) => (
               <div key={sub.id} className="bg-bg-primary rounded-lg border border-border p-3 flex items-center gap-3">
                 <StatusBadge status={sub.status || 'active'} size="sm" />
                 <div className="flex-1">
                   <div className="text-sm text-text-primary">{t(sub.name, sub.nameZh)}</div>
-                  <div className="text-xs text-text-muted">{t(sub.description || '', sub.descriptionZh || sub.description || '')}</div>
+                  <div className="text-xs text-text-muted">{t(sub.currentTask, sub.currentTaskZh)}</div>
                 </div>
-                <div className="text-xs text-text-muted tabular-nums">{sub.taskCount || Math.floor(Math.random() * 50 + 10)} {t('tasks', '任务')}</div>
+                <div className="text-xs text-text-muted tabular-nums">{sub.toolCalls.toLocaleString()} {t('calls', '调用')}</div>
               </div>
             ))}
           </div>
