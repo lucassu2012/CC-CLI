@@ -8,10 +8,11 @@ import { useText } from '../hooks/useText';
 
 interface WfNode {
   id: string;
-  type: 'trigger' | 'agent' | 'condition' | 'action' | 'merge' | 'split' | 'transform';
+  type: 'trigger' | 'agent' | 'condition' | 'action' | 'merge' | 'split' | 'transform' | 'connector';
   name: string;
   agentType?: string;
   subAgent?: string;
+  connectorType?: string;
   x: number;
   y: number;
   config?: Record<string, any>;
@@ -23,6 +24,15 @@ const SUB_AGENTS: Record<string, { name: string; subs: string[] }> = {
   experience:   { name: '体验保障Agent', subs: ['投诉预警', '差异化体验', '确定性体验'] },
   ops:          { name: '网络运维Agent', subs: ['运维监控', '故障分析', '上站维护'] },
   marketing:    { name: '运营支撑Agent', subs: ['潜客识别', '实时营销', '离网维挽'] },
+};
+
+const CONNECTORS: Record<string, { name: string; nameEn: string; color: string; desc: string }> = {
+  oss:        { name: 'OSS平台', nameEn: 'OSS Platform', color: '#f97316', desc: '网管系统·配置下发·性能采集' },
+  ticket:     { name: '工单系统', nameEn: 'Ticket/ITSM', color: '#8b5cf6', desc: '工单创建·派单·闭环' },
+  smartcare:  { name: 'SmartCare', nameEn: 'Huawei SmartCare', color: '#ec4899', desc: '用户体验管理·CEM分析' },
+  autin:      { name: 'AUTIN', nameEn: 'Huawei AUTIN', color: '#06b6d4', desc: '自治网络·智能运维' },
+  crm:        { name: 'CRM系统', nameEn: 'CRM System', color: '#10b981', desc: '客户管理·营销触达·渠道' },
+  bss:        { name: 'BSS/计费', nameEn: 'BSS/Billing', color: '#eab308', desc: '计费·套餐·账务' },
 };
 
 let _nextId = 100;
@@ -201,6 +211,60 @@ const TEMPLATES: WfTemplate[] = [
       { id: 'e11', source: 'a4', target: 'a5' },
     ],
   },
+  {
+    id: 'wf7', name: '跨系统故障工单自动化',
+    description: 'OSS告警→故障分析→SmartCare体验关联→自动创建工单→AUTIN闭环',
+    nodes: [
+      { id: 't1', type: 'connector', name: 'OSS告警接入', connectorType: 'oss', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '故障分析', agentType: 'ops', x: 300, y: 200 },
+      { id: 's1', type: 'split', name: '并行关联', x: 550, y: 200 },
+      { id: 'c1', type: 'connector', name: 'SmartCare查询', connectorType: 'smartcare', x: 800, y: 80 },
+      { id: 'a2', type: 'agent', name: '影响分析', agentType: 'experience', x: 800, y: 320 },
+      { id: 'm1', type: 'merge', name: '综合研判', x: 1050, y: 200 },
+      { id: 'cd1', type: 'condition', name: '需现场?', x: 1300, y: 200 },
+      { id: 'c2', type: 'connector', name: '创建工单', connectorType: 'ticket', x: 1550, y: 120 },
+      { id: 'c3', type: 'connector', name: 'AUTIN远程修复', connectorType: 'autin', x: 1550, y: 300 },
+      { id: 'a3', type: 'action', name: '验证&闭环', x: 1800, y: 200 },
+    ],
+    edges: [
+      { id: 'e1', source: 't1', target: 'a1' },
+      { id: 'e2', source: 'a1', target: 's1' },
+      { id: 'e3', source: 's1', target: 'c1' },
+      { id: 'e4', source: 's1', target: 'a2' },
+      { id: 'e5', source: 'c1', target: 'm1' },
+      { id: 'e6', source: 'a2', target: 'm1' },
+      { id: 'e7', source: 'm1', target: 'cd1' },
+      { id: 'e8', source: 'cd1', target: 'c2', label: '是' },
+      { id: 'e9', source: 'cd1', target: 'c3', label: '否' },
+      { id: 'e10', source: 'c2', target: 'a3' },
+      { id: 'e11', source: 'c3', target: 'a3' },
+    ],
+  },
+  {
+    id: 'wf8', name: '精准营销全流程自动化',
+    description: 'CRM潜客→BSS套餐匹配→营销执行→SmartCare体验监控→工单跟进',
+    nodes: [
+      { id: 'c1', type: 'connector', name: 'CRM潜客数据', connectorType: 'crm', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '潜客筛选', agentType: 'marketing', x: 300, y: 200 },
+      { id: 'c2', type: 'connector', name: 'BSS套餐查询', connectorType: 'bss', x: 550, y: 200 },
+      { id: 'a2', type: 'agent', name: '方案匹配', agentType: 'marketing', x: 800, y: 200 },
+      { id: 'cd1', type: 'condition', name: '匹配成功?', x: 1050, y: 200 },
+      { id: 'c3', type: 'connector', name: 'CRM营销触达', connectorType: 'crm', x: 1300, y: 120 },
+      { id: 'c4', type: 'connector', name: 'SmartCare监控', connectorType: 'smartcare', x: 1550, y: 120 },
+      { id: 'a3', type: 'action', name: '效果报告', x: 1800, y: 120 },
+      { id: 'a4', type: 'action', name: '标记观望', x: 1300, y: 310 },
+    ],
+    edges: [
+      { id: 'e1', source: 'c1', target: 'a1' },
+      { id: 'e2', source: 'a1', target: 'c2' },
+      { id: 'e3', source: 'c2', target: 'a2' },
+      { id: 'e4', source: 'a2', target: 'cd1' },
+      { id: 'e5', source: 'cd1', target: 'c3', label: '是' },
+      { id: 'e6', source: 'cd1', target: 'a4', label: '否' },
+      { id: 'e7', source: 'c3', target: 'c4' },
+      { id: 'e8', source: 'c4', target: 'a3' },
+    ],
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -217,6 +281,7 @@ const COLORS: Record<string, { bg: string; border: string; text: string }> = {
   merge:     { bg: '#374151', border: '#6b7280', text: '#d1d5db' },
   split:     { bg: '#374151', border: '#6b7280', text: '#d1d5db' },
   transform: { bg: '#581c87', border: '#a855f7', text: '#e9d5ff' },
+  connector: { bg: '#164e63', border: '#06b6d4', text: '#a5f3fc' },
 };
 
 const AGENT_COLORS: Record<string, string> = {
@@ -233,6 +298,7 @@ function nodeIcon(type: string) {
     case 'merge': return '⤵';
     case 'split': return '⤴';
     case 'transform': return '⇄';
+    case 'connector': return '🔌';
     default: return '●';
   }
 }
@@ -342,9 +408,10 @@ export default function Workflows() {
     return { x, y };
   }, [zoom]);
 
-  const handlePaletteDragStart = useCallback((e: React.DragEvent, type: WfNode['type'], agentType?: string) => {
+  const handlePaletteDragStart = useCallback((e: React.DragEvent, type: WfNode['type'], agentType?: string, connectorType?: string) => {
     e.dataTransfer.setData('nodeType', type);
     if (agentType) e.dataTransfer.setData('agentType', agentType);
+    if (connectorType) e.dataTransfer.setData('connectorType', connectorType);
   }, []);
 
   const handleCanvasDrop = useCallback((e: React.DragEvent) => {
@@ -358,8 +425,9 @@ export default function Workflows() {
     const x = (e.clientX - rect.left) / zoom - NODE_W / 2;
     const y = (e.clientY - rect.top) / zoom - NODE_H / 2;
     const id = `n${_nextId++}`;
-    const names: Record<string, string> = { trigger: '新触发器', agent: agentType ? (SUB_AGENTS[agentType]?.name || 'Agent') : 'Agent', condition: '新条件', action: '新动作', merge: '合并', split: '拆分', transform: '转换' };
-    const newNode: WfNode = { id, type, name: names[type] || type, agentType, x: Math.max(0, x), y: Math.max(0, y) };
+    const connectorType = e.dataTransfer.getData('connectorType') || undefined;
+    const names: Record<string, string> = { trigger: '新触发器', agent: agentType ? (SUB_AGENTS[agentType]?.name || 'Agent') : 'Agent', condition: '新条件', action: '新动作', merge: '合并', split: '拆分', transform: '转换', connector: connectorType ? (CONNECTORS[connectorType]?.name || '连接器') : '连接器' };
+    const newNode: WfNode = { id, type, name: names[type] || type, agentType, connectorType, x: Math.max(0, x), y: Math.max(0, y) };
     if (!isCustom) {
       setCustomNodes([...template.nodes, newNode]);
       setCustomEdges([...template.edges]);
@@ -569,7 +637,7 @@ export default function Workflows() {
         {/* Left: Node palette */}
         <div className="w-48 border-r border-border bg-bg-card p-3 shrink-0 overflow-auto">
           <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">{t('Node Types', '节点类型')}</h3>
-          {(['trigger', 'agent', 'condition', 'action', 'merge', 'split', 'transform'] as const).map(type => {
+          {(['trigger', 'agent', 'connector', 'condition', 'action', 'merge', 'split', 'transform'] as const).map(type => {
             const c = COLORS[type];
             return (
               <div key={type} draggable onDragStart={e => handlePaletteDragStart(e, type)}
@@ -578,7 +646,7 @@ export default function Workflows() {
                 <div className="w-7 h-7 rounded-md flex items-center justify-center text-xs" style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}>
                   {nodeIcon(type)}
                 </div>
-                <span className="text-xs text-text-secondary capitalize">{type === 'trigger' ? '触发器' : type === 'agent' ? 'Agent' : type === 'condition' ? '条件' : type === 'action' ? '动作' : type === 'merge' ? '合并' : type === 'split' ? '拆分' : '转换'}</span>
+                <span className="text-xs text-text-secondary capitalize">{type === 'trigger' ? '触发器' : type === 'agent' ? 'Agent' : type === 'connector' ? '连接器' : type === 'condition' ? '条件' : type === 'action' ? '动作' : type === 'merge' ? '合并' : type === 'split' ? '拆分' : '转换'}</span>
               </div>
             );
           })}
@@ -590,6 +658,18 @@ export default function Workflows() {
                 <GripVertical className="w-3 h-3 text-text-muted/40" />
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: AGENT_COLORS[key] }} />
                 <span className="text-xs text-text-secondary">{label}Agent</span>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-border mt-3 pt-3">
+            <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t('Connectors', '外部连接器')}</h3>
+            {Object.entries(CONNECTORS).map(([key, conn]) => (
+              <div key={key} draggable onDragStart={e => handlePaletteDragStart(e, 'connector', undefined, key)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-bg-primary transition-colors mb-1 cursor-grab active:cursor-grabbing"
+                title={conn.desc}>
+                <GripVertical className="w-3 h-3 text-text-muted/40" />
+                <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: conn.color }} />
+                <span className="text-xs text-text-secondary">{conn.name}</span>
               </div>
             ))}
           </div>
@@ -680,6 +760,7 @@ export default function Workflows() {
               const isCurrent = currentNodeId === node.id;
               const isSelected = selectedNode?.id === node.id;
               const agentColor = node.agentType ? AGENT_COLORS[node.agentType] : undefined;
+              const connColor = node.connectorType ? CONNECTORS[node.connectorType]?.color : undefined;
 
               return (
                 <g key={node.id} onClick={() => setSelectedNode(node)}
@@ -699,17 +780,17 @@ export default function Workflows() {
                   {/* n8n-style node body */}
                   <rect x={node.x} y={node.y} width={NODE_W} height={NODE_H} rx={10}
                     fill={isDone ? '#14532d' : '#111827'}
-                    stroke={isDone ? '#22c55e' : (agentColor || c.border)}
+                    stroke={isDone ? '#22c55e' : (connColor || agentColor || c.border)}
                     strokeWidth={isCurrent ? 2.5 : 1.5}
                     style={{ transition: 'all 0.3s' }}
                   />
                   {/* n8n-style icon circle on left */}
                   <circle cx={node.x + 26} cy={node.y + NODE_H / 2} r={18}
-                    fill={isDone ? '#22c55e20' : (agentColor ? `${agentColor}20` : `${c.border}20`)}
-                    stroke={isDone ? '#22c55e40' : (agentColor ? `${agentColor}40` : `${c.border}40`)}
+                    fill={isDone ? '#22c55e20' : (connColor ? `${connColor}20` : agentColor ? `${agentColor}20` : `${c.border}20`)}
+                    stroke={isDone ? '#22c55e40' : (connColor ? `${connColor}40` : agentColor ? `${agentColor}40` : `${c.border}40`)}
                     strokeWidth={1} />
                   <text x={node.x + 26} y={node.y + NODE_H / 2 + 1}
-                    fill={isDone ? '#bbf7d0' : (agentColor || c.text)} fontSize="14" textAnchor="middle" dominantBaseline="middle">
+                    fill={isDone ? '#bbf7d0' : (connColor || agentColor || c.text)} fontSize="14" textAnchor="middle" dominantBaseline="middle">
                     {isDone ? '✓' : nodeIcon(node.type)}
                   </text>
                   {/* Name (right of icon) */}
@@ -721,7 +802,7 @@ export default function Workflows() {
                   {/* Subtitle: agent type or node type */}
                   <text x={node.x + 52} y={node.y + NODE_H / 2 + 10}
                     fill="#64748b" fontSize="9" dominantBaseline="middle">
-                    {node.subAgent || (node.agentType ? SUB_AGENTS[node.agentType]?.name : node.type)}
+                    {node.subAgent || (node.connectorType ? CONNECTORS[node.connectorType]?.nameEn : node.agentType ? SUB_AGENTS[node.agentType]?.name : node.type)}
                   </text>
                   {/* n8n-style left port (input) */}
                   <circle cx={node.x} cy={node.y + NODE_H / 2} r={5}
@@ -827,6 +908,24 @@ export default function Workflows() {
                     <span className="text-sm text-text-secondary">
                       {selectedNode.agentType === 'ops' ? '网络运维' : selectedNode.agentType === 'optimization' ? '网络优化' : selectedNode.agentType === 'experience' ? '体验保障' : selectedNode.agentType === 'planning' ? '规划' : '运营支撑'}Agent
                     </span>
+                  </div>
+                </div>
+              )}
+              {selectedNode.connectorType && CONNECTORS[selectedNode.connectorType] && (
+                <div>
+                  <label className="text-xs text-text-muted block mb-1">{t('External System', '外部系统')}</label>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CONNECTORS[selectedNode.connectorType].color }} />
+                    <span className="text-sm text-text-secondary">{CONNECTORS[selectedNode.connectorType].name}</span>
+                  </div>
+                  <p className="text-xs text-text-muted mt-1">{CONNECTORS[selectedNode.connectorType].desc}</p>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-status-green" />
+                      <span className="text-status-green">{t('Connected', '已连接')}</span>
+                    </div>
+                    <div className="text-[10px] text-text-muted">API: https://{selectedNode.connectorType}.telecom.cn/api/v2</div>
+                    <div className="text-[10px] text-text-muted">{t('Latency', '延迟')}: {Math.floor(Math.random() * 30 + 10)}ms</div>
                   </div>
                 </div>
               )}

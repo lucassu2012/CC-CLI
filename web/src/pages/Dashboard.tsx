@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, XCircle,
-  Clock, Loader2, Activity, X, ChevronRight, Zap, Radio,
+  Clock, Loader2, Activity, X, ChevronRight, Zap, Radio, Plug,
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { useText } from '../hooks/useText';
@@ -140,6 +140,41 @@ export default function Dashboard() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* ②-0 Connected External Systems */}
+      <section>
+        <h2 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-2">
+          <Plug className="w-4 h-4 text-accent-cyan" />
+          {t('Connected Systems', '外部系统连接')}
+          <span className="ml-2 text-xs bg-status-green/20 text-status-green px-2 py-0.5 rounded-full">
+            6/6 {t('Online', '在线')}
+          </span>
+        </h2>
+        <div className="grid grid-cols-6 gap-3">
+          {[
+            { id: 'oss', name: 'OSS平台', nameEn: 'OSS Platform', color: '#f97316', status: 'connected', latency: 12, api: 'CORBA/MTOSI', tasks: 1247 },
+            { id: 'ticket', name: '工单系统', nameEn: 'Ticket/ITSM', color: '#8b5cf6', status: 'connected', latency: 8, api: 'REST API', tasks: 892 },
+            { id: 'smartcare', name: 'SmartCare', nameEn: 'Huawei CEM', color: '#ec4899', status: 'connected', latency: 23, api: 'Northbound', tasks: 456 },
+            { id: 'autin', name: 'AUTIN', nameEn: 'Huawei ADN', color: '#06b6d4', status: 'connected', latency: 18, api: 'Intent API', tasks: 334 },
+            { id: 'crm', name: 'CRM系统', nameEn: 'CRM System', color: '#10b981', status: 'connected', latency: 15, api: 'REST API', tasks: 2103 },
+            { id: 'bss', name: 'BSS/计费', nameEn: 'BSS/Billing', color: '#eab308', status: 'connected', latency: 11, api: 'SOAP/REST', tasks: 1578 },
+          ].map(sys => (
+            <div key={sys.id} className="bg-bg-card rounded-xl border border-border p-3 hover:border-accent-cyan/30 transition-all group">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: sys.color }} />
+                <span className="text-xs font-medium text-text-primary truncate">{sys.name}</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-status-green ml-auto shrink-0" />
+              </div>
+              <p className="text-[10px] text-text-muted mb-2">{sys.nameEn}</p>
+              <div className="space-y-1 text-[10px]">
+                <div className="flex justify-between"><span className="text-text-muted">{t('Protocol', '协议')}</span><span className="text-text-secondary font-mono">{sys.api}</span></div>
+                <div className="flex justify-between"><span className="text-text-muted">{t('Latency', '延迟')}</span><span className="text-status-green">{sys.latency}ms</span></div>
+                <div className="flex justify-between"><span className="text-text-muted">{t('Calls/24h', '调用/24h')}</span><span className="text-text-secondary tabular-nums">{sys.tasks.toLocaleString()}</span></div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
