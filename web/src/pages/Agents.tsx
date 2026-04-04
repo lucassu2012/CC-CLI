@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bot, ChevronDown, ChevronRight, Shield, Wrench, BarChart3, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft, Eye } from 'lucide-react';
+import { Bot, ChevronDown, ChevronRight, Shield, Wrench, BarChart3, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft } from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { domainAgents, type DomainAgent } from '../data/agents';
 import { generatedSkills } from '../data/knowledge';
@@ -464,13 +464,6 @@ function AgentCard({ agent, onEdit }: { agent: DomainAgent; onEdit: (agent: Doma
               </div>
             </div>
           ))}
-          {/* Quick-edit button at bottom of expanded panel */}
-          <div className="px-5 py-2.5 flex justify-center">
-            <button onClick={() => onEdit(agent)}
-              className="flex items-center gap-1.5 text-xs text-accent-cyan hover:text-accent-cyan/80 cursor-pointer">
-              <Eye className="w-3.5 h-3.5" /> {t('Open Editor — Memory / Skills / SOP / Model / Twin', '打开编辑器 — 记忆 / Skill / SOP / 模型 / 孪生')}
-            </button>
-          </div>
         </div>
       )}
     </div>

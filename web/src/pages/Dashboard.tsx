@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, XCircle,
-  Clock, Loader2, Activity, X, ChevronRight, Zap, Radio, Plug,
+  Clock, Loader2, Activity, X, ChevronRight, Zap, Radio, Plug, Users, ChevronDown,
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { useText } from '../hooks/useText';
-import { kpiMetrics as kpiBase, activeAlerts, recentTasks } from '../data/dashboard';
+import { kpiMetrics as kpiBase, activeAlerts, recentTasks, extraTasks, extraAlerts, type TaskItem, type AlertItem } from '../data/dashboard';
 import { domainAgents, type SubAgent } from '../data/agents';
 import StatusBadge from '../components/StatusBadge';
 
@@ -75,11 +75,62 @@ export default function Dashboard() {
     return () => clearInterval(iv);
   }, []);
 
+  /* Dynamic task rotation */
+  const [liveTasks, setLiveTasks] = useState<TaskItem[]>(recentTasks.slice(0, 6));
+  const extraTaskIdx = useRef(0);
+  const taskScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setLiveTasks(prev => {
+        const pool = extraTasks;
+        const newTask = { ...pool[extraTaskIdx.current % pool.length], id: `TSK-D${Date.now()}`, timestamp: '刚刚' };
+        extraTaskIdx.current++;
+        // Remove oldest completed, add new at top
+        const updated = [newTask, ...prev.filter(t => t.status !== 'completed' || prev.indexOf(t) < 4)];
+        // Mark a running task as completed randomly
+        const running = updated.filter(t => t.status === 'running' && t.id !== newTask.id);
+        if (running.length > 1) {
+          const toComplete = running[Math.floor(Math.random() * running.length)];
+          const idx = updated.findIndex(t => t.id === toComplete.id);
+          if (idx >= 0) updated[idx] = { ...toComplete, status: 'completed', result: 'Auto-completed', resultZh: '已自动完成' };
+        }
+        return updated.slice(0, 8);
+      });
+    }, 5000);
+    return () => clearInterval(iv);
+  }, []);
+
+  /* Dynamic alert rotation */
+  const [liveAlerts, setLiveAlerts] = useState<AlertItem[]>(activeAlerts.slice(0, 6));
+  const extraAlertIdx = useRef(0);
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setLiveAlerts(prev => {
+        const pool = extraAlerts;
+        const newAlert = { ...pool[extraAlertIdx.current % pool.length], id: `ALM-D${Date.now()}`, timestamp: '刚刚' };
+        extraAlertIdx.current++;
+        // Acknowledge an existing one randomly
+        const unacked = prev.filter(a => !a.acknowledged);
+        const updated = [newAlert, ...prev];
+        if (unacked.length > 1) {
+          const toAck = unacked[Math.floor(Math.random() * unacked.length)];
+          const idx = updated.findIndex(a => a.id === toAck.id);
+          if (idx >= 0) updated[idx] = { ...toAck, acknowledged: true };
+        }
+        return updated.slice(0, 8);
+      });
+    }, 6000);
+    return () => clearInterval(iv);
+  }, []);
+
   /* Modals */
-  const [taskModal, setTaskModal] = useState<typeof recentTasks[0] | null>(null);
-  const [alertModal, setAlertModal] = useState<typeof activeAlerts[0] | null>(null);
+  const [taskModal, setTaskModal] = useState<TaskItem | null>(null);
+  const [alertModal, setAlertModal] = useState<AlertItem | null>(null);
   const [agentModal, setAgentModal] = useState<typeof domainAgents[0] | null>(null);
   const [subAgentModal, setSubAgentModal] = useState<SubAgent | null>(null);
+  const [subTaskDetail, setSubTaskDetail] = useState<{ title: string; status: string; start: string; elapsed: string } | null>(null);
+  const [subAlarmDetail, setSubAlarmDetail] = useState<{ severity: string; title: string; time: string; status: string } | null>(null);
+  const [collabOpen, setCollabOpen] = useState(false);
 
   /* Pulse indicator */
   const pulseClass = tick % 2 === 0 ? 'opacity-100' : 'opacity-60';
@@ -212,21 +263,32 @@ export default function Dashboard() {
       </section>
 
       <div className="grid grid-cols-2 gap-5">
-        {/* ③ Recent Tasks (clickable) */}
+        {/* ③ Recent Tasks (dynamic, clickable) */}
         <section>
           <h2 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-2">
             <Activity className="w-4 h-4" />
             {t('Recent Tasks', '最近任务')}
+            <span className="ml-2 w-1.5 h-1.5 rounded-full bg-accent-cyan animate-pulse" />
+            <span className="text-xs text-text-muted font-normal">{t('Live', '实时')}</span>
+            <span className="ml-auto text-xs text-text-muted tabular-nums">{liveTasks.filter(tt => tt.status === 'running').length} {t('running', '运行中')}</span>
           </h2>
-          <div className="bg-bg-card rounded-xl border border-border overflow-hidden">
+          <div ref={taskScrollRef} className="bg-bg-card rounded-xl border border-border overflow-hidden">
             <div className="divide-y divide-border">
-              {recentTasks.map(task => (
-                <div key={task.id} onClick={() => setTaskModal(task)}
-                  className="px-4 py-3 flex items-center gap-3 hover:bg-bg-hover/50 transition-colors cursor-pointer group">
+              {liveTasks.map(task => (
+                <div key={task.id} onClick={() => { setTaskModal(task); setCollabOpen(false); }}
+                  className="px-4 py-3 flex items-center gap-3 hover:bg-bg-hover/50 transition-all duration-500 cursor-pointer group animate-fadeIn">
                   {taskStatusIcon[task.status]}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-text-primary truncate">{t(task.title, task.titleZh)}</p>
-                    <p className="text-xs text-text-muted">{task.agent} · {task.duration}</p>
+                    <div className="flex items-center gap-2 text-xs text-text-muted">
+                      <span>{task.agent}</span>
+                      {task.collaborators && task.collaborators.length > 0 && (
+                        <span className="flex items-center gap-0.5 text-accent-cyan/70">
+                          <Users className="w-3 h-3" />+{task.collaborators.length}
+                        </span>
+                      )}
+                      <span>· {task.duration}</span>
+                    </div>
                   </div>
                   <span className="text-xs text-text-muted shrink-0">{task.timestamp}</span>
                   <ChevronRight className="w-3 h-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -236,20 +298,22 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ④ Active Alerts (clickable) */}
+        {/* ④ Active Alerts (dynamic, clickable) */}
         <section>
           <h2 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
             {t('Active Alerts', '活跃告警')}
+            <span className="ml-2 w-1.5 h-1.5 rounded-full bg-status-red animate-pulse" />
+            <span className="text-xs text-text-muted font-normal">{t('Live', '实时')}</span>
             <span className="ml-auto text-xs bg-status-red/20 text-status-red px-2 py-0.5 rounded-full animate-pulse">
-              {activeAlerts.filter(a => !a.acknowledged).length} {t('new', '新')}
+              {liveAlerts.filter(a => !a.acknowledged).length} {t('new', '新')}
             </span>
           </h2>
           <div className="bg-bg-card rounded-xl border border-border overflow-hidden">
             <div className="divide-y divide-border">
-              {activeAlerts.map(alert => (
+              {liveAlerts.map(alert => (
                 <div key={alert.id} onClick={() => setAlertModal(alert)}
-                  className="px-4 py-3 flex items-center gap-3 hover:bg-bg-hover/50 transition-colors cursor-pointer group">
+                  className="px-4 py-3 flex items-center gap-3 hover:bg-bg-hover/50 transition-all duration-500 cursor-pointer group animate-fadeIn">
                   <span className={`text-xs font-mono px-1.5 py-0.5 rounded border ${severityColor[alert.severity]}`}>
                     {alert.severity === 'critical' ? 'CRIT' : alert.severity === 'major' ? 'MAJR' : alert.severity === 'warning' ? 'WARN' : 'MINR'}
                   </span>
@@ -328,7 +392,8 @@ export default function Dashboard() {
                 </h4>
                 <div className="space-y-1.5">
                   {subTasks.map(task => (
-                    <div key={task.id} className="bg-bg-primary rounded-lg border border-border px-3 py-2 flex items-center gap-2.5">
+                    <div key={task.id} onClick={(e) => { e.stopPropagation(); setSubTaskDetail(task); }}
+                      className="bg-bg-primary rounded-lg border border-border px-3 py-2 flex items-center gap-2.5 hover:bg-bg-hover/50 hover:border-accent-cyan/30 cursor-pointer transition-colors group/task">
                       {task.status === 'running' ? <Loader2 className="w-3.5 h-3.5 text-accent-cyan animate-spin shrink-0" />
                         : task.status === 'completed' ? <CheckCircle2 className="w-3.5 h-3.5 text-status-green shrink-0" />
                         : <Clock className="w-3.5 h-3.5 text-text-muted shrink-0" />}
@@ -337,6 +402,7 @@ export default function Dashboard() {
                       </div>
                       <span className="text-[10px] text-text-muted shrink-0">{task.start}</span>
                       <span className="text-[10px] text-text-muted shrink-0 w-12 text-right">{task.elapsed}</span>
+                      <ChevronRight className="w-3 h-3 text-text-muted opacity-0 group-hover/task:opacity-100 transition-opacity shrink-0" />
                     </div>
                   ))}
                 </div>
@@ -349,7 +415,8 @@ export default function Dashboard() {
                 </h4>
                 <div className="space-y-1.5">
                   {subAlarms.map(alarm => (
-                    <div key={alarm.id} className="bg-bg-primary rounded-lg border border-border px-3 py-2 flex items-center gap-2.5">
+                    <div key={alarm.id} onClick={(e) => { e.stopPropagation(); setSubAlarmDetail(alarm); }}
+                      className="bg-bg-primary rounded-lg border border-border px-3 py-2 flex items-center gap-2.5 hover:bg-bg-hover/50 hover:border-accent-cyan/30 cursor-pointer transition-colors group/alarm">
                       <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${severityColor[alarm.severity] || severityColor['minor']}`}>
                         {alarm.severity === 'major' ? 'MAJR' : alarm.severity === 'warning' ? 'WARN' : 'MINR'}
                       </span>
@@ -360,6 +427,7 @@ export default function Dashboard() {
                       <span className={`text-[10px] px-1.5 py-0.5 rounded ${alarm.status === 'processing' ? 'bg-accent-cyan/10 text-accent-cyan' : 'bg-status-green/10 text-status-green'}`}>
                         {alarm.status === 'processing' ? t('Processing', '处理中') : t('Resolved', '已解决')}
                       </span>
+                      <ChevronRight className="w-3 h-3 text-text-muted opacity-0 group-hover/alarm:opacity-100 transition-opacity shrink-0" />
                     </div>
                   ))}
                 </div>
@@ -369,22 +437,68 @@ export default function Dashboard() {
         })()}
       </Modal>
 
-      {/* ─── Task detail modal ─── */}
-      <Modal open={!!taskModal} onClose={() => setTaskModal(null)} title={taskModal ? t(taskModal.title, taskModal.titleZh) : ''}>
+      {/* ─── Task detail modal (rich) ─── */}
+      <Modal open={!!taskModal} onClose={() => { setTaskModal(null); setCollabOpen(false); }} title={taskModal ? t(taskModal.title, taskModal.titleZh) : ''}>
         {taskModal && (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               {taskStatusIcon[taskModal.status]}
               <span className="text-sm font-medium text-text-primary capitalize">{taskModal.status}</span>
-              <span className="text-xs text-text-muted">· {taskModal.agent} · {taskModal.duration}</span>
+              <span className="text-xs text-text-muted">· {taskModal.duration}</span>
+              <span className="text-xs text-text-muted">{taskModal.timestamp}</span>
             </div>
+
+            {/* Lead Agent */}
+            <div>
+              <div className="text-xs text-text-muted mb-1.5">{t('Lead Agent', '主导Agent')}</div>
+              <div className="bg-bg-primary rounded-lg border border-accent-cyan/30 p-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-accent-cyan/20 flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-accent-cyan" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-accent-cyan">{taskModal.agent}</div>
+                  <div className="text-[10px] text-text-muted">{t('Primary executor', '主要执行者')}</div>
+                </div>
+                <span className="text-xs bg-accent-cyan/10 text-accent-cyan px-2 py-0.5 rounded-full">{t('Lead', '主导')}</span>
+              </div>
+            </div>
+
+            {/* Collaborating Agents */}
+            {taskModal.collaborators && taskModal.collaborators.length > 0 && (
+              <div>
+                <button onClick={() => setCollabOpen(!collabOpen)}
+                  className="text-xs text-text-muted mb-1.5 flex items-center gap-1 cursor-pointer hover:text-text-secondary transition-colors">
+                  <Users className="w-3 h-3" />
+                  {t('Collaborating Agents', '协同Agent')} ({taskModal.collaborators.length})
+                  <ChevronDown className={`w-3 h-3 transition-transform ${collabOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {collabOpen && (
+                  <div className="space-y-1.5">
+                    {taskModal.collaborators.map((collab, i) => (
+                      <div key={i} className="bg-bg-primary rounded-lg border border-border p-2.5 flex items-center gap-3">
+                        <div className="w-6 h-6 rounded bg-purple-500/20 flex items-center justify-center">
+                          <Users className="w-3 h-3 text-purple-400" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs font-medium text-text-primary">{collab}</div>
+                        </div>
+                        <span className="text-[10px] bg-purple-500/10 text-purple-400 px-1.5 py-0.5 rounded">{t('Assist', '协同')}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div>
               <div className="text-xs text-text-muted mb-1">{t('Detail', '详情')}</div>
               <div className="text-sm text-text-secondary bg-bg-primary rounded-lg p-3 border border-border">{t(taskModal.detail, taskModal.detailZh)}</div>
             </div>
             <div>
               <div className="text-xs text-text-muted mb-1">{t('Result', '结果')}</div>
-              <div className="text-sm text-status-green bg-bg-primary rounded-lg p-3 border border-border">{t(taskModal.result, taskModal.resultZh)}</div>
+              <div className={`text-sm bg-bg-primary rounded-lg p-3 border border-border ${taskModal.status === 'completed' ? 'text-status-green' : taskModal.status === 'failed' ? 'text-status-red' : 'text-accent-cyan'}`}>
+                {t(taskModal.result, taskModal.resultZh)}
+              </div>
             </div>
           </div>
         )}
@@ -411,6 +525,99 @@ export default function Dashboard() {
               <div className="text-xs text-text-muted mb-1">{t('Affected Scope', '影响范围')}</div>
               <div className="text-sm text-text-secondary">{t(alertModal.affectedScope, alertModal.affectedScopeZh)}</div>
             </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ─── Sub-agent task detail modal ─── */}
+      <Modal open={!!subTaskDetail} onClose={() => setSubTaskDetail(null)} title={subTaskDetail?.title || ''}>
+        {subTaskDetail && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              {subTaskDetail.status === 'running' ? <Loader2 className="w-4 h-4 text-accent-cyan animate-spin" />
+                : subTaskDetail.status === 'completed' ? <CheckCircle2 className="w-4 h-4 text-status-green" />
+                : <Clock className="w-4 h-4 text-text-muted" />}
+              <span className="text-sm font-medium text-text-primary capitalize">{subTaskDetail.status}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-bg-primary rounded-lg border border-border p-3">
+                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">{t('Start Time', '开始时间')}</div>
+                <div className="text-sm text-text-primary font-mono">{subTaskDetail.start}</div>
+              </div>
+              <div className="bg-bg-primary rounded-lg border border-border p-3">
+                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">{t('Elapsed', '已耗时')}</div>
+                <div className="text-sm text-text-primary font-mono">{subTaskDetail.elapsed}</div>
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-text-muted mb-1">{t('Task Description', '任务描述')}</div>
+              <div className="text-sm text-text-secondary bg-bg-primary rounded-lg p-3 border border-border">{subTaskDetail.title}</div>
+            </div>
+            {subTaskDetail.status === 'running' && (
+              <div className="bg-accent-cyan/5 border border-accent-cyan/20 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-xs text-accent-cyan">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  {t('Task is currently executing. Results will be available upon completion.', '任务正在执行中，完成后将显示结果。')}
+                </div>
+              </div>
+            )}
+            {subTaskDetail.status === 'completed' && (
+              <div className="bg-status-green/5 border border-status-green/20 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-xs text-status-green">
+                  <CheckCircle2 className="w-3 h-3" />
+                  {t('Task completed successfully. All outputs verified.', '任务已成功完成。所有输出已验证。')}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* ─── Sub-agent alarm detail modal ─── */}
+      <Modal open={!!subAlarmDetail} onClose={() => setSubAlarmDetail(null)} title={subAlarmDetail?.title || ''}>
+        {subAlarmDetail && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className={`text-xs font-mono px-2 py-1 rounded border ${severityColor[subAlarmDetail.severity] || severityColor['minor']}`}>
+                {subAlarmDetail.severity.toUpperCase()}
+              </span>
+              <span className="text-xs text-text-muted">{subAlarmDetail.time}</span>
+              <span className={`text-xs px-2 py-0.5 rounded ${subAlarmDetail.status === 'processing' ? 'bg-accent-cyan/10 text-accent-cyan' : 'bg-status-green/10 text-status-green'}`}>
+                {subAlarmDetail.status === 'processing' ? t('Processing', '处理中') : t('Resolved', '已解决')}
+              </span>
+            </div>
+            <div>
+              <div className="text-xs text-text-muted mb-1">{t('Alarm Description', '告警描述')}</div>
+              <div className="text-sm text-text-secondary bg-bg-primary rounded-lg p-3 border border-border">{subAlarmDetail.title}</div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-bg-primary rounded-lg border border-border p-3">
+                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">{t('Detected At', '检测时间')}</div>
+                <div className="text-sm text-text-primary font-mono">{subAlarmDetail.time}</div>
+              </div>
+              <div className="bg-bg-primary rounded-lg border border-border p-3">
+                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">{t('Severity', '严重程度')}</div>
+                <div className={`text-sm font-medium capitalize ${subAlarmDetail.severity === 'major' || subAlarmDetail.severity === 'critical' ? 'text-status-red' : subAlarmDetail.severity === 'warning' ? 'text-status-yellow' : 'text-text-muted'}`}>
+                  {subAlarmDetail.severity}
+                </div>
+              </div>
+            </div>
+            {subAlarmDetail.status === 'processing' && (
+              <div className="bg-accent-cyan/5 border border-accent-cyan/20 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-xs text-accent-cyan">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  {t('Agent is actively investigating this alarm. Root cause analysis in progress.', 'Agent正在积极排查此告警。根因分析进行中。')}
+                </div>
+              </div>
+            )}
+            {subAlarmDetail.status === 'resolved' && (
+              <div className="bg-status-green/5 border border-status-green/20 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-xs text-status-green">
+                  <CheckCircle2 className="w-3 h-3" />
+                  {t('Alarm has been resolved. Corrective actions applied successfully.', '告警已解决。纠正措施已成功应用。')}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Modal>
