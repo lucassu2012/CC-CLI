@@ -693,6 +693,9 @@ export default function Workflows() {
               <marker id="arrow-active" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
                 <polygon points="0 0, 8 3, 0 6" fill="#22c55e" />
               </marker>
+              <marker id="arrow-connector" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#06b6d4" />
+              </marker>
               {/* Grid pattern */}
               <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
                 <circle cx="12" cy="12" r="0.8" fill="#1e293b" />
@@ -733,12 +736,14 @@ export default function Workflows() {
               const tgtDone = activeNodeIds.has(edge.target);
               const isActive = srcDone && tgtDone;
               const isAnimating = srcDone && !tgtDone && running;
+              const isConnectorEdge = src.type === 'connector' || tgt.type === 'connector';
+              const connEdgeColor = isConnectorEdge ? '#06b6d4' : '#475569';
 
               return (
                 <g key={edge.id}>
-                  <path d={path} fill="none" stroke={isActive ? '#22c55e' : '#475569'} strokeWidth={isActive ? 2.5 : 1.5}
-                    markerEnd={isActive ? 'url(#arrow-active)' : 'url(#arrow)'}
-                    strokeDasharray={isAnimating ? '6 4' : 'none'}
+                  <path d={path} fill="none" stroke={isActive ? '#22c55e' : connEdgeColor} strokeWidth={isActive ? 2.5 : isConnectorEdge ? 2 : 1.5}
+                    markerEnd={isActive ? 'url(#arrow-active)' : isConnectorEdge ? 'url(#arrow-connector)' : 'url(#arrow)'}
+                    strokeDasharray={isAnimating ? '6 4' : isConnectorEdge ? '8 3' : 'none'}
                     className={isAnimating ? 'edge-active' : ''}
                     style={{ transition: 'stroke 0.3s' }}
                   />
@@ -747,6 +752,13 @@ export default function Workflows() {
                           y={(src.y + NODE_H/2 + tgt.y + NODE_H/2) / 2 - 8}
                           fill="#94a3b8" fontSize="9" textAnchor="middle">
                       {edge.label}
+                    </text>
+                  )}
+                  {isConnectorEdge && !edge.label && (
+                    <text x={(src.x + NODE_W + tgt.x) / 2}
+                          y={(src.y + NODE_H/2 + tgt.y + NODE_H/2) / 2 - 8}
+                          fill="#06b6d4" fontSize="8" textAnchor="middle" opacity={0.7}>
+                      API
                     </text>
                   )}
                 </g>

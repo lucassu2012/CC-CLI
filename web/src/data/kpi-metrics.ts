@@ -1,4 +1,4 @@
-// KPI指标时序数据 - IOE智能运维引擎演示数据
+// KPI指标时序数据 - IOE智能运营引擎演示数据
 // Time-series KPI data for charts (24 hours, hourly granularity)
 // 基准时间: 2026-03-31 00:00 至 2026-03-31 23:00
 

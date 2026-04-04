@@ -14,7 +14,7 @@ export default function Navbar() {
         </div>
         <span className="text-lg font-semibold text-text-primary tracking-tight">IOE</span>
         <span className="text-xs text-text-muted hidden sm:inline">
-          {t('Intelligent Operations Engine', '智能运维引擎')}
+          {t('Intelligent Operations Engine', '智能运营引擎')}
         </span>
       </div>
 

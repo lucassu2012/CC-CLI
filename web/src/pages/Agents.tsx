@@ -251,7 +251,7 @@ function AgentEditor({ agent, onClose }: { agent: DomainAgent; onClose: () => vo
                             </div>
                             <span className="text-[10px] font-medium text-text-primary truncate">{t(skill.name, skill.nameZh)}</span>
                           </div>
-                          <p className="text-[10px] text-text-muted truncate mt-1 ml-5.5">{skill.domain}</p>
+                          <p className="text-[10px] text-text-muted truncate mt-1 ml-6">{skill.domain}</p>
                         </div>
                       );
                     })}

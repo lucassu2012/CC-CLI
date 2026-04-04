@@ -1,4 +1,4 @@
-// 告警数据 - IOE智能运维引擎演示数据
+// 告警数据 - IOE智能运营引擎演示数据
 // Active and historical alarm data
 
 export type AlarmSeverity = 'critical' | 'major' | 'minor' | 'warning';

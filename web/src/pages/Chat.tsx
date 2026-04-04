@@ -17,6 +17,45 @@ const suggestionIcons: Record<string, React.ReactNode> = {
   reject: <XCircle className="w-3.5 h-3.5" />,
 };
 
+function formatChatContent(content: string): string {
+  // Split into lines to detect tables
+  const lines = content.split('\n');
+  const out: string[] = [];
+  let inTable = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const isTableRow = /^\|(.+)\|$/.test(line.trim());
+    const isSeparator = /^\|[-\s|:]+\|$/.test(line.trim());
+
+    if (isTableRow && !isSeparator) {
+      if (!inTable) {
+        inTable = true;
+        out.push('<table class="text-xs border-collapse my-2 w-full">');
+      }
+      const cells = line.trim().slice(1, -1).split('|').map(c => c.trim());
+      // First row after table start is header
+      const tag = out.filter(l => l.includes('<tr')).length === 0 ? 'th' : 'td';
+      const thStyle = tag === 'th' ? ' style="color:#94a3b8;font-weight:600;text-align:left;padding:4px 8px;border-bottom:1px solid #334155"' : ' style="padding:4px 8px;border-bottom:1px solid #1e293b"';
+      out.push(`<tr>${cells.map(c => `<${tag}${thStyle}>${c}</${tag}>`).join('')}</tr>`);
+    } else if (isSeparator) {
+      // Skip separator rows
+      continue;
+    } else {
+      if (inTable) {
+        inTable = false;
+        out.push('</table>');
+      }
+      out.push(line);
+    }
+  }
+  if (inTable) out.push('</table>');
+
+  return out.join('\n')
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-accent-cyan">$1</strong>')
+    .replace(/✅/g, '<span class="text-status-green">✅</span>');
+}
+
 const suggestionColors: Record<string, string> = {
   approve: 'border-status-green/40 hover:border-status-green hover:bg-status-green/10 text-status-green',
   modify: 'border-accent-cyan/40 hover:border-accent-cyan hover:bg-accent-cyan/10 text-accent-cyan',
@@ -145,8 +184,8 @@ export default function Chat() {
                   </span>
                   <span className="text-[10px] text-text-muted">{msg.timestamp}</span>
                 </div>
-                <div className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: msg.content.replace(/\*\*(.*?)\*\*/g, '<strong class="text-accent-cyan">$1</strong>').replace(/✅/g, '<span class="text-status-green">✅</span>') }} />
+                <div className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed chat-content"
+                  dangerouslySetInnerHTML={{ __html: formatChatContent(msg.content) }} />
 
                 {msg.toolCalls && msg.toolCalls.length > 0 && (
                   <div className="mt-3 space-y-1.5 border-t border-border pt-3">
