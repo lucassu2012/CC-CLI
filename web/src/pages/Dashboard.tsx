@@ -11,6 +11,11 @@ import StatusBadge from '../components/StatusBadge';
 
 /* ─── helpers ─── */
 const trendIcon = { up: TrendingUp, down: TrendingDown, stable: Minus };
+const TIMESTAMP_MAP: Record<string, string> = {
+  '刚刚': 'Just now', '2分钟前': '2 min ago', '5分钟前': '5 min ago',
+  '15分钟前': '15 min ago', '20分钟前': '20 min ago', '35分钟前': '35 min ago',
+  '1小时前': '1 hr ago', '1.5小时前': '1.5 hr ago', '2小时前': '2 hr ago',
+};
 const severityColor: Record<string, string> = {
   critical: 'border-status-red text-status-red bg-status-red/10',
   major: 'border-status-orange text-status-orange bg-status-orange/10',
@@ -135,6 +140,9 @@ export default function Dashboard() {
   /* Pulse indicator */
   const pulseClass = tick % 2 === 0 ? 'opacity-100' : 'opacity-60';
 
+  /* Timestamp translator */
+  const ts = (v: string) => t(TIMESTAMP_MAP[v] || v, v);
+
   return (
     <div className="p-5 space-y-5 overflow-auto h-full">
       {/* System status header with pulse */}
@@ -216,10 +224,10 @@ export default function Dashboard() {
             <div key={sys.id} className="bg-bg-card rounded-xl border border-border p-3 hover:border-accent-cyan/30 transition-all group">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: sys.color }} />
-                <span className="text-xs font-medium text-text-primary truncate">{sys.name}</span>
+                <span className="text-xs font-medium text-text-primary truncate">{t(sys.nameEn, sys.name)}</span>
                 <div className="w-1.5 h-1.5 rounded-full bg-status-green ml-auto shrink-0" />
               </div>
-              <p className="text-[10px] text-text-muted mb-2">{sys.nameEn}</p>
+              <p className="text-[10px] text-text-muted mb-2">{t(sys.nameEn, sys.name) === sys.nameEn ? sys.name : sys.nameEn}</p>
               <div className="space-y-1 text-[10px]">
                 <div className="flex justify-between"><span className="text-text-muted">{t('Protocol', '协议')}</span><span className="text-text-secondary font-mono">{sys.api}</span></div>
                 <div className="flex justify-between"><span className="text-text-muted">{t('Latency', '延迟')}</span><span className="text-status-green">{sys.latency}ms</span></div>
@@ -290,7 +298,7 @@ export default function Dashboard() {
                       <span>· {task.duration}</span>
                     </div>
                   </div>
-                  <span className="text-xs text-text-muted shrink-0">{task.timestamp}</span>
+                  <span className="text-xs text-text-muted shrink-0">{ts(task.timestamp)}</span>
                   <ChevronRight className="w-3 h-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               ))}
@@ -322,7 +330,7 @@ export default function Dashboard() {
                     <p className="text-xs text-text-muted">{alert.source}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-xs text-text-muted">{alert.timestamp}</p>
+                    <p className="text-xs text-text-muted">{ts(alert.timestamp)}</p>
                     {alert.acknowledged && <span className="text-[10px] text-status-green">{t('ACK', '已确认')}</span>}
                   </div>
                   <ChevronRight className="w-3 h-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -445,7 +453,7 @@ export default function Dashboard() {
               {taskStatusIcon[taskModal.status]}
               <span className="text-sm font-medium text-text-primary capitalize">{taskModal.status}</span>
               <span className="text-xs text-text-muted">· {taskModal.duration}</span>
-              <span className="text-xs text-text-muted">{taskModal.timestamp}</span>
+              <span className="text-xs text-text-muted">{ts(taskModal.timestamp)}</span>
             </div>
 
             {/* Lead Agent */}
@@ -510,7 +518,7 @@ export default function Dashboard() {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className={`text-xs font-mono px-2 py-1 rounded border ${severityColor[alertModal.severity]}`}>{alertModal.severity.toUpperCase()}</span>
-              <span className="text-xs text-text-muted">{alertModal.timestamp}</span>
+              <span className="text-xs text-text-muted">{ts(alertModal.timestamp)}</span>
               {alertModal.acknowledged && <span className="text-xs text-status-green bg-status-green/10 px-2 py-0.5 rounded">{t('Acknowledged', '已确认')}</span>}
             </div>
             <div>

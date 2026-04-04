@@ -15,29 +15,29 @@ const MODELS = [
   { id: 'qwen-72b', name: 'Qwen-72B', desc: '通义千问 · 72B · 多语言', descEn: 'Qwen · 72B · Multilingual' },
 ];
 
-const DIGITAL_TWINS: Record<string, { name: string; nameEn: string; desc: string }[]> = {
+const DIGITAL_TWINS: Record<string, { name: string; nameEn: string; desc: string; descEn: string }[]> = {
   planning: [
-    { name: '覆盖孪生', nameEn: 'Coverage Twin', desc: '覆盖仿真·信号预测·盲区识别' },
-    { name: '容量孪生', nameEn: 'Capacity Twin', desc: '容量规划·用户密度·频谱效率' },
-    { name: '价值孪生', nameEn: 'Value Twin', desc: '价值用户分布·收益预测' },
+    { name: '覆盖孪生', nameEn: 'Coverage Twin', desc: '覆盖仿真·信号预测·盲区识别', descEn: 'Coverage simulation · signal prediction · blind spot detection' },
+    { name: '容量孪生', nameEn: 'Capacity Twin', desc: '容量规划·用户密度·频谱效率', descEn: 'Capacity planning · user density · spectrum efficiency' },
+    { name: '价值孪生', nameEn: 'Value Twin', desc: '价值用户分布·收益预测', descEn: 'Value user distribution · revenue forecast' },
   ],
   optimization: [
-    { name: '无线孪生', nameEn: 'Radio Twin', desc: '无线参数仿真·KPI预测' },
-    { name: '干扰孪生', nameEn: 'Interference Twin', desc: '干扰分析·频率规划' },
-    { name: '负荷孪生', nameEn: 'Load Twin', desc: '负荷均衡·流量预测' },
+    { name: '无线孪生', nameEn: 'Radio Twin', desc: '无线参数仿真·KPI预测', descEn: 'Radio parameter simulation · KPI prediction' },
+    { name: '干扰孪生', nameEn: 'Interference Twin', desc: '干扰分析·频率规划', descEn: 'Interference analysis · frequency planning' },
+    { name: '负荷孪生', nameEn: 'Load Twin', desc: '负荷均衡·流量预测', descEn: 'Load balancing · traffic prediction' },
   ],
   experience: [
-    { name: '用户孪生', nameEn: 'User Twin', desc: 'LUM模型·行为预测·体验画像' },
-    { name: '业务孪生', nameEn: 'Service Twin', desc: '业务质量建模·端到端体验' },
+    { name: '用户孪生', nameEn: 'User Twin', desc: 'LUM模型·行为预测·体验画像', descEn: 'LUM model · behavior prediction · experience profiling' },
+    { name: '业务孪生', nameEn: 'Service Twin', desc: '业务质量建模·端到端体验', descEn: 'Service quality modeling · end-to-end experience' },
   ],
   ops: [
-    { name: '设备孪生', nameEn: 'Equipment Twin', desc: '网元健康·寿命预测·告警关联' },
-    { name: '传输孪生', nameEn: 'Transport Twin', desc: '光路仿真·链路冗余' },
-    { name: '站点孪生', nameEn: 'Site Twin', desc: '站点3D建模·上站辅助' },
+    { name: '设备孪生', nameEn: 'Equipment Twin', desc: '网元健康·寿命预测·告警关联', descEn: 'NE health · lifespan prediction · alarm correlation' },
+    { name: '传输孪生', nameEn: 'Transport Twin', desc: '光路仿真·链路冗余', descEn: 'Optical path simulation · link redundancy' },
+    { name: '站点孪生', nameEn: 'Site Twin', desc: '站点3D建模·上站辅助', descEn: 'Site 3D modeling · on-site assistance' },
   ],
   marketing: [
-    { name: '用户画像孪生', nameEn: 'Profile Twin', desc: '360°画像·消费行为·偏好' },
-    { name: '市场孪生', nameEn: 'Market Twin', desc: '竞争分析·套餐收益仿真' },
+    { name: '用户画像孪生', nameEn: 'Profile Twin', desc: '360°画像·消费行为·偏好', descEn: '360° profiling · consumption behavior · preferences' },
+    { name: '市场孪生', nameEn: 'Market Twin', desc: '竞争分析·套餐收益仿真', descEn: 'Competition analysis · plan revenue simulation' },
   ],
 };
 
@@ -48,26 +48,26 @@ const MEMORY_LAYERS = [
   { key: 'episode', label: '情景记忆', labelEn: 'Episode Memory', icon: '📖', desc: '历史案例/故障经验/成功模式', descEn: 'Historical cases, fault experiences, success patterns', color: 'text-accent-cyan' },
 ];
 
-const SOP_TEMPLATES: Record<string, { name: string; steps: string[] }[]> = {
+const SOP_TEMPLATES: Record<string, { name: string; nameEn: string; steps: string[]; stepsEn: string[] }[]> = {
   planning: [
-    { name: '新站规划SOP', steps: ['需求分析→价值评估', '覆盖仿真→容量仿真', '投资收益预估', '方案评审→输出规划'] },
-    { name: '扩容评估SOP', steps: ['容量预警触发', '话务增长预测', '扩容方案生成', 'ROI对比→决策'] },
+    { name: '新站规划SOP', nameEn: 'New Site Planning SOP', steps: ['需求分析→价值评估', '覆盖仿真→容量仿真', '投资收益预估', '方案评审→输出规划'], stepsEn: ['Demand Analysis → Value Assessment', 'Coverage Sim → Capacity Sim', 'Investment ROI Estimation', 'Review → Output Plan'] },
+    { name: '扩容评估SOP', nameEn: 'Capacity Expansion SOP', steps: ['容量预警触发', '话务增长预测', '扩容方案生成', 'ROI对比→决策'], stepsEn: ['Capacity Alert Triggered', 'Traffic Growth Forecast', 'Expansion Plan Generation', 'ROI Comparison → Decision'] },
   ],
   optimization: [
-    { name: '全网优化SOP', steps: ['KPI采集→基线对比', '问题小区识别', '参数优化→仿真验证', '批量下发→效果跟踪'] },
-    { name: '新站优化SOP', steps: ['开通验证→覆盖测试', '邻区/切换优化', '参数精调→性能达标', '转入日常优化'] },
+    { name: '全网优化SOP', nameEn: 'Network-wide Optimization SOP', steps: ['KPI采集→基线对比', '问题小区识别', '参数优化→仿真验证', '批量下发→效果跟踪'], stepsEn: ['KPI Collection → Baseline Compare', 'Problem Cell Identification', 'Parameter Optimization → Sim Verify', 'Batch Deploy → Track Results'] },
+    { name: '新站优化SOP', nameEn: 'New Site Optimization SOP', steps: ['开通验证→覆盖测试', '邻区/切换优化', '参数精调→性能达标', '转入日常优化'], stepsEn: ['Activation Verify → Coverage Test', 'Neighbor/Handover Optimization', 'Parameter Tuning → KPI Target', 'Transfer to Routine Optimization'] },
   ],
   experience: [
-    { name: '投诉处理SOP', steps: ['投诉接收→用户画像', '体验指标分析', '问题定位→协同修复', '用户回访→闭环'] },
-    { name: '确定性体验SOP', steps: ['用户等级判定', '资源预留→QoS配置', '实时监控→动态调整', '体验达标验证'] },
+    { name: '投诉处理SOP', nameEn: 'Complaint Handling SOP', steps: ['投诉接收→用户画像', '体验指标分析', '问题定位→协同修复', '用户回访→闭环'], stepsEn: ['Complaint Receive → User Profile', 'Experience KPI Analysis', 'Root Cause → Collaborative Fix', 'User Follow-up → Close Loop'] },
+    { name: '确定性体验SOP', nameEn: 'Deterministic Experience SOP', steps: ['用户等级判定', '资源预留→QoS配置', '实时监控→动态调整', '体验达标验证'], stepsEn: ['User Tier Classification', 'Resource Reserve → QoS Config', 'Real-time Monitor → Dynamic Adjust', 'Experience Target Verification'] },
   ],
   ops: [
-    { name: '故障处理SOP', steps: ['告警接收→分类分级', '根因分析→影响评估', '修复执行→安全验证', '工单闭环→知识沉淀'] },
-    { name: '巡检SOP', steps: ['定时触发→分区巡检', '健康评分→风险识别', '预防性维护→汇总报告'] },
+    { name: '故障处理SOP', nameEn: 'Fault Handling SOP', steps: ['告警接收→分类分级', '根因分析→影响评估', '修复执行→安全验证', '工单闭环→知识沉淀'], stepsEn: ['Alarm Receive → Classify & Grade', 'Root Cause → Impact Assessment', 'Repair Execute → Safety Verify', 'Ticket Close → Knowledge Archive'] },
+    { name: '巡检SOP', nameEn: 'Inspection SOP', steps: ['定时触发→分区巡检', '健康评分→风险识别', '预防性维护→汇总报告'], stepsEn: ['Scheduled Trigger → Zone Inspect', 'Health Score → Risk Identification', 'Preventive Maintenance → Summary Report'] },
   ],
   marketing: [
-    { name: '精准营销SOP', steps: ['目标市场分析', '潜客筛选→分层', '个性化方案→触达', '效果监控→策略迭代'] },
-    { name: '离网维挽SOP', steps: ['流失预警→原因分析', '挽留策略制定', '触达执行→效果跟踪', '成功/失败归档'] },
+    { name: '精准营销SOP', nameEn: 'Precision Marketing SOP', steps: ['目标市场分析', '潜客筛选→分层', '个性化方案→触达', '效果监控→策略迭代'], stepsEn: ['Target Market Analysis', 'Lead Filtering → Tiering', 'Personalized Plan → Reach Out', 'Performance Monitor → Strategy Iterate'] },
+    { name: '离网维挽SOP', nameEn: 'Churn Prevention SOP', steps: ['流失预警→原因分析', '挽留策略制定', '触达执行→效果跟踪', '成功/失败归档'], stepsEn: ['Churn Alert → Root Cause', 'Retention Strategy Design', 'Outreach Execute → Track Results', 'Success/Failure Archive'] },
   ],
 };
 
@@ -108,11 +108,25 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
     return new Set(domainSkills.map(s => s.id));
   });
   const [enabledTwins, setEnabledTwins] = useState<Set<string>>(() => new Set((DIGITAL_TWINS[agent.id] || []).map(t => t.name)));
+  const successCount = Math.floor(taskCount * successRate / 100);
+  const failCount = Math.floor(taskCount * (100 - successRate) / 100);
   const [memoryEdits, setMemoryEdits] = useState<Record<string, string>>({
-    system: '# 安全边界\n- 禁止高峰期（9:00-22:00）执行核心网重启\n- 参数调整范围不超过基线±30%\n- L4+操作需人工审批\n\n# 操作规范\n- 所有操作需数字孪生预验证\n- 修复后自动验证KPI恢复',
-    domain: `# ${editName} 领域知识\n- 华为设备MML命令集\n- 3GPP TS 28.xxx/TS 32.xxx标准\n- 历史故障案例库（${taskCount}+条）\n- ${t(agent.domain, agent.domainZh)}最佳实践文档`,
-    session: '# 当前会话上下文\n（运行时自动填充）\n- 当前任务链\n- 操作历史\n- 中间结果缓存',
-    episode: `# 历史情景\n- 成功案例：${Math.floor(taskCount * successRate / 100)}条\n- 失败案例：${Math.floor(taskCount * (100 - successRate) / 100)}条\n- 自动从知识库同步更新`,
+    system: t(
+      '# Safety Boundaries\n- No core network restart during peak hours (9:00-22:00)\n- Parameter adjustment range within baseline ±30%\n- L4+ operations require human approval\n\n# Operational Standards\n- All operations require Digital Twin pre-verification\n- Auto-verify KPI recovery after repair',
+      '# 安全边界\n- 禁止高峰期（9:00-22:00）执行核心网重启\n- 参数调整范围不超过基线±30%\n- L4+操作需人工审批\n\n# 操作规范\n- 所有操作需数字孪生预验证\n- 修复后自动验证KPI恢复',
+    ),
+    domain: t(
+      `# ${editName} Domain Knowledge\n- Huawei equipment MML command set\n- 3GPP TS 28.xxx/TS 32.xxx standards\n- Historical fault case library (${taskCount}+ entries)\n- ${t(agent.domain, agent.domainZh)} best practice documents`,
+      `# ${editName} 领域知识\n- 华为设备MML命令集\n- 3GPP TS 28.xxx/TS 32.xxx标准\n- 历史故障案例库（${taskCount}+条）\n- ${t(agent.domain, agent.domainZh)}最佳实践文档`,
+    ),
+    session: t(
+      '# Current Session Context\n(Auto-populated at runtime)\n- Current task chain\n- Operation history\n- Intermediate result cache',
+      '# 当前会话上下文\n（运行时自动填充）\n- 当前任务链\n- 操作历史\n- 中间结果缓存',
+    ),
+    episode: t(
+      `# Historical Episodes\n- Successful cases: ${successCount}\n- Failed cases: ${failCount}\n- Auto-synced from knowledge base`,
+      `# 历史情景\n- 成功案例：${successCount}条\n- 失败案例：${failCount}条\n- 自动从知识库同步更新`,
+    ),
   });
 
   const domainSkills = generatedSkills.filter(s => s.domain === agent.id);
@@ -298,11 +312,11 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
                     <div className="w-6 h-6 rounded-lg bg-accent-cyan/10 flex items-center justify-center">
                       <GitBranch className="w-3.5 h-3.5 text-accent-cyan" />
                     </div>
-                    <h4 className="text-sm font-medium text-text-primary">{sop.name}</h4>
+                    <h4 className="text-sm font-medium text-text-primary">{t(sop.nameEn, sop.name)}</h4>
                     <span className="text-[10px] text-status-green bg-status-green/10 px-2 py-0.5 rounded-full ml-auto">{t('Active', '启用中')}</span>
                   </div>
                   <div className="flex items-start gap-0">
-                    {sop.steps.map((step, j) => (
+                    {(t(sop.stepsEn[0], sop.steps[0]) === sop.stepsEn[0] ? sop.stepsEn : sop.steps).map((step, j) => (
                       <div key={j} className="flex items-center">
                         <div className="flex flex-col items-center">
                           <div className="w-7 h-7 rounded-full bg-accent-cyan/10 border border-accent-cyan/30 flex items-center justify-center text-[10px] font-bold text-accent-cyan shrink-0">{j + 1}</div>
@@ -355,15 +369,15 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
                 <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">{t('Inference Parameters', '推理参数')}</h4>
                 <div className="grid grid-cols-3 gap-4">
                   {[
-                    { label: 'Temperature', value: '0.3', desc: '低温度保证输出稳定' },
-                    { label: 'Max Tokens', value: '8192', desc: '最大输出长度' },
-                    { label: 'Top-P', value: '0.9', desc: '核采样概率' },
+                    { label: 'Temperature', value: '0.3', desc: '低温度保证输出稳定', descEn: 'Low temperature for stable output' },
+                    { label: 'Max Tokens', value: '8192', desc: '最大输出长度', descEn: 'Maximum output length' },
+                    { label: 'Top-P', value: '0.9', desc: '核采样概率', descEn: 'Nucleus sampling probability' },
                   ].map(param => (
                     <div key={param.label}>
                       <label className="text-[10px] text-text-muted block mb-1">{param.label}</label>
                       <input defaultValue={param.value}
                         className="w-full bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm text-text-primary font-mono outline-none focus:border-accent-cyan/50" />
-                      <p className="text-[10px] text-text-muted mt-0.5">{param.desc}</p>
+                      <p className="text-[10px] text-text-muted mt-0.5">{t(param.descEn, param.desc)}</p>
                     </div>
                   ))}
                 </div>
@@ -391,15 +405,15 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-text-primary">{twin.name}</span>
+                            <span className="text-sm font-medium text-text-primary">{t(twin.nameEn, twin.name)}</span>
                             <div className={`w-4 h-4 rounded border flex items-center justify-center ${on ? 'bg-accent-cyan border-accent-cyan text-bg-primary' : 'border-border'}`}>
                               {on && <Check className="w-3 h-3" />}
                             </div>
                           </div>
-                          <p className="text-[10px] text-text-muted">{twin.nameEn}</p>
+                          <p className="text-[10px] text-text-muted">{t(twin.nameEn, twin.name) === twin.nameEn ? twin.name : twin.nameEn}</p>
                         </div>
                       </div>
-                      <p className="text-xs text-text-secondary">{twin.desc}</p>
+                      <p className="text-xs text-text-secondary">{t(twin.descEn, twin.desc)}</p>
                       {on && (
                         <div className="mt-2 flex items-center gap-2 text-[10px]">
                           <div className="w-1.5 h-1.5 rounded-full bg-status-green" />

@@ -18,21 +18,21 @@ interface WfNode {
   config?: Record<string, any>;
 }
 
-const SUB_AGENTS: Record<string, { name: string; subs: string[] }> = {
-  planning:     { name: '规划Agent', subs: ['价值洞察', '网络仿真', '市场收益预测', '收益预估'] },
-  optimization: { name: '网络优化Agent', subs: ['实时优化', '工程优化', '事件保障'] },
-  experience:   { name: '体验保障Agent', subs: ['投诉预警', '差异化体验', '确定性体验'] },
-  ops:          { name: '网络运维Agent', subs: ['运维监控', '故障分析', '上站维护'] },
-  marketing:    { name: '运营支撑Agent', subs: ['潜客识别', '实时营销', '离网维挽'] },
+const SUB_AGENTS: Record<string, { name: string; nameEn: string; subs: string[]; subsEn: string[] }> = {
+  planning:     { name: '规划Agent', nameEn: 'Planning Agent', subs: ['价值洞察', '网络仿真', '市场收益预测', '收益预估'], subsEn: ['Value Insight', 'Network Sim', 'Revenue Forecast', 'ROI Estimation'] },
+  optimization: { name: '网络优化Agent', nameEn: 'Optimization Agent', subs: ['实时优化', '工程优化', '事件保障'], subsEn: ['Real-time Opt', 'Engineering Opt', 'Event Assurance'] },
+  experience:   { name: '体验保障Agent', nameEn: 'Experience Agent', subs: ['投诉预警', '差异化体验', '确定性体验'], subsEn: ['Complaint Alert', 'Differentiated Exp', 'Deterministic Exp'] },
+  ops:          { name: '网络运维Agent', nameEn: 'O&M Agent', subs: ['运维监控', '故障分析', '上站维护'], subsEn: ['Monitoring', 'Fault Analysis', 'On-site Maint'] },
+  marketing:    { name: '运营支撑Agent', nameEn: 'Marketing Agent', subs: ['潜客识别', '实时营销', '离网维挽'], subsEn: ['Lead Identification', 'Real-time Marketing', 'Churn Prevention'] },
 };
 
-const CONNECTORS: Record<string, { name: string; nameEn: string; color: string; desc: string }> = {
-  oss:        { name: 'OSS平台', nameEn: 'OSS Platform', color: '#f97316', desc: '网管系统·配置下发·性能采集' },
-  ticket:     { name: '工单系统', nameEn: 'Ticket/ITSM', color: '#8b5cf6', desc: '工单创建·派单·闭环' },
-  smartcare:  { name: 'SmartCare', nameEn: 'Huawei SmartCare', color: '#ec4899', desc: '用户体验管理·CEM分析' },
-  autin:      { name: 'AUTIN', nameEn: 'Huawei AUTIN', color: '#06b6d4', desc: '自治网络·智能运维' },
-  crm:        { name: 'CRM系统', nameEn: 'CRM System', color: '#10b981', desc: '客户管理·营销触达·渠道' },
-  bss:        { name: 'BSS/计费', nameEn: 'BSS/Billing', color: '#eab308', desc: '计费·套餐·账务' },
+const CONNECTORS: Record<string, { name: string; nameEn: string; color: string; desc: string; descEn: string }> = {
+  oss:        { name: 'OSS平台', nameEn: 'OSS Platform', color: '#f97316', desc: '网管系统·配置下发·性能采集', descEn: 'NMS · Config deploy · Perf collection' },
+  ticket:     { name: '工单系统', nameEn: 'Ticket/ITSM', color: '#8b5cf6', desc: '工单创建·派单·闭环', descEn: 'Ticket create · Dispatch · Close loop' },
+  smartcare:  { name: 'SmartCare', nameEn: 'Huawei SmartCare', color: '#ec4899', desc: '用户体验管理·CEM分析', descEn: 'User experience · CEM analytics' },
+  autin:      { name: 'AUTIN', nameEn: 'Huawei AUTIN', color: '#06b6d4', desc: '自治网络·智能运维', descEn: 'Autonomous network · Intelligent O&M' },
+  crm:        { name: 'CRM系统', nameEn: 'CRM System', color: '#10b981', desc: '客户管理·营销触达·渠道', descEn: 'Customer mgmt · Marketing · Channels' },
+  bss:        { name: 'BSS/计费', nameEn: 'BSS/Billing', color: '#eab308', desc: '计费·套餐·账务', descEn: 'Billing · Plans · Accounting' },
 };
 
 let _nextId = 100;
@@ -47,15 +47,17 @@ interface WfEdge {
 interface WfTemplate {
   id: string;
   name: string;
+  nameEn: string;
   description: string;
+  descriptionEn: string;
   nodes: WfNode[];
   edges: WfEdge[];
 }
 
 const TEMPLATES: WfTemplate[] = [
   {
-    id: 'wf1', name: '网络故障自动诊断与修复',
-    description: '接收告警→分类→严重程度判断→跨域分析/自动修复→验证',
+    id: 'wf1', name: '网络故障自动诊断与修复', nameEn: 'Auto Fault Diagnosis & Repair',
+    description: '接收告警→分类→严重程度判断→跨域分析/自动修复→验证', descriptionEn: 'Alarm receive → Classify → Severity check → Cross-domain analysis / Auto repair → Verify',
     nodes: [
       { id: 't1', type: 'trigger', name: '告警接收', x: 50, y: 200 },
       { id: 'a1', type: 'agent', name: '告警分类', agentType: 'ops', x: 300, y: 200 },
@@ -83,8 +85,8 @@ const TEMPLATES: WfTemplate[] = [
     ],
   },
   {
-    id: 'wf2', name: '用户投诉闭环处理',
-    description: '接收投诉→体验分析→网络检查→优化或套餐推荐→通知用户',
+    id: 'wf2', name: '用户投诉闭环处理', nameEn: 'Complaint Closed-loop Handling',
+    description: '接收投诉→体验分析→网络检查→优化或套餐推荐→通知用户', descriptionEn: 'Receive complaint → Experience analysis → Network check → Optimize or plan recommend → Notify user',
     nodes: [
       { id: 't1', type: 'trigger', name: '投诉接收', x: 50, y: 200 },
       { id: 'a1', type: 'agent', name: '体验分析', agentType: 'experience', x: 300, y: 200 },
@@ -112,8 +114,8 @@ const TEMPLATES: WfTemplate[] = [
     ],
   },
   {
-    id: 'wf3', name: '新站开通优化',
-    description: '新站激活→覆盖验证→工程优化→体验监控→KPI达标检查',
+    id: 'wf3', name: '新站开通优化', nameEn: 'New Site Activation Optimization',
+    description: '新站激活→覆盖验证→工程优化→体验监控→KPI达标检查', descriptionEn: 'Site activation → Coverage verify → Engineering opt → Experience monitor → KPI target check',
     nodes: [
       { id: 't1', type: 'trigger', name: '新站激活', x: 50, y: 200 },
       { id: 'a1', type: 'agent', name: '覆盖验证', agentType: 'planning', x: 300, y: 200 },
@@ -134,8 +136,8 @@ const TEMPLATES: WfTemplate[] = [
     ],
   },
   {
-    id: 'wf4', name: '突发事件保障',
-    description: '事件检测→容量扩充→体验监控→稳定性监控→汇总→问题处理',
+    id: 'wf4', name: '突发事件保障', nameEn: 'Emergency Event Assurance',
+    description: '事件检测→容量扩充→体验监控→稳定性监控→汇总→问题处理', descriptionEn: 'Event detect → Capacity expand → Experience monitor → Stability monitor → Summary → Issue handling',
     nodes: [
       { id: 't1', type: 'trigger', name: '事件检测', x: 50, y: 200 },
       { id: 's1', type: 'split', name: '并行保障', x: 300, y: 200 },
@@ -161,8 +163,8 @@ const TEMPLATES: WfTemplate[] = [
     ],
   },
   {
-    id: 'wf5', name: '精准营销活动',
-    description: '营销创建→潜客识别→容量评估→执行营销→效果监控→报告',
+    id: 'wf5', name: '精准营销活动', nameEn: 'Precision Marketing Campaign',
+    description: '营销创建→潜客识别→容量评估→执行营销→效果监控→报告', descriptionEn: 'Campaign create → Lead identify → Capacity assess → Execute marketing → Monitor → Report',
     nodes: [
       { id: 't1', type: 'trigger', name: '营销创建', x: 50, y: 200 },
       { id: 'a1', type: 'agent', name: '潜客识别', agentType: 'marketing', x: 300, y: 200 },
@@ -184,8 +186,8 @@ const TEMPLATES: WfTemplate[] = [
     ],
   },
   {
-    id: 'wf6', name: '全网健康巡检',
-    description: '定时触发→分区域巡检→汇总→异常处理→生成报告',
+    id: 'wf6', name: '全网健康巡检', nameEn: 'Network-wide Health Inspection',
+    description: '定时触发→分区域巡检→汇总→异常处理→生成报告', descriptionEn: 'Scheduled trigger → Zone inspection → Aggregate → Anomaly handling → Generate report',
     nodes: [
       { id: 't1', type: 'trigger', name: '定时触发', x: 50, y: 200 },
       { id: 's1', type: 'split', name: '分区巡检', x: 300, y: 200 },
@@ -212,8 +214,8 @@ const TEMPLATES: WfTemplate[] = [
     ],
   },
   {
-    id: 'wf7', name: '跨系统故障工单自动化',
-    description: 'OSS告警→故障分析→SmartCare体验关联→自动创建工单→AUTIN闭环',
+    id: 'wf7', name: '跨系统故障工单自动化', nameEn: 'Cross-system Fault Ticket Automation',
+    description: 'OSS告警→故障分析→SmartCare体验关联→自动创建工单→AUTIN闭环', descriptionEn: 'OSS alarm → Fault analysis → SmartCare correlation → Auto ticket → AUTIN close loop',
     nodes: [
       { id: 't1', type: 'connector', name: 'OSS告警接入', connectorType: 'oss', x: 50, y: 200 },
       { id: 'a1', type: 'agent', name: '故障分析', agentType: 'ops', x: 300, y: 200 },
@@ -241,8 +243,8 @@ const TEMPLATES: WfTemplate[] = [
     ],
   },
   {
-    id: 'wf8', name: '精准营销全流程自动化',
-    description: 'CRM潜客→BSS套餐匹配→营销执行→SmartCare体验监控→工单跟进',
+    id: 'wf8', name: '精准营销全流程自动化', nameEn: 'End-to-end Marketing Automation',
+    description: 'CRM潜客→BSS套餐匹配→营销执行→SmartCare体验监控→工单跟进', descriptionEn: 'CRM leads → BSS plan matching → Marketing execute → SmartCare monitor → Ticket follow-up',
     nodes: [
       { id: 'c1', type: 'connector', name: 'CRM潜客数据', connectorType: 'crm', x: 50, y: 200 },
       { id: 'a1', type: 'agent', name: '潜客筛选', agentType: 'marketing', x: 300, y: 200 },
@@ -426,7 +428,7 @@ export default function Workflows() {
     const y = (e.clientY - rect.top) / zoom - NODE_H / 2;
     const id = `n${_nextId++}`;
     const connectorType = e.dataTransfer.getData('connectorType') || undefined;
-    const names: Record<string, string> = { trigger: '新触发器', agent: agentType ? (SUB_AGENTS[agentType]?.name || 'Agent') : 'Agent', condition: '新条件', action: '新动作', merge: '合并', split: '拆分', transform: '转换', connector: connectorType ? (CONNECTORS[connectorType]?.name || '连接器') : '连接器' };
+    const names: Record<string, string> = { trigger: t('New Trigger', '新触发器'), agent: agentType ? (t(SUB_AGENTS[agentType]?.nameEn, SUB_AGENTS[agentType]?.name) || 'Agent') : 'Agent', condition: t('New Condition', '新条件'), action: t('New Action', '新动作'), merge: t('Merge', '合并'), split: t('Split', '拆分'), transform: t('Transform', '转换'), connector: connectorType ? (t(CONNECTORS[connectorType]?.nameEn, CONNECTORS[connectorType]?.name) || t('Connector', '连接器')) : t('Connector', '连接器') };
     const newNode: WfNode = { id, type, name: names[type] || type, agentType, connectorType, x: Math.max(0, x), y: Math.max(0, y) };
     if (!isCustom) {
       setCustomNodes([...template.nodes, newNode]);
@@ -499,7 +501,7 @@ export default function Workflows() {
   }, [isCustom, selectedNode]);
 
   const handleNewWorkflow = useCallback(() => {
-    setCustomNodes([{ id: 'start', type: 'trigger', name: '开始', x: 400, y: 40 }]);
+    setCustomNodes([{ id: 'start', type: 'trigger', name: t('Start', '开始'), x: 400, y: 40 }]);
     setCustomEdges([]);
     setIsCustom(true);
     setSelectedNode(null);
@@ -580,7 +582,7 @@ export default function Workflows() {
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-2 bg-bg-primary px-3 py-1.5 rounded-lg border border-border hover:border-accent-cyan/40 text-sm text-text-primary cursor-pointer"
             >
-              {template.name}
+              {t(template.nameEn, template.name)}
               <ChevronDown className="w-4 h-4 text-text-muted" />
             </button>
             {dropdownOpen && (
@@ -593,8 +595,8 @@ export default function Workflows() {
                       i === selectedTemplate ? 'text-accent-cyan bg-bg-primary' : 'text-text-secondary'
                     }`}
                   >
-                    <div className="font-medium">{tmpl.name}</div>
-                    <div className="text-xs text-text-muted mt-0.5">{tmpl.description}</div>
+                    <div className="font-medium">{t(tmpl.nameEn, tmpl.name)}</div>
+                    <div className="text-xs text-text-muted mt-0.5">{t(tmpl.descriptionEn, tmpl.description)}</div>
                   </button>
                 ))}
               </div>
@@ -646,18 +648,18 @@ export default function Workflows() {
                 <div className="w-7 h-7 rounded-md flex items-center justify-center text-xs" style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}>
                   {nodeIcon(type)}
                 </div>
-                <span className="text-xs text-text-secondary capitalize">{type === 'trigger' ? '触发器' : type === 'agent' ? 'Agent' : type === 'connector' ? '连接器' : type === 'condition' ? '条件' : type === 'action' ? '动作' : type === 'merge' ? '合并' : type === 'split' ? '拆分' : '转换'}</span>
+                <span className="text-xs text-text-secondary capitalize">{type === 'trigger' ? t('Trigger', '触发器') : type === 'agent' ? 'Agent' : type === 'connector' ? t('Connector', '连接器') : type === 'condition' ? t('Condition', '条件') : type === 'action' ? t('Action', '动作') : type === 'merge' ? t('Merge', '合并') : type === 'split' ? t('Split', '拆分') : t('Transform', '转换')}</span>
               </div>
             );
           })}
           <div className="border-t border-border mt-3 pt-3">
             <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t('Agents', '领域Agent')}</h3>
-            {[['planning','规划'],['optimization','网络优化'],['experience','体验保障'],['ops','网络运维'],['marketing','运营支撑']].map(([key, label]) => (
+            {Object.entries(SUB_AGENTS).map(([key, val]) => (
               <div key={key} draggable onDragStart={e => handlePaletteDragStart(e, 'agent', key)}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-bg-primary transition-colors mb-1 cursor-grab active:cursor-grabbing">
                 <GripVertical className="w-3 h-3 text-text-muted/40" />
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: AGENT_COLORS[key] }} />
-                <span className="text-xs text-text-secondary">{label}Agent</span>
+                <span className="text-xs text-text-secondary">{t(val.nameEn, val.name)}</span>
               </div>
             ))}
           </div>
@@ -666,10 +668,10 @@ export default function Workflows() {
             {Object.entries(CONNECTORS).map(([key, conn]) => (
               <div key={key} draggable onDragStart={e => handlePaletteDragStart(e, 'connector', undefined, key)}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-bg-primary transition-colors mb-1 cursor-grab active:cursor-grabbing"
-                title={conn.desc}>
+                title={t(conn.descEn, conn.desc)}>
                 <GripVertical className="w-3 h-3 text-text-muted/40" />
                 <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: conn.color }} />
-                <span className="text-xs text-text-secondary">{conn.name}</span>
+                <span className="text-xs text-text-secondary">{t(conn.nameEn, conn.name)}</span>
               </div>
             ))}
           </div>
@@ -841,7 +843,7 @@ export default function Workflows() {
               <div className="absolute z-50 bg-bg-card border border-border rounded-lg shadow-xl p-2 w-48"
                 style={{ left: agentPicker.x - rect.left, top: agentPicker.y - rect.top }}
                 onClick={e => e.stopPropagation()}>
-                <p className="text-xs text-text-muted mb-1 px-2">选择Agent和子Agent</p>
+                <p className="text-xs text-text-muted mb-1 px-2">{t('Select Agent & Sub-Agent', '选择Agent和子Agent')}</p>
                 {Object.entries(SUB_AGENTS).map(([key, val]) => (
                   <div key={key}>
                     <p className="text-xs font-medium text-text-secondary px-2 py-1 flex items-center gap-1.5">
@@ -928,9 +930,9 @@ export default function Workflows() {
                   <label className="text-xs text-text-muted block mb-1">{t('External System', '外部系统')}</label>
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CONNECTORS[selectedNode.connectorType].color }} />
-                    <span className="text-sm text-text-secondary">{CONNECTORS[selectedNode.connectorType].name}</span>
+                    <span className="text-sm text-text-secondary">{t(CONNECTORS[selectedNode.connectorType].nameEn, CONNECTORS[selectedNode.connectorType].name)}</span>
                   </div>
-                  <p className="text-xs text-text-muted mt-1">{CONNECTORS[selectedNode.connectorType].desc}</p>
+                  <p className="text-xs text-text-muted mt-1">{t(CONNECTORS[selectedNode.connectorType].descEn, CONNECTORS[selectedNode.connectorType].desc)}</p>
                   <div className="mt-2 space-y-1">
                     <div className="flex items-center gap-1.5 text-xs">
                       <div className="w-1.5 h-1.5 rounded-full bg-status-green" />
@@ -965,8 +967,8 @@ export default function Workflows() {
                     setCustomNodes(prev => prev.map(n => n.id === selectedNode.id ? { ...n, agentType: val || undefined } : n));
                     setSelectedNode({ ...selectedNode, agentType: val || undefined });
                   }} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm text-text-primary">
-                    <option value="">选择...</option>
-                    {Object.entries(SUB_AGENTS).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                    <option value="">{t('Select...', '选择...')}</option>
+                    {Object.entries(SUB_AGENTS).map(([k, v]) => <option key={k} value={k}>{t(v.nameEn, v.name)}</option>)}
                   </select>
                 </div>
               )}
@@ -978,8 +980,8 @@ export default function Workflows() {
                     setCustomNodes(prev => prev.map(n => n.id === selectedNode.id ? { ...n, subAgent: val, name: val || SUB_AGENTS[selectedNode.agentType!].name } : n));
                     setSelectedNode({ ...selectedNode, subAgent: val, name: val || SUB_AGENTS[selectedNode.agentType!].name });
                   }} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm text-text-primary">
-                    <option value="">选择子Agent...</option>
-                    {SUB_AGENTS[selectedNode.agentType].subs.map(s => <option key={s} value={s}>{s}</option>)}
+                    <option value="">{t('Select sub-agent...', '选择子Agent...')}</option>
+                    {SUB_AGENTS[selectedNode.agentType].subs.map((s, i) => <option key={s} value={s}>{t(SUB_AGENTS[selectedNode.agentType!].subsEn[i], s)}</option>)}
                   </select>
                 </div>
               )}
