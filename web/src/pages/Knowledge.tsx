@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Book, AlertCircle, Lightbulb, FileText, Tag, X, Zap, CheckCircle2, Loader2, ChevronRight } from 'lucide-react';
+import { Search, Book, AlertCircle, Lightbulb, FileText, Tag, X, Zap, CheckCircle2, Loader2, ChevronRight, Shield, ChevronDown, Globe, Clock, Server } from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { knowledgeEntries, generatedSkills, type KnowledgeEntry, type Skill } from '../data/knowledge';
 
@@ -270,6 +270,102 @@ function DetailPanel({ entry, skills, onClose }: { entry: KnowledgeEntry; skills
   );
 }
 
+/* ─── Network.md Section ─── */
+const NETWORK_MD_SECTIONS = [
+  {
+    key: 'topology', icon: Globe,
+    titleEn: 'Network Topology & Domain Boundaries', titleZh: '网络拓扑与域边界',
+    contentEn: '# Network Topology\n\nRAN Domain: 23,456 cells (4G/5G), 5 regions\nTransport: IP/MPLS backbone, 48 core routers\nCore Network: 3 AMF/SMF clusters, 2 UPF pools\nDomain boundary: RAN↔Transport at S1/N2, Transport↔Core at N4\n\n## Cross-domain handoff rules\n- Fault correlation across domains requires ≥3 KPI anomalies\n- Cross-domain parameter changes need L4 approval',
+    contentZh: '# 网络拓扑\n\nRAN域：23,456小区（4G/5G），5个区域\n传输：IP/MPLS骨干网，48台核心路由器\n核心网：3套AMF/SMF集群，2个UPF池\n域边界：RAN↔传输在S1/N2，传输↔核心网在N4\n\n## 跨域交接规则\n- 跨域故障关联需≥3个KPI异常\n- 跨域参数变更需L4审批',
+  },
+  {
+    key: 'sla', icon: Shield,
+    titleEn: 'SLA Requirements & KPI Thresholds', titleZh: 'SLA要求与KPI阈值',
+    contentEn: '# SLA & KPI Thresholds\n\nNetwork Availability: ≥99.95%\nCall Drop Rate: <0.3%\nHandover Success: >99.2%\nDL Throughput (5G): ≥500Mbps (urban)\nLatency (5G URLLC): <10ms\nMTTR: <30min (critical), <4h (major)\n\n## VIP SLA Tiers\n- Diamond: 99.99% availability, dedicated slice\n- Gold: 99.95%, priority QoS\n- Silver: 99.9%, best-effort enhanced',
+    contentZh: '# SLA与KPI阈值\n\n网络可用性：≥99.95%\n掉话率：<0.3%\n切换成功率：>99.2%\n下行吞吐量（5G）：≥500Mbps（城区）\n时延（5G URLLC）：<10ms\nMTTR：<30min（严重），<4h（重大）\n\n## VIP SLA分级\n- 钻石卡：99.99%可用性，专用切片\n- 金卡：99.95%，优先QoS\n- 银卡：99.9%，增强型尽力而为',
+  },
+  {
+    key: 'escalation', icon: AlertCircle,
+    titleEn: 'Escalation Policies & Paths', titleZh: '升级策略与路径',
+    contentEn: '# Escalation Policies\n\nL1 → L2: Auto-escalate if unresolved >15min\nL2 → L3: Auto-escalate if impact >100 users\nL3 → L4: Manual approval, NOC director\nL4 → L5: Emergency only, VP approval\n\n## Priority Matrix\n- P1 (Critical): Core outage, >10K users → immediate L4\n- P2 (Major): Regional degradation → L3 within 5min\n- P3 (Minor): Single cell issue → L2 auto-handle\n- P4 (Info): Threshold approaching → L1 monitor',
+    contentZh: '# 升级策略\n\nL1 → L2：未解决>15分钟自动升级\nL2 → L3：影响>100用户自动升级\nL3 → L4：需人工审批，NOC主管\nL4 → L5：仅限紧急情况，VP审批\n\n## 优先级矩阵\n- P1（严重）：核心网故障，>1万用户 → 立即L4\n- P2（重大）：区域性劣化 → 5分钟内L3\n- P3（一般）：单小区问题 → L2自动处理\n- P4（信息）：阈值逼近 → L1监控',
+  },
+  {
+    key: 'forbidden', icon: Shield,
+    titleEn: 'Forbidden Operations', titleZh: '禁止操作',
+    contentEn: '# Forbidden Operations\n\n## NEVER execute:\n- Core NE restart during peak hours (9:00-22:00)\n- Batch parameter changes >200 cells without simulation\n- Delete/modify subscriber profiles without dual approval\n- Disable alarm monitoring on any production NE\n- Override VIP SLA protections\n\n## Conditional restrictions:\n- Firmware upgrades: maintenance window only (02:00-06:00)\n- Cross-region failover: requires L5 + VP approval\n- New feature activation: staged rollout mandatory',
+    contentZh: '# 禁止操作\n\n## 绝对禁止：\n- 高峰期（9:00-22:00）重启核心网元\n- 未经仿真批量变更>200小区参数\n- 未经双人审批删除/修改用户档案\n- 关闭任何生产网元的告警监控\n- 覆盖VIP SLA保护策略\n\n## 条件限制：\n- 固件升级：仅限维护窗口（02:00-06:00）\n- 跨区域倒换：需L5+VP审批\n- 新功能激活：必须灰度发布',
+  },
+  {
+    key: 'maintenance', icon: Clock,
+    titleEn: 'Maintenance Windows & Change Freezes', titleZh: '维护窗口与变更冻结期',
+    contentEn: '# Maintenance Windows\n\nDaily: 02:00-06:00 (routine maintenance)\nWeekly: Sunday 01:00-05:00 (major changes)\nMonthly: Last Sunday 00:00-08:00 (firmware/upgrades)\n\n## Change Freeze Periods\n- National holidays: 7 days before + during\n- Major events (concerts, sports): 24h before + during\n- Quarter-end billing: Last 3 days of quarter\n- Year-end: Dec 20 - Jan 5\n\n## Emergency override: L5 approval + post-audit',
+    contentZh: '# 维护窗口\n\n每日：02:00-06:00（常规维护）\n每周：周日01:00-05:00（重大变更）\n每月：最后一个周日00:00-08:00（固件/升级）\n\n## 变更冻结期\n- 国家法定假日：前7天+期间\n- 重大活动（演唱会、体育赛事）：前24小时+期间\n- 季末计费：每季度最后3天\n- 年终：12月20日-1月5日\n\n## 紧急覆盖：需L5审批+事后审计',
+  },
+  {
+    key: 'vendor', icon: Server,
+    titleEn: 'Vendor-specific Notes & Compliance', titleZh: '厂商注意事项与合规',
+    contentEn: '# Vendor-specific Notes\n\n## Huawei\n- MML command validation required before execution\n- U2020/iManager compatibility check for batch ops\n- AUTIN integration: use Intent API v3.2+\n\n## Multi-vendor\n- Parameter naming differs across vendors\n- Cross-vendor handover: extra validation needed\n\n# Regulatory Compliance\n- MIIT annual inspection: Q4 preparation\n- User data: comply with Personal Information Protection Law\n- Spectrum usage: report to radio management bureau quarterly\n- Emergency comms: priority channel reservation per regulations',
+    contentZh: '# 厂商注意事项\n\n## 华为\n- MML命令执行前须验证\n- U2020/iManager批量操作兼容性检查\n- AUTIN集成：使用Intent API v3.2+\n\n## 多厂商\n- 不同厂商参数命名不同\n- 跨厂商切换：需额外验证\n\n# 监管合规\n- 工信部年检：Q4准备\n- 用户数据：遵守《个人信息保护法》\n- 频谱使用：每季度向无线电管理局报告\n- 应急通信：按规定预留优先通道',
+  },
+];
+
+function NetworkMdSection() {
+  const { t } = useText();
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['topology', 'sla']));
+
+  const toggleSection = (key: string) => {
+    setExpandedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+  return (
+    <div className="mb-5">
+      <div className="bg-bg-card rounded-xl border border-accent-cyan/30 overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-3 border-b border-border bg-accent-cyan/5">
+          <div className="w-8 h-8 rounded-lg bg-accent-cyan/20 flex items-center justify-center">
+            <FileText className="w-4 h-4 text-accent-cyan" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-accent-cyan">Network.md</h2>
+              <span className="text-[10px] bg-accent-cyan/20 text-accent-cyan px-1.5 py-0.5 rounded">{t('Declarative Knowledge File', '声明式知识文件')}</span>
+            </div>
+            <p className="text-xs text-text-muted">{t('Telecom CLAUDE.md — engineer-editable knowledge defining network rules, SLA, forbidden ops, and compliance', '电信版CLAUDE.md — 工程师可编辑的知识文件，定义网络规则、SLA、禁止操作与合规要求')}</p>
+          </div>
+          <span className="text-xs text-text-muted shrink-0">{NETWORK_MD_SECTIONS.length} {t('sections', '章节')}</span>
+        </div>
+        <div className="divide-y divide-border">
+          {NETWORK_MD_SECTIONS.map(sec => {
+            const Icon = sec.icon;
+            const expanded = expandedSections.has(sec.key);
+            return (
+              <div key={sec.key}>
+                <button onClick={() => toggleSection(sec.key)}
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-bg-hover/50 transition-colors cursor-pointer text-left">
+                  <Icon className="w-4 h-4 text-accent-cyan shrink-0" />
+                  <span className="text-sm font-medium text-text-primary flex-1">{t(sec.titleEn, sec.titleZh)}</span>
+                  <ChevronDown className={`w-4 h-4 text-text-muted transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                </button>
+                {expanded && (
+                  <div className="px-5 pb-4">
+                    <pre className="bg-bg-primary border border-border rounded-lg px-4 py-3 text-xs text-text-secondary font-mono whitespace-pre-wrap leading-relaxed overflow-auto max-h-64">
+                      {t(sec.contentEn, sec.contentZh)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main Component ─── */
 export default function Knowledge() {
   const { t } = useText();
@@ -303,6 +399,9 @@ export default function Knowledge() {
           <p className="text-xs text-text-muted mt-0.5">{knowledgeEntries.length} {t('entries', '条目')} · {skills.length} {t('skills', '个Skill')}</p>
         </div>
       </div>
+
+      {/* ── SECTION 0: Network.md ── */}
+      <NetworkMdSection />
 
       {/* ── SECTION 1: Skill Gallery ── */}
       <div className="mb-5">

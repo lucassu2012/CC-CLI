@@ -136,6 +136,7 @@ export default function Dashboard() {
   const [subTaskDetail, setSubTaskDetail] = useState<{ title: string; status: string; start: string; elapsed: string } | null>(null);
   const [subAlarmDetail, setSubAlarmDetail] = useState<{ severity: string; title: string; time: string; status: string } | null>(null);
   const [collabOpen, setCollabOpen] = useState(false);
+  const [systemModal, setSystemModal] = useState<string | null>(null);
 
   /* Pulse indicator */
   const pulseClass = tick % 2 === 0 ? 'opacity-100' : 'opacity-60';
@@ -221,7 +222,8 @@ export default function Dashboard() {
             { id: 'crm', name: 'CRM系统', nameEn: 'CRM System', color: '#10b981', status: 'connected', latency: 15, api: 'REST API', tasks: 2103 },
             { id: 'bss', name: 'BSS/计费', nameEn: 'BSS/Billing', color: '#eab308', status: 'connected', latency: 11, api: 'SOAP/REST', tasks: 1578 },
           ].map(sys => (
-            <div key={sys.id} className="bg-bg-card rounded-xl border border-border p-3 hover:border-accent-cyan/30 transition-all group">
+            <div key={sys.id} onClick={() => setSystemModal(sys.id)}
+              className="bg-bg-card rounded-xl border border-border p-3 hover:border-accent-cyan/40 transition-all group cursor-pointer">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: sys.color }} />
                 <span className="text-xs font-medium text-text-primary truncate">{t(sys.nameEn, sys.name)}</span>
@@ -232,6 +234,9 @@ export default function Dashboard() {
                 <div className="flex justify-between"><span className="text-text-muted">{t('Protocol', '协议')}</span><span className="text-text-secondary font-mono">{sys.api}</span></div>
                 <div className="flex justify-between"><span className="text-text-muted">{t('Latency', '延迟')}</span><span className="text-status-green">{sys.latency}ms</span></div>
                 <div className="flex justify-between"><span className="text-text-muted">{t('Calls/24h', '调用/24h')}</span><span className="text-text-secondary tabular-nums">{sys.tasks.toLocaleString()}</span></div>
+              </div>
+              <div className="flex items-center gap-1 mt-2 text-[10px] text-accent-cyan opacity-0 group-hover:opacity-100 transition-opacity">
+                {t('View architecture', '查看架构')} <ChevronRight className="w-3 h-3" />
               </div>
             </div>
           ))}
@@ -629,6 +634,257 @@ export default function Dashboard() {
           </div>
         )}
       </Modal>
+
+      {/* ─── Connected System Architecture Drill-down ─── */}
+      <SystemArchModal systemId={systemModal} onClose={() => setSystemModal(null)} t={t} />
+    </div>
+  );
+}
+
+/* ─── System Architecture Modal ─── */
+const SYSTEM_ARCH: Record<string, {
+  name: string; nameEn: string; color: string;
+  protocols: { name: string; type: string; latency: string; mode: string }[];
+  dataFlows: { from: string; to: string; protocol: string; rate: string }[];
+  interfaces: { name: string; direction: string; desc: string; descEn: string }[];
+}> = {
+  oss: {
+    name: 'OSS平台', nameEn: 'OSS Platform', color: '#f97316',
+    protocols: [
+      { name: 'CORBA/MTOSI', type: 'Northbound', latency: '<50ms', mode: 'Real-time' },
+      { name: 'SNMP v2c/v3', type: 'Monitoring', latency: '<100ms', mode: 'Polling (30s)' },
+      { name: 'NETCONF/YANG', type: 'Config', latency: '<200ms', mode: 'On-demand' },
+      { name: 'Kafka', type: 'Streaming', latency: '<10ms', mode: 'Real-time stream' },
+      { name: 'REST API', type: 'Integration', latency: '<30ms', mode: 'Request/Response' },
+    ],
+    dataFlows: [
+      { from: 'OSS', to: 'IOE Data Lake', protocol: 'Kafka', rate: '12K msg/s' },
+      { from: 'IOE Agent', to: 'OSS', protocol: 'NETCONF', rate: '450 ops/min' },
+      { from: 'NE/BTS', to: 'OSS', protocol: 'SNMP', rate: '8K traps/min' },
+      { from: 'OSS', to: 'Alarm Engine', protocol: 'CORBA', rate: '2K events/min' },
+    ],
+    interfaces: [
+      { name: 'PM Interface', direction: 'IN', desc: '性能指标采集（15min粒度）', descEn: 'Performance metrics collection (15min granularity)' },
+      { name: 'FM Interface', direction: 'IN', desc: '故障告警实时接入', descEn: 'Real-time fault alarm ingestion' },
+      { name: 'CM Interface', direction: 'OUT', desc: '配置下发与参数变更', descEn: 'Configuration deployment & parameter changes' },
+      { name: 'Topology Interface', direction: 'IN', desc: '网络拓扑同步', descEn: 'Network topology synchronization' },
+    ],
+  },
+  ticket: {
+    name: '工单系统', nameEn: 'Ticket/ITSM', color: '#8b5cf6',
+    protocols: [
+      { name: 'REST API', type: 'CRUD', latency: '<20ms', mode: 'Request/Response' },
+      { name: 'gRPC', type: 'Streaming', latency: '<5ms', mode: 'Bidirectional stream' },
+      { name: 'Kafka', type: 'Events', latency: '<10ms', mode: 'Event-driven' },
+      { name: 'Database', type: 'PostgreSQL', latency: '<3ms', mode: 'Direct query' },
+    ],
+    dataFlows: [
+      { from: 'IOE Agent', to: 'ITSM', protocol: 'REST', rate: '120 tickets/hr' },
+      { from: 'ITSM', to: 'IOE', protocol: 'Kafka', rate: '500 events/hr' },
+      { from: 'ITSM', to: 'Field Eng App', protocol: 'gRPC', rate: '2K msg/hr' },
+    ],
+    interfaces: [
+      { name: 'Ticket CRUD', direction: 'OUT', desc: '工单创建/更新/关闭', descEn: 'Ticket create/update/close' },
+      { name: 'Status Webhook', direction: 'IN', desc: '工单状态变更回调', descEn: 'Ticket status change callback' },
+      { name: 'SLA Monitor', direction: 'IN', desc: 'SLA超时预警', descEn: 'SLA timeout early warning' },
+    ],
+  },
+  smartcare: {
+    name: 'SmartCare', nameEn: 'Huawei SmartCare CEM', color: '#ec4899',
+    protocols: [
+      { name: 'Northbound API', type: 'REST', latency: '<100ms', mode: 'Request/Response' },
+      { name: 'Kafka', type: 'XDR Stream', latency: '<500ms', mode: 'Near real-time' },
+      { name: 'Database', type: 'Hive/Spark', latency: '<5s', mode: 'Batch query' },
+      { name: 'gRPC', type: 'Streaming', latency: '<10ms', mode: 'Bidirectional' },
+    ],
+    dataFlows: [
+      { from: 'SmartCare', to: 'IOE', protocol: 'Kafka', rate: '50K XDR/s' },
+      { from: 'IOE', to: 'SmartCare', protocol: 'REST', rate: '800 queries/hr' },
+      { from: 'SmartCare', to: 'User Profile DB', protocol: 'Hive', rate: 'Batch 4x/day' },
+    ],
+    interfaces: [
+      { name: 'CEM Dashboard', direction: 'IN', desc: '用户体验指标聚合', descEn: 'User experience metrics aggregation' },
+      { name: 'XDR Feed', direction: 'IN', desc: '详单数据实时流', descEn: 'Call detail record real-time stream' },
+      { name: 'User Insight', direction: 'IN', desc: '用户画像与行为分析', descEn: 'User profiling & behavior analytics' },
+    ],
+  },
+  autin: {
+    name: 'AUTIN', nameEn: 'Huawei AUTIN ADN', color: '#06b6d4',
+    protocols: [
+      { name: 'Intent API', type: 'REST/gRPC', latency: '<50ms', mode: 'Intent-driven' },
+      { name: 'NETCONF', type: 'Config', latency: '<200ms', mode: 'Transaction' },
+      { name: 'Kafka', type: 'Telemetry', latency: '<100ms', mode: 'Streaming' },
+      { name: 'SNMP', type: 'Monitoring', latency: '<100ms', mode: 'Trap/Poll' },
+    ],
+    dataFlows: [
+      { from: 'IOE', to: 'AUTIN', protocol: 'Intent API', rate: '60 intents/hr' },
+      { from: 'AUTIN', to: 'IOE', protocol: 'Kafka', rate: '5K telemetry/s' },
+      { from: 'AUTIN', to: 'Network', protocol: 'NETCONF', rate: '200 configs/hr' },
+    ],
+    interfaces: [
+      { name: 'Intent Interface', direction: 'OUT', desc: '意图下发与执行', descEn: 'Intent deployment & execution' },
+      { name: 'Closed-loop', direction: 'IN', desc: '闭环结果反馈', descEn: 'Closed-loop result feedback' },
+      { name: 'Telemetry', direction: 'IN', desc: '遥测数据实时采集', descEn: 'Real-time telemetry collection' },
+    ],
+  },
+  crm: {
+    name: 'CRM系统', nameEn: 'CRM System', color: '#10b981',
+    protocols: [
+      { name: 'REST API', type: 'CRUD', latency: '<30ms', mode: 'Request/Response' },
+      { name: 'Kafka', type: 'Events', latency: '<10ms', mode: 'Event-driven' },
+      { name: 'Database', type: 'Oracle/MySQL', latency: '<5ms', mode: 'Direct query' },
+      { name: 'gRPC', type: 'Real-time', latency: '<5ms', mode: 'Streaming' },
+    ],
+    dataFlows: [
+      { from: 'CRM', to: 'IOE', protocol: 'Kafka', rate: '3K events/hr' },
+      { from: 'IOE', to: 'CRM', protocol: 'REST', rate: '500 pushes/hr' },
+      { from: 'CRM', to: 'User DB', protocol: 'Oracle', rate: '10K queries/hr' },
+    ],
+    interfaces: [
+      { name: 'Customer Profile', direction: 'IN', desc: '客户360°画像', descEn: 'Customer 360° profile' },
+      { name: 'Campaign Push', direction: 'OUT', desc: '营销活动推送', descEn: 'Marketing campaign push' },
+      { name: 'Interaction Log', direction: 'IN', desc: '客户交互记录', descEn: 'Customer interaction log' },
+    ],
+  },
+  bss: {
+    name: 'BSS/计费', nameEn: 'BSS/Billing', color: '#eab308',
+    protocols: [
+      { name: 'SOAP/XML', type: 'Legacy', latency: '<100ms', mode: 'Request/Response' },
+      { name: 'REST API', type: 'Modern', latency: '<30ms', mode: 'Request/Response' },
+      { name: 'Kafka', type: 'CDR Stream', latency: '<500ms', mode: 'Near real-time' },
+      { name: 'Database', type: 'Oracle RAC', latency: '<5ms', mode: 'Direct query' },
+    ],
+    dataFlows: [
+      { from: 'BSS', to: 'IOE', protocol: 'Kafka', rate: '20K CDR/s' },
+      { from: 'IOE', to: 'BSS', protocol: 'REST', rate: '200 queries/hr' },
+      { from: 'BSS', to: 'Revenue Engine', protocol: 'SOAP', rate: 'Batch 24x/day' },
+    ],
+    interfaces: [
+      { name: 'Billing Query', direction: 'IN', desc: '套餐/账单/余额查询', descEn: 'Plan/bill/balance query' },
+      { name: 'Product Catalog', direction: 'IN', desc: '产品目录与资费', descEn: 'Product catalog & tariff' },
+      { name: 'Provisioning', direction: 'OUT', desc: '业务开通/变更', descEn: 'Service provisioning/modification' },
+    ],
+  },
+};
+
+function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; onClose: () => void; t: (en: string, zh: string) => string }) {
+  const [flowTick, setFlowTick] = useState(0);
+  useEffect(() => {
+    if (!systemId) return;
+    const iv = setInterval(() => setFlowTick(p => p + 1), 1500);
+    return () => clearInterval(iv);
+  }, [systemId]);
+
+  if (!systemId || !SYSTEM_ARCH[systemId]) return null;
+  const sys = SYSTEM_ARCH[systemId];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-[800px] max-h-[85vh] overflow-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: sys.color + '20' }}>
+              <Plug className="w-4 h-4" style={{ color: sys.color }} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-text-primary">{t(sys.nameEn, sys.name)} — {t('System Architecture', '系统架构')}</h3>
+              <p className="text-xs text-text-muted">{t('Multi-protocol data integration · Real-time & batch', '多协议数据集成 · 实时与批量')}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-6 space-y-5">
+          {/* Protocol Support */}
+          <div>
+            <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Activity className="w-3 h-3" /> {t('Supported Protocols', '支持的协议')}
+            </h4>
+            <div className="grid grid-cols-5 gap-2">
+              {sys.protocols.map((p, i) => (
+                <div key={i} className="bg-bg-primary rounded-lg border border-border p-2.5 text-center hover:border-accent-cyan/30 transition-all">
+                  <div className="text-xs font-mono font-medium text-accent-cyan mb-1">{p.name}</div>
+                  <div className="text-[10px] text-text-muted">{p.type}</div>
+                  <div className="text-[10px] text-status-green mt-1">{p.latency}</div>
+                  <div className="text-[10px] text-text-muted">{p.mode}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Data Flow Diagram */}
+          <div>
+            <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Radio className="w-3 h-3" /> {t('Data Flow', '数据流转')}
+              <span className="ml-1 w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
+              <span className="text-[10px] font-normal text-text-muted">{t('Live', '实时')}</span>
+            </h4>
+            <div className="space-y-2">
+              {sys.dataFlows.map((flow, i) => {
+                const active = (flowTick + i) % sys.dataFlows.length === 0;
+                return (
+                  <div key={i} className={`bg-bg-primary rounded-lg border p-3 flex items-center gap-3 transition-all duration-500 ${active ? 'border-accent-cyan/50 bg-accent-cyan/5' : 'border-border'}`}>
+                    <div className="text-xs font-medium text-text-primary w-24 shrink-0">{flow.from}</div>
+                    <div className="flex-1 flex items-center gap-2">
+                      <div className="flex-1 h-px bg-border relative">
+                        <div className={`absolute top-0 left-0 h-px bg-accent-cyan transition-all duration-1000 ${active ? 'w-full' : 'w-0'}`} />
+                      </div>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-bg-tertiary text-accent-cyan shrink-0">{flow.protocol}</span>
+                      <div className="flex-1 h-px bg-border relative">
+                        <div className={`absolute top-0 right-0 h-px bg-accent-cyan transition-all duration-1000 ${active ? 'w-full' : 'w-0'}`} />
+                      </div>
+                    </div>
+                    <div className="text-xs font-medium text-text-primary w-24 shrink-0 text-right">{flow.to}</div>
+                    <div className="text-[10px] text-status-green font-mono w-24 text-right shrink-0">{flow.rate}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Interfaces */}
+          <div>
+            <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Plug className="w-3 h-3" /> {t('Interfaces', '接口')}
+            </h4>
+            <div className="grid grid-cols-2 gap-2">
+              {sys.interfaces.map((iface, i) => (
+                <div key={i} className="bg-bg-primary rounded-lg border border-border p-3 flex items-center gap-3">
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${iface.direction === 'IN' ? 'bg-status-green/10 text-status-green border-status-green/30' : 'bg-accent-cyan/10 text-accent-cyan border-accent-cyan/30'}`}>
+                    {iface.direction}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-text-primary">{iface.name}</div>
+                    <div className="text-[10px] text-text-muted truncate">{t(iface.descEn, iface.desc)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Integration Summary */}
+          <div className="bg-bg-primary rounded-lg border border-border p-4">
+            <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t('Integration Summary', '集成概要')}</h4>
+            <div className="grid grid-cols-4 gap-4 text-center">
+              <div>
+                <p className="text-lg font-semibold text-text-primary">{sys.protocols.length}</p>
+                <p className="text-[10px] text-text-muted">{t('Protocols', '协议数')}</p>
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-status-green">&lt;1s</p>
+                <p className="text-[10px] text-text-muted">{t('Sub-second latency', '亚秒级延迟')}</p>
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-accent-cyan">{sys.dataFlows.length}</p>
+                <p className="text-[10px] text-text-muted">{t('Data flows', '数据流')}</p>
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-text-primary">{sys.interfaces.length}</p>
+                <p className="text-[10px] text-text-muted">{t('Interfaces', '接口数')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

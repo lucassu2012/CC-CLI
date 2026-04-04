@@ -88,6 +88,66 @@ const EDITOR_TABS = [
 
 type EditorTab = typeof EDITOR_TABS[number]['key'];
 
+/* ─── Per-agent/sub-agent memory content generator ─── */
+function generateMemory(agent: DomainAgent, sub: SubAgent | undefined, t: (en: string, zh: string) => string): Record<string, string> {
+  const name = sub ? t(sub.name, sub.nameZh) : t(agent.name, agent.nameZh);
+  const count = sub ? sub.toolCalls : agent.taskCount;
+  const rate = sub ? sub.successRate : agent.successRate;
+  const succCount = Math.floor(count * rate / 100);
+  const failCount = Math.floor(count * (100 - rate) / 100);
+  const pLevel = sub ? sub.permissionLevel : 3;
+
+  // Per-domain system memory
+  const systemEn: Record<string, string> = {
+    planning: `# Safety Boundaries\n- Investment decisions >$1M require human approval\n- Site planning must pass coverage simulation verification\n- ROI projections must include sensitivity analysis\n- L${pLevel}+ operations require approval chain\n\n# Operational Standards\n- All plans validated via Digital Twin before submission\n- Revenue forecasts must use latest 90-day data`,
+    optimization: `# Safety Boundaries\n- No core network restart during peak hours (9:00-22:00)\n- Parameter adjustment range within baseline ±30%\n- L${pLevel}+ operations require human approval\n- Batch changes limited to 50 cells per cycle\n\n# Operational Standards\n- All parameter changes require Digital Twin pre-verification\n- Auto-verify KPI recovery after each optimization cycle`,
+    experience: `# Safety Boundaries\n- VIP user SLA modifications require L4 approval\n- QoS parameter changes must not degrade other users >5%\n- Complaint escalation within 15min for critical cases\n- L${pLevel}+ operations require approval\n\n# Operational Standards\n- Experience baselines updated hourly from SmartCare\n- User profiling must comply with privacy regulations`,
+    ops: `# Safety Boundaries\n- No core network restart during peak hours (9:00-22:00)\n- Maintenance window: 02:00-06:00 only for critical NEs\n- L${pLevel}+ operations require human approval\n- Emergency patches need dual-approval\n\n# Operational Standards\n- All repairs require Digital Twin pre-verification\n- Post-repair KPI verification mandatory within 30min`,
+    marketing: `# Safety Boundaries\n- Campaign targeting must comply with privacy regulations\n- Maximum push frequency: 2 messages/user/week\n- Retention offers capped at ¥200/user/month\n- L${pLevel}+ operations require approval\n\n# Operational Standards\n- A/B testing required for campaigns >1000 users\n- Revenue impact validated before full rollout`,
+  };
+  const systemZh: Record<string, string> = {
+    planning: `# 安全边界\n- 投资决策>100万需人工审批\n- 站点规划必须通过覆盖仿真验证\n- ROI预测必须包含敏感性分析\n- L${pLevel}+操作需审批链\n\n# 操作规范\n- 所有方案提交前需数字孪生验证\n- 收益预测必须使用最近90天数据`,
+    optimization: `# 安全边界\n- 禁止高峰期（9:00-22:00）执行核心网重启\n- 参数调整范围不超过基线±30%\n- L${pLevel}+操作需人工审批\n- 批量变更每轮限50小区\n\n# 操作规范\n- 所有参数变更需数字孪生预验证\n- 每轮优化后自动验证KPI恢复`,
+    experience: `# 安全边界\n- VIP用户SLA修改需L4审批\n- QoS参数变更不得降低其他用户体验>5%\n- 重要投诉15分钟内升级\n- L${pLevel}+操作需审批\n\n# 操作规范\n- 体验基线每小时从SmartCare更新\n- 用户画像必须遵守隐私法规`,
+    ops: `# 安全边界\n- 禁止高峰期（9:00-22:00）执行核心网重启\n- 关键网元维护窗口：仅02:00-06:00\n- L${pLevel}+操作需人工审批\n- 紧急补丁需双人审批\n\n# 操作规范\n- 所有修复需数字孪生预验证\n- 修复后30分钟内完成KPI验证`,
+    marketing: `# 安全边界\n- 营销活动须遵守隐私法规\n- 最大推送频率：每用户每周2条\n- 维挽优惠上限：¥200/用户/月\n- L${pLevel}+操作需审批\n\n# 操作规范\n- 超过1000用户的活动需A/B测试\n- 全量推广前须验证收入影响`,
+  };
+
+  // Per-domain/sub-agent domain memory
+  const domainEn: Record<string, string> = {
+    planning: `# ${name} Domain Knowledge\n- Coverage/capacity planning methodologies\n- 3GPP TS 28.xxx site planning standards\n- Historical planning case library (${count}+ entries)\n- Market-network synergy best practices\n- ROI calculation frameworks`,
+    optimization: `# ${name} Domain Knowledge\n- Huawei equipment MML command set\n- 3GPP TS 32.xxx optimization standards\n- Historical optimization cases (${count}+ entries)\n- Pareto multi-objective optimization theory\n- Interference/coverage/capacity trade-off models`,
+    experience: `# ${name} Domain Knowledge\n- LUM user experience models\n- SmartCare CEM integration APIs\n- Complaint pattern recognition library (${count}+ cases)\n- 5QI/QoS parameter mapping tables\n- SLA definition & monitoring frameworks`,
+    ops: `# ${name} Domain Knowledge\n- Huawei equipment MML command set\n- 3GPP TS 28.xxx/TS 32.xxx standards\n- Historical fault case library (${count}+ entries)\n- AUTIN autonomous network integration\n- Predictive maintenance ML models`,
+    marketing: `# ${name} Domain Knowledge\n- Customer segmentation models\n- CRM/BSS integration APIs\n- Campaign effectiveness library (${count}+ cases)\n- Churn prediction ML models\n- Revenue optimization strategies`,
+  };
+  const domainZh: Record<string, string> = {
+    planning: `# ${name} 领域知识\n- 覆盖/容量规划方法论\n- 3GPP TS 28.xxx站点规划标准\n- 历史规划案例库（${count}+条）\n- 商网协同最佳实践\n- ROI计算框架`,
+    optimization: `# ${name} 领域知识\n- 华为设备MML命令集\n- 3GPP TS 32.xxx优化标准\n- 历史优化案例（${count}+条）\n- Pareto多目标优化理论\n- 干扰/覆盖/容量权衡模型`,
+    experience: `# ${name} 领域知识\n- LUM用户体验模型\n- SmartCare CEM集成接口\n- 投诉模式识别库（${count}+条）\n- 5QI/QoS参数映射表\n- SLA定义与监控框架`,
+    ops: `# ${name} 领域知识\n- 华为设备MML命令集\n- 3GPP TS 28.xxx/TS 32.xxx标准\n- 历史故障案例库（${count}+条）\n- AUTIN自治网络集成\n- 预测性维护ML模型`,
+    marketing: `# ${name} 领域知识\n- 客户细分模型\n- CRM/BSS集成接口\n- 营销效果库（${count}+条）\n- 离网预测ML模型\n- 收入优化策略`,
+  };
+
+  // Per-sub-agent session memory
+  const sessionEn = sub
+    ? `# Current Session — ${t(sub.name, sub.nameZh)}\n- Active task: ${t(sub.currentTask, sub.currentTaskZh)}\n- Permission level: L${sub.permissionLevel}\n- Tool calls this session: ${sub.toolCalls.toLocaleString()}\n- Success rate: ${sub.successRate}%`
+    : `# Current Session Context\n(Auto-populated at runtime)\n- Current task chain\n- Operation history\n- Intermediate result cache`;
+  const sessionZh = sub
+    ? `# 当前会话 — ${t(sub.name, sub.nameZh)}\n- 当前任务：${t(sub.currentTask, sub.currentTaskZh)}\n- 权限级别：L${sub.permissionLevel}\n- 本次工具调用：${sub.toolCalls.toLocaleString()}\n- 成功率：${sub.successRate}%`
+    : `# 当前会话上下文\n（运行时自动填充）\n- 当前任务链\n- 操作历史\n- 中间结果缓存`;
+
+  return {
+    system: t(systemEn[agent.id] || systemEn.ops, systemZh[agent.id] || systemZh.ops),
+    domain: t(domainEn[agent.id] || domainEn.ops, domainZh[agent.id] || domainZh.ops),
+    session: t(sessionEn, sessionZh),
+    episode: t(
+      `# Historical Episodes\n- Successful cases: ${succCount}\n- Failed cases: ${failCount}\n- Last updated: ${new Date().toLocaleDateString()}\n- Auto-synced from knowledge base`,
+      `# 历史情景\n- 成功案例：${succCount}条\n- 失败案例：${failCount}条\n- 最近更新：${new Date().toLocaleDateString()}\n- 自动从知识库同步更新`,
+    ),
+  };
+}
+
 function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgent?: SubAgent; onClose: () => void }) {
   const { t } = useText();
   const [tab, setTab] = useState<EditorTab>('memory');
@@ -100,34 +160,20 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
   const editDesc = editingSubAgent
     ? t(editingSubAgent.currentTask, editingSubAgent.currentTaskZh)
     : t(agent.description, agent.descriptionZh);
-  const taskCount = editingSubAgent ? editingSubAgent.toolCalls : agent.taskCount;
-  const successRate = editingSubAgent ? editingSubAgent.successRate : agent.successRate;
 
   const [enabledSkills, setEnabledSkills] = useState<Set<string>>(() => {
     const domainSkills = generatedSkills.filter(s => s.domain === agent.id);
     return new Set(domainSkills.map(s => s.id));
   });
   const [enabledTwins, setEnabledTwins] = useState<Set<string>>(() => new Set((DIGITAL_TWINS[agent.id] || []).map(t => t.name)));
-  const successCount = Math.floor(taskCount * successRate / 100);
-  const failCount = Math.floor(taskCount * (100 - successRate) / 100);
-  const [memoryEdits, setMemoryEdits] = useState<Record<string, string>>({
-    system: t(
-      '# Safety Boundaries\n- No core network restart during peak hours (9:00-22:00)\n- Parameter adjustment range within baseline ±30%\n- L4+ operations require human approval\n\n# Operational Standards\n- All operations require Digital Twin pre-verification\n- Auto-verify KPI recovery after repair',
-      '# 安全边界\n- 禁止高峰期（9:00-22:00）执行核心网重启\n- 参数调整范围不超过基线±30%\n- L4+操作需人工审批\n\n# 操作规范\n- 所有操作需数字孪生预验证\n- 修复后自动验证KPI恢复',
-    ),
-    domain: t(
-      `# ${editName} Domain Knowledge\n- Huawei equipment MML command set\n- 3GPP TS 28.xxx/TS 32.xxx standards\n- Historical fault case library (${taskCount}+ entries)\n- ${t(agent.domain, agent.domainZh)} best practice documents`,
-      `# ${editName} 领域知识\n- 华为设备MML命令集\n- 3GPP TS 28.xxx/TS 32.xxx标准\n- 历史故障案例库（${taskCount}+条）\n- ${t(agent.domain, agent.domainZh)}最佳实践文档`,
-    ),
-    session: t(
-      '# Current Session Context\n(Auto-populated at runtime)\n- Current task chain\n- Operation history\n- Intermediate result cache',
-      '# 当前会话上下文\n（运行时自动填充）\n- 当前任务链\n- 操作历史\n- 中间结果缓存',
-    ),
-    episode: t(
-      `# Historical Episodes\n- Successful cases: ${successCount}\n- Failed cases: ${failCount}\n- Auto-synced from knowledge base`,
-      `# 历史情景\n- 成功案例：${successCount}条\n- 失败案例：${failCount}条\n- 自动从知识库同步更新`,
-    ),
-  });
+  const [memoryEdits, setMemoryEdits] = useState<Record<string, string>>(() => generateMemory(agent, editingSubAgent, t));
+
+  // Update memory when switching sub-agents
+  const switchSubAgent = (sub: SubAgent | undefined) => {
+    setEditingSubAgent(sub);
+    setMemoryEdits(generateMemory(agent, sub, t));
+    setTab('memory');
+  };
 
   const domainSkills = generatedSkills.filter(s => s.domain === agent.id);
   const otherSkills = generatedSkills.filter(s => s.domain !== agent.id);
@@ -156,7 +202,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-4 px-5 py-3 border-b border-border bg-bg-card shrink-0">
-        <button onClick={() => { if (editingSubAgent) { setEditingSubAgent(undefined); setTab('memory'); } else { onClose(); } }}
+        <button onClick={() => { if (editingSubAgent) { switchSubAgent(undefined); } else { onClose(); } }}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover border border-border text-sm cursor-pointer">
           <ArrowLeft className="w-4 h-4" /> {t('Back', '返回')}
         </button>
@@ -200,7 +246,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
             {agent.subAgents.map(sub => {
               const isActive = editingSubAgent?.id === sub.id;
               return (
-                <button key={sub.id} onClick={() => { setEditingSubAgent(sub); setTab('memory'); }}
+                <button key={sub.id} onClick={() => switchSubAgent(sub)}
                   className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg mb-0.5 cursor-pointer transition-all ${isActive ? 'bg-purple-500/15 text-purple-400' : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'}`}>
                   <StatusBadge status={sub.status} size="sm" />
                   <span className="truncate flex-1 text-left">{t(sub.name, sub.nameZh)}</span>

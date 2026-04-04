@@ -6,6 +6,7 @@ import {
   GitBranch,
   BookOpen,
   Network,
+  Shield,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -19,6 +20,7 @@ const navItems = [
   { path: '/workflows', icon: GitBranch, label: 'Workflows', labelZh: '工作流' },
   { path: '/knowledge', icon: BookOpen, label: 'Knowledge', labelZh: '知识库' },
   { path: '/topology', icon: Network, label: 'Digital Twin', labelZh: '数字孪生' },
+  { path: '/permissions', icon: Shield, label: 'Permissions', labelZh: '权限控制' },
 ];
 
 export default function Sidebar() {

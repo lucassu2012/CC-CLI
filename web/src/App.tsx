@@ -7,6 +7,7 @@ import Agents from './pages/Agents';
 import Workflows from './pages/Workflows';
 import Knowledge from './pages/Knowledge';
 import Topology from './pages/Topology';
+import Permissions from './pages/Permissions';
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/workflows" element={<Workflows />} />
             <Route path="/knowledge" element={<Knowledge />} />
             <Route path="/topology" element={<Topology />} />
+            <Route path="/permissions" element={<Permissions />} />
           </Routes>
         </main>
       </div>
