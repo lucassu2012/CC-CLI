@@ -1,3 +1,31 @@
+export interface SupervisorAgent {
+  id: 'ioe-supervisor';
+  name: string;
+  nameZh: string;
+  status: 'active' | 'idle' | 'emergency';
+  mode: 'routine' | 'emergency';
+  activePlan: string;
+  activePlanZh: string;
+  tasksCoordinated: number;
+  conflictsResolved: number;
+  contextSyncs: number;
+  uptime: string;
+}
+
+export const defaultSupervisor: SupervisorAgent = {
+  id: 'ioe-supervisor',
+  name: 'IOE-Supervisor',
+  nameZh: 'IOE-Supervisor',
+  status: 'active',
+  mode: 'routine',
+  activePlan: 'Daily optimization cycle #1247 — coordinate network-wide parameter tuning across 5 domain agents',
+  activePlanZh: '日常优化周期 #1247 — 协调5个领域Agent完成全网参数调优',
+  tasksCoordinated: 12847,
+  conflictsResolved: 342,
+  contextSyncs: 8923,
+  uptime: '99.97%',
+};
+
 export interface SubAgent {
   id: string;
   name: string;

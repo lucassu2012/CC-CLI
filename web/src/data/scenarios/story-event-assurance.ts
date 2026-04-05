@@ -376,4 +376,66 @@ export const storyEventAssurance: ScenarioData = {
     { id: 'AUD-E06', time: '20:20:00', level: 2, agentEn: 'Capacity Planning Agent', agentZh: '容量规划Agent', actEn: 'Pre-staging dispersal handover parameters', actZh: '预部署散场切换参数', status: 'completed', highRisk: false, detailEn: 'Concert ending in ~40 minutes. Pre-configured macro cell handover thresholds for 15,000 user transition. Gradual temp cell power reduction scheduled.', detailZh: '演唱会约40分钟后结束。已预配置宏站切换阈值用于15000用户过渡。临时站功率逐步降低已排期。', impactEn: 'Handover parameters staged for dispersal', impactZh: '散场切换参数已预部署' },
     { id: 'AUD-E07', time: '20:25:00', level: 1, agentEn: 'Event Assurance Agent', agentZh: '事件保障Agent', actEn: 'Event status summary — zero critical incidents', actZh: '活动状态汇总 — 零重大事故', status: 'info', highRisk: false, detailEn: 'Concert 2h 25min: 72,500 peak users, 99.2% availability, 4.5 QoE, 96.8% video success, 0 critical incidents. All 8 temp cells operational. Backup generators active on TC-03.', detailZh: '演唱会2小时25分钟：72500峰值用户，99.2%可用性，4.5 QoE，96.8%视频成功率，0重大事故。全部8个临时站运行正常。TC-03备用发电机运行中。', impactEn: 'Event summary — all targets exceeded', impactZh: '活动汇总 — 全部目标超额达成' },
   ],
+
+  // ─── Multi-Agent Collaboration ───────────────────────────────────────
+
+  supervisor: {
+    id: 'ioe-supervisor',
+    name: 'IOE-Supervisor',
+    nameZh: 'IOE-Supervisor',
+    status: 'active',
+    mode: 'routine',
+    activePlan: 'Event assurance — Guangzhou Music Festival, 80,000 attendees, pre-event capacity planning and live monitoring',
+    activePlanZh: '活动保障 — 广州音乐节，80,000观众，赛前容量规划与实时监控',
+    tasksCoordinated: 12156,
+    conflictsResolved: 356,
+    contextSyncs: 8734,
+    uptime: '99.98%',
+  },
+
+  a2aMessages: [
+    { id: 'a2a-ev-1', timestamp: '16:00:00', type: 'task-delegate', from: 'ioe-supervisor', to: 'planning', subject: 'Kick off event assurance plan — Guangzhou Music Festival 80K', subjectZh: '启动活动保障方案 — 广州音乐节8万人', status: 'completed' },
+    { id: 'a2a-ev-2', timestamp: '16:05:12', type: 'result-report', from: 'planning', to: 'ioe-supervisor', subject: 'Venue capacity model complete: 8 temp cells, 10Gbps total, 99.5% confidence', subjectZh: '场馆容量模型完成：8个临时站，总计10Gbps，99.5%置信度', status: 'completed' },
+    { id: 'a2a-ev-3', timestamp: '16:10:30', type: 'task-delegate', from: 'ioe-supervisor', to: 'optimization', subject: 'Pre-allocate spectrum and carrier resources for venue cells', subjectZh: '为场馆小站预分配频谱与载波资源', status: 'completed' },
+    { id: 'a2a-ev-4', timestamp: '16:15:45', type: 'result-report', from: 'optimization', to: 'ioe-supervisor', subject: 'Spectrum pre-allocation done: 200MHz across 8 cells, carrier aggregation configured', subjectZh: '频谱预分配完成：8小站200MHz，载波聚合已配置', status: 'completed' },
+    { id: 'a2a-ev-5', timestamp: '16:20:00', type: 'task-delegate', from: 'ioe-supervisor', to: 'experience', subject: 'Set up VIP monitoring for festival sponsors and VVIP areas', subjectZh: '为音乐节赞助商和VVIP区域设置VIP监控', status: 'completed' },
+    { id: 'a2a-ev-6', timestamp: '16:25:18', type: 'peer-request', from: 'ops', to: 'optimization', subject: 'Equipment health validated for all 8 venue cells — all green', subjectZh: '全部8个场馆小站设备健康验证 — 全部正常', status: 'completed' },
+    { id: 'a2a-ev-7', timestamp: '16:30:00', type: 'task-delegate', from: 'ioe-supervisor', to: 'marketing', subject: 'Prepare real-time promotions for festival attendees', subjectZh: '为音乐节观众准备实时促销活动', status: 'completed' },
+    { id: 'a2a-ev-8', timestamp: '19:45:00', type: 'context-share', from: 'optimization', to: 'ioe-supervisor', subject: 'Live traffic heatmap update: Section A-D utilization 78%-92%', subjectZh: '实时流量热力图更新：A-D区利用率78%-92%', status: 'completed' },
+    { id: 'a2a-ev-9', timestamp: '20:00:05', type: 'context-share', from: 'experience', to: 'ioe-supervisor', subject: 'VIP QoE stable at 4.7, VVIP at 4.9 — all sponsor SLAs met', subjectZh: 'VIP QoE稳定4.7，VVIP 4.9 — 全部赞助商SLA达标', status: 'completed' },
+    { id: 'a2a-ev-10', timestamp: '20:05:10', type: 'conflict-escalate', from: 'optimization', to: 'ioe-supervisor', subject: 'Section C capacity at 94% — requesting load balancing coordination', subjectZh: 'C区容量达94% — 请求负载均衡协调', status: 'completed' },
+    { id: 'a2a-ev-11', timestamp: '20:05:15', type: 'conflict-resolve', from: 'ioe-supervisor', to: 'optimization', subject: 'Activate MLB for Section C: redirect 2,400 users from TC-03 to TC-05', subjectZh: '激活C区MLB：从TC-03重定向2400用户至TC-05', status: 'completed' },
+    { id: 'a2a-ev-12', timestamp: '20:15:00', type: 'result-report', from: 'marketing', to: 'ioe-supervisor', subject: 'Real-time campaign delivered to 45,000 attendees — 12.3% engagement rate', subjectZh: '实时营销已触达45000名观众 — 12.3%互动率', status: 'completed' },
+  ],
+
+  collaborationEvents: [
+    { id: 'ce-ev-1', timestamp: '16:00:00', type: 'delegation', agents: ['ioe-supervisor', 'planning'], description: 'Supervisor kicked off event assurance plan, delegating capacity modeling to Planning Agent', descriptionZh: 'Supervisor启动活动保障方案，将容量建模委派给规划Agent' },
+    { id: 'ce-ev-2', timestamp: '16:05:12', type: 'completion', agents: ['planning', 'ioe-supervisor'], description: 'Planning Agent delivered venue capacity model: 8 temp cells covering all sections', descriptionZh: '规划Agent交付场馆容量模型：8个临时站覆盖全部区域' },
+    { id: 'ce-ev-3', timestamp: '16:10:30', type: 'delegation', agents: ['ioe-supervisor', 'optimization'], description: 'Supervisor delegated spectrum and carrier pre-allocation to Optimization Agent', descriptionZh: 'Supervisor将频谱与载波预分配委派给优化Agent' },
+    { id: 'ce-ev-4', timestamp: '16:20:00', type: 'delegation', agents: ['ioe-supervisor', 'experience'], description: 'Supervisor delegated VIP/VVIP monitoring setup to Experience Agent', descriptionZh: 'Supervisor将VIP/VVIP监控设置委派给体验Agent' },
+    { id: 'ce-ev-5', timestamp: '16:25:18', type: 'context-sync', agents: ['ops', 'optimization'], description: 'O&M Agent validated equipment health for all 8 venue cells and shared status with Optimization', descriptionZh: '运维Agent验证全部8个场馆小站设备健康并与优化Agent共享状态' },
+    { id: 'ce-ev-6', timestamp: '16:30:00', type: 'delegation', agents: ['ioe-supervisor', 'marketing'], description: 'Supervisor delegated real-time attendee promotions to Marketing Agent', descriptionZh: 'Supervisor将实时观众促销委派给营销Agent' },
+    { id: 'ce-ev-7', timestamp: '19:45:00', type: 'context-sync', agents: ['optimization', 'ioe-supervisor'], description: 'Optimization Agent shared live traffic heatmap showing 78%-92% utilization across sections', descriptionZh: '优化Agent共享实时流量热力图，各区利用率78%-92%' },
+    { id: 'ce-ev-8', timestamp: '20:00:05', type: 'context-sync', agents: ['experience', 'ioe-supervisor'], description: 'Experience Agent confirmed VIP QoE 4.7 and VVIP QoE 4.9 — all sponsor SLAs met', descriptionZh: '体验Agent确认VIP QoE 4.7，VVIP QoE 4.9 — 全部赞助商SLA达标' },
+    { id: 'ce-ev-9', timestamp: '20:05:10', type: 'conflict', agents: ['optimization', 'ioe-supervisor'], description: 'Section C capacity hit 94% — Optimization escalated for load balancing coordination', descriptionZh: 'C区容量达94% — 优化Agent上报请求负载均衡协调' },
+    { id: 'ce-ev-10', timestamp: '20:05:15', type: 'resolution', agents: ['ioe-supervisor', 'optimization'], description: 'Supervisor resolved congestion: activated MLB to redirect 2,400 users from TC-03 to TC-05', descriptionZh: 'Supervisor解决拥塞：激活MLB从TC-03重定向2400用户至TC-05' },
+    { id: 'ce-ev-11', timestamp: '20:15:00', type: 'completion', agents: ['marketing', 'ioe-supervisor'], description: 'Marketing Agent completed real-time campaign delivery to 45,000 attendees', descriptionZh: '营销Agent完成实时营销推送，触达45000名观众' },
+    { id: 'ce-ev-12', timestamp: '20:25:00', type: 'completion', agents: ['ioe-supervisor'], description: 'Supervisor confirmed event status: zero critical incidents, all KPIs exceeded targets', descriptionZh: 'Supervisor确认活动状态：零重大事故，全部KPI超额达标' },
+  ],
+
+  sharedContext: [
+    { id: 'sc-ev-1', key: 'Venue Cell Inventory', keyZh: '场馆小站清单', value: '8 temporary cells (TC-01~TC-08), 2Gbps microwave backhaul each, total 10Gbps capacity', valueZh: '8个临时站(TC-01~TC-08)，每站2Gbps微波回传，总容量10Gbps', source: 'ops', consumers: ['planning', 'optimization', 'ioe-supervisor'], updatedAt: '16:25:18' },
+    { id: 'sc-ev-2', key: 'Capacity Forecast Model', keyZh: '容量预测模型', value: 'Monte Carlo simulation: 80K attendees, 72.5K peak concurrent, 99.5% confidence with 8 temp cells', valueZh: '蒙特卡洛仿真：8万观众，72500峰值并发，8个临时站99.5%置信度', source: 'planning', consumers: ['optimization', 'ops', 'ioe-supervisor'], updatedAt: '16:05:12' },
+    { id: 'sc-ev-3', key: 'Pre-allocated Spectrum Resources', keyZh: '预分配频谱资源', value: '200MHz total across 8 cells, 3CC carrier aggregation, n78 band primary + n41 supplementary', valueZh: '8小站共200MHz，3CC载波聚合，n78主频段+n41补充频段', source: 'optimization', consumers: ['planning', 'ops', 'ioe-supervisor'], updatedAt: '16:15:45' },
+    { id: 'sc-ev-4', key: 'VIP Sponsor User List', keyZh: 'VIP赞助商用户列表', value: '500 VVIP box users (guaranteed 50Mbps DL), 8,000 VIP standing users (guaranteed 20Mbps DL), 5 sponsor SLAs', valueZh: '500名VVIP包厢用户(保障50Mbps DL)，8000名VIP站区用户(保障20Mbps DL)，5个赞助商SLA', source: 'experience', consumers: ['optimization', 'marketing', 'ioe-supervisor'], updatedAt: '16:20:00' },
+    { id: 'sc-ev-5', key: 'Live Traffic Heatmap', keyZh: '实时流量热力图', value: 'Section A: 78%, Section B: 85%, Section C: 92%, Section D: 80%, VIP: 65%, VVIP: 45%', valueZh: 'A区：78%，B区：85%，C区：92%，D区：80%，VIP区：65%，VVIP区：45%', source: 'optimization', consumers: ['planning', 'experience', 'ops', 'ioe-supervisor'], updatedAt: '19:45:00' },
+    { id: 'sc-ev-6', key: 'Event Promotion Campaign Status', keyZh: '活动促销活动状态', value: 'Push notifications delivered to 45,000 attendees, 12.3% engagement, top offer: 50% off concert merch data pack', valueZh: '推送通知已触达45000名观众，12.3%互动率，热门优惠：演唱会周边流量包5折', source: 'marketing', consumers: ['experience', 'ops', 'ioe-supervisor'], updatedAt: '20:15:00' },
+    { id: 'sc-ev-7', key: 'Equipment Health Dashboard', keyZh: '设备健康看板', value: 'All 8 temp cells green, TC-03 on backup generator (65% battery), microwave backhaul 100% uptime', valueZh: '全部8个临时站正常，TC-03使用备用发电机(电池65%)，微波回传100%在线', source: 'ops', consumers: ['optimization', 'planning', 'ioe-supervisor'], updatedAt: '20:10:00' },
+  ],
+
+  conflictResolutions: [
+    { id: 'cr-ev-1', timestamp: '17:30:00', conflictingAgents: ['optimization', 'planning'], issue: 'Optimization requested temporary 20MHz spectrum boost for Section C, but Planning flagged long-term interference risk to adjacent macro cells', issueZh: '优化Agent请求为C区临时增加20MHz频谱，但规划Agent指出对相邻宏站有长期干扰风险', resolution: 'Approved temporary boost with automatic rollback after event ends; Planning to schedule post-event interference audit', resolutionZh: '批准临时增加并在活动结束后自动回退；规划Agent安排赛后干扰审计', decision: 'parameter-merge' },
+    { id: 'cr-ev-2', timestamp: '19:50:00', conflictingAgents: ['experience', 'optimization'], issue: 'Experience Agent requested dedicated 30% capacity reservation for VIP/VVIP users, Optimization argued this would degrade general attendee throughput below acceptable threshold', issueZh: '体验Agent请求为VIP/VVIP用户预留30%容量，优化Agent认为这会导致普通观众吞吐量低于可接受阈值', resolution: 'Compromise: 20% dedicated VIP reservation + dynamic overflow sharing when VIP utilization below 60%', resolutionZh: '折中方案：20%专属VIP预留+VIP利用率低于60%时动态溢出共享', decision: 'parameter-merge' },
+    { id: 'cr-ev-3', timestamp: '20:08:00', conflictingAgents: ['marketing', 'ops'], issue: 'Marketing planned burst push notification to 60,000 users simultaneously, O&M warned this would cause signaling storm on already-loaded venue cells', issueZh: '营销Agent计划同时向60000用户推送通知，运维Agent警告这会在已高负载的场馆小站引发信令风暴', resolution: 'Staggered delivery: push notifications sent in 5 batches of 12,000 over 10 minutes to limit signaling load', resolutionZh: '分批发送：推送通知分5批每批12000人，10分钟内完成，限制信令负载', decision: 'sequential-execution' },
+  ],
 };

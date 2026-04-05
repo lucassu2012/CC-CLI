@@ -1,7 +1,8 @@
 import type { KpiMetric, AlertItem, TaskItem } from './dashboard';
-import type { DomainAgent } from './agents';
+import type { DomainAgent, SupervisorAgent } from './agents';
 import type { KnowledgeEntry, Skill } from './knowledge';
 import type { DemoConversation } from './chat';
+import type { A2AMessage, CollaborationEvent, SharedContextEntry, ConflictResolution } from './a2a-protocol';
 
 // Scenario metadata
 export interface ScenarioMeta {
@@ -125,4 +126,10 @@ export interface ScenarioData {
   workflowTemplates?: ScenarioWorkflowTemplate[];
   // Permissions page
   auditLog?: ScenarioAuditEntry[];
+  // Multi-agent collaboration
+  supervisor?: SupervisorAgent;
+  a2aMessages?: A2AMessage[];
+  collaborationEvents?: CollaborationEvent[];
+  sharedContext?: SharedContextEntry[];
+  conflictResolutions?: ConflictResolution[];
 }

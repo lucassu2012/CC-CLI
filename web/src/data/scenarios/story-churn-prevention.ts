@@ -375,4 +375,66 @@ export const storyChurnPrevention: ScenarioData = {
     { id: 'AUD-C06', time: '09:25:00', level: 2, agentEn: 'Proactive Care Agent', agentZh: '主动关怀Agent', actEn: 'Compensation packages prepared for 156 users', actZh: '为156位用户准备补偿方案', status: 'completed', highRisk: false, detailEn: 'Prepared personalized compensation packages for 156 users with 3+ complaints: 50GB bonus data + dedicated service representative + priority complaint handling.', detailZh: '为156位3+次投诉用户准备个性化补偿方案：50GB赠送流量+专属客服代表+优先投诉处理。', impactEn: '156 users, compensation packages pending approval', impactZh: '156位用户，补偿方案待审批' },
     { id: 'AUD-C07', time: '09:30:00', level: 1, agentEn: 'Marketing Agent', agentZh: '营销Agent', actEn: 'Real-time campaign performance report', actZh: '实时营销效果报告', status: 'info', highRisk: false, detailEn: 'Campaign running 20 minutes: 1,890 contacted, 892 responded (47.2%), 698 accepted offers (78.3%). Revenue protected so far: ¥2.8M/month. On track to exceed 75% target.', detailZh: '营销运行20分钟：已触达1890位，892位响应(47.2%)，698位接受方案(78.3%)。已保护收入：280万/月。达标进度良好。', impactEn: 'Monitoring only — campaign metrics on track', impactZh: '仅监控 — 营销指标达标进展中' },
   ],
+
+  // ── Multi-agent collaboration ──────────────────────────────────────────
+
+  supervisor: {
+    id: 'ioe-supervisor',
+    name: 'IOE-Supervisor',
+    nameZh: 'IOE-Supervisor',
+    status: 'active',
+    mode: 'routine',
+    activePlan: 'Churn prevention campaign — 238 high-value users at risk, coordinating cross-domain retention strategy',
+    activePlanZh: '离网预防活动 — 238位高价值用户面临流失风险，协调跨域挽留策略',
+    tasksCoordinated: 11234,
+    conflictsResolved: 289,
+    contextSyncs: 7845,
+    uptime: '99.95%',
+  },
+
+  a2aMessages: [
+    { id: 'a2a-cp-1', timestamp: '09:00:05', type: 'task-delegate', from: 'ioe-supervisor', to: 'marketing', subject: 'Initiate churn analysis for 238 high-value at-risk users', subjectZh: '启动238位高价值风险用户流失分析', status: 'completed' },
+    { id: 'a2a-cp-2', timestamp: '09:02:10', type: 'peer-request', from: 'marketing', to: 'experience', subject: 'Request QoE degradation data for at-risk user cohort', subjectZh: '请求风险用户群体QoE劣化数据', status: 'completed' },
+    { id: 'a2a-cp-3', timestamp: '09:02:45', type: 'peer-response', from: 'experience', to: 'marketing', subject: 'User experience degradation report: 142 users with QoE <3.5 in past 7 days', subjectZh: '用户体验劣化报告：142位用户近7天QoE<3.5', status: 'completed' },
+    { id: 'a2a-cp-4', timestamp: '09:04:00', type: 'peer-request', from: 'marketing', to: 'optimization', subject: 'Request network quality metrics for cells serving at-risk users', subjectZh: '请求服务风险用户小区的网络质量指标', status: 'completed' },
+    { id: 'a2a-cp-5', timestamp: '09:04:30', type: 'peer-response', from: 'optimization', to: 'marketing', subject: 'Cell performance data: 18 cells with PRB utilization >85%, 6 with RSRP degradation', subjectZh: '小区性能数据：18个小区PRB利用率>85%，6个RSRP劣化', status: 'completed' },
+    { id: 'a2a-cp-6', timestamp: '09:06:00', type: 'context-share', from: 'marketing', to: 'ioe-supervisor', subject: 'Churn analysis complete — 238 users segmented into 5 risk tiers with root causes', subjectZh: '流失分析完成 — 238位用户按5个风险层级分类并归因', status: 'completed' },
+    { id: 'a2a-cp-7', timestamp: '09:08:00', type: 'task-delegate', from: 'ioe-supervisor', to: 'marketing', subject: 'Coordinate retention strategy with experience and optimization agents', subjectZh: '协调营销、体验、优化Agent制定挽留策略', payload: 'Cross-domain retention: marketing leads, experience provides QoE fixes, optimization ensures network quality', payloadZh: '跨域挽留：营销牵头，体验提供QoE修复，优化保障网络质量', status: 'completed' },
+    { id: 'a2a-cp-8', timestamp: '09:10:30', type: 'peer-request', from: 'marketing', to: 'planning', subject: 'Request capacity forecast for retention offer fulfillment in target areas', subjectZh: '请求目标区域挽留方案履约的容量预测', status: 'completed' },
+    { id: 'a2a-cp-9', timestamp: '09:11:00', type: 'peer-response', from: 'planning', to: 'marketing', subject: 'Capacity forecast: sufficient headroom for 90% of retention offers, 3 cells need MLB activation', subjectZh: '容量预测：90%挽留方案有充足余量，3个小区需启用MLB', status: 'completed' },
+    { id: 'a2a-cp-10', timestamp: '09:14:00', type: 'peer-request', from: 'marketing', to: 'ops', subject: 'Confirm network stability and no planned maintenance during campaign window', subjectZh: '确认营销窗口期网络稳定且无计划维护', status: 'completed' },
+    { id: 'a2a-cp-11', timestamp: '09:14:30', type: 'peer-response', from: 'ops', to: 'marketing', subject: 'Network stable — maintenance window shifted to 02:00-05:00 to avoid campaign conflict', subjectZh: '网络稳定 — 维护窗口已调整至02:00-05:00以避免营销冲突', status: 'completed' },
+    { id: 'a2a-cp-12', timestamp: '09:16:00', type: 'result-report', from: 'marketing', to: 'ioe-supervisor', subject: 'Retention campaign launched: 238 users, 4 channels, estimated ¥2.8M revenue protection', subjectZh: '挽留营销已启动：238位用户，4渠道，预估保护收入280万元', status: 'completed' },
+  ],
+
+  collaborationEvents: [
+    { id: 'ce-cp-1', timestamp: '09:00:05', type: 'delegation', agents: ['ioe-supervisor', 'marketing'], description: 'Supervisor delegated churn risk analysis to Marketing Agent for 238 high-value users', descriptionZh: 'Supervisor将238位高价值用户流失风险分析委派给营销Agent' },
+    { id: 'ce-cp-2', timestamp: '09:02:10', type: 'context-sync', agents: ['marketing', 'experience'], description: 'Marketing requested QoE degradation data from Experience Agent for at-risk cohort', descriptionZh: '营销Agent向体验Agent请求风险群体QoE劣化数据' },
+    { id: 'ce-cp-3', timestamp: '09:02:45', type: 'context-sync', agents: ['experience', 'marketing'], description: 'Experience Agent shared degradation report: 142 users with poor QoE linked to network issues', descriptionZh: '体验Agent共享劣化报告：142位用户QoE不佳与网络问题相关' },
+    { id: 'ce-cp-4', timestamp: '09:04:00', type: 'context-sync', agents: ['marketing', 'optimization'], description: 'Marketing requested cell performance data from Optimization Agent for at-risk areas', descriptionZh: '营销Agent向优化Agent请求风险区域小区性能数据' },
+    { id: 'ce-cp-5', timestamp: '09:04:30', type: 'context-sync', agents: ['optimization', 'marketing'], description: 'Optimization Agent shared cell metrics: 18 congested cells, 6 with coverage degradation', descriptionZh: '优化Agent共享小区指标：18个拥塞小区，6个覆盖劣化' },
+    { id: 'ce-cp-6', timestamp: '09:06:00', type: 'completion', agents: ['marketing', 'ioe-supervisor'], description: 'Churn root cause analysis completed — 5 risk tiers identified with cross-domain drivers', descriptionZh: '流失根因分析完成 — 识别5个风险层级及跨域驱动因素' },
+    { id: 'ce-cp-7', timestamp: '09:08:00', type: 'delegation', agents: ['ioe-supervisor', 'marketing', 'experience', 'optimization'], description: 'Supervisor coordinated cross-domain retention strategy led by Marketing Agent', descriptionZh: 'Supervisor协调由营销Agent牵头的跨域挽留策略' },
+    { id: 'ce-cp-8', timestamp: '09:10:30', type: 'context-sync', agents: ['marketing', 'planning'], description: 'Planning Agent provided capacity forecast for retention offer fulfillment', descriptionZh: '规划Agent提供挽留方案履约的容量预测' },
+    { id: 'ce-cp-9', timestamp: '09:14:00', type: 'context-sync', agents: ['marketing', 'ops'], description: 'O&M Agent confirmed network stability and adjusted maintenance window for campaign', descriptionZh: '运维Agent确认网络稳定并为营销调整维护窗口' },
+    { id: 'ce-cp-10', timestamp: '09:16:00', type: 'completion', agents: ['marketing', 'ioe-supervisor'], description: 'Retention campaign launched across 4 channels — 238 users, ¥2.8M revenue at stake', descriptionZh: '挽留营销跨4渠道启动 — 238位用户，280万元收入待保护' },
+    { id: 'ce-cp-11', timestamp: '09:20:00', type: 'conflict', agents: ['marketing', 'experience'], description: 'Conflict: aggressive retention offers may exceed network capacity in congested cells', descriptionZh: '冲突：激进挽留方案可能超出拥塞小区网络容量' },
+    { id: 'ce-cp-12', timestamp: '09:21:00', type: 'resolution', agents: ['ioe-supervisor', 'marketing', 'experience'], description: 'Resolved: tiered offers — premium QoS only for users on uncongested cells, data bonus for others', descriptionZh: '已解决：分层方案 — 仅非拥塞小区用户享有优先QoS，其余给予流量赠送' },
+  ],
+
+  sharedContext: [
+    { id: 'sc-cp-1', key: 'Churn Risk Cohort', keyZh: '流失风险群体', value: '238 high-value users (ARPU >¥300) across 5 risk tiers — Tier 1 (critical): 42, Tier 2 (high): 78, Tier 3 (medium): 118', valueZh: '238位高价值用户(ARPU>300元)分布于5个风险层级 — 层级1(危急)：42位，层级2(高)：78位，层级3(中)：118位', source: 'marketing', consumers: ['ioe-supervisor', 'experience', 'optimization', 'planning'], updatedAt: '09:06:00' },
+    { id: 'sc-cp-2', key: 'User QoE Degradation Data', keyZh: '用户QoE劣化数据', value: '142 at-risk users experienced QoE <3.5 in past 7 days. Top issues: video buffering (38%), latency >100ms (29%), call drops (18%)', valueZh: '142位风险用户近7天QoE<3.5。主要问题：视频卡顿(38%)、时延>100ms(29%)、掉话(18%)', source: 'experience', consumers: ['marketing', 'optimization', 'ioe-supervisor'], updatedAt: '09:02:45' },
+    { id: 'sc-cp-3', key: 'Network Quality for At-Risk Areas', keyZh: '风险区域网络质量指标', value: '18 cells with PRB >85%, 6 cells with RSRP degradation, 3 cells need MLB activation. Affected districts: Futian, Luohu, Nanshan', valueZh: '18个小区PRB>85%，6个小区RSRP劣化，3个小区需启用MLB。涉及区域：福田、罗湖、南山', source: 'optimization', consumers: ['marketing', 'planning', 'ioe-supervisor'], updatedAt: '09:04:30' },
+    { id: 'sc-cp-4', key: 'Retention Offer Catalog', keyZh: '挽留方案目录', value: '6 offer templates: Premium QoS upgrade, Data bonus 50GB, Tariff discount 20%, Device subsidy ¥500, Family plan bundle, Loyalty points 2x — 238 personalized variants generated', valueZh: '6套方案模板：优先QoS升级、50GB流量赠送、资费8折、终端补贴500元、家庭套餐组合、积分双倍 — 已生成238个个性化变体', source: 'marketing', consumers: ['ioe-supervisor', 'experience', 'ops'], updatedAt: '09:10:00' },
+    { id: 'sc-cp-5', key: 'Capacity Forecast for Retention', keyZh: '挽留方案容量预测', value: '90% of retention offers can be fulfilled within current capacity. 3 cells in Futian require MLB activation to support premium QoS tier offers', valueZh: '90%挽留方案可在现有容量内履约。福田3个小区需启用MLB以支持优先QoS层级方案', source: 'planning', consumers: ['marketing', 'optimization', 'ioe-supervisor'], updatedAt: '09:11:00' },
+    { id: 'sc-cp-6', key: 'Campaign Execution Status', keyZh: '营销活动执行状态', value: 'Campaign launched 09:16 — 4 channels active (APP push, SMS, WeChat, outbound call). 238 users targeted. First-hour response rate: 47.2%, offer acceptance: 78.3%', valueZh: '营销09:16启动 — 4渠道激活(APP推送、短信、微信、外呼)。定向238位用户。首小时响应率：47.2%，方案接受率：78.3%', source: 'marketing', consumers: ['ioe-supervisor', 'experience', 'ops', 'planning'], updatedAt: '09:30:00' },
+    { id: 'sc-cp-7', key: 'Maintenance Window Adjustment', keyZh: '维护窗口调整', value: 'Planned maintenance shifted from 22:00-01:00 to 02:00-05:00 to avoid impact on retention campaign peak engagement hours', valueZh: '计划维护从22:00-01:00调整至02:00-05:00，避免影响挽留营销高峰互动时段', source: 'ops', consumers: ['marketing', 'ioe-supervisor'], updatedAt: '09:14:30' },
+  ],
+
+  conflictResolutions: [
+    { id: 'cr-cp-1', timestamp: '09:20:00', conflictingAgents: ['marketing', 'experience'], issue: 'Marketing proposed premium QoS upgrade for all 238 at-risk users, but Experience Agent flagged that 18 congested cells cannot support additional QoS bearers without degrading other users', issueZh: '营销提议为全部238位风险用户升级优先QoS，但体验Agent指出18个拥塞小区无法在不影响其他用户的情况下支持额外QoS承载', resolution: 'Tiered approach: premium QoS only for 180 users on uncongested cells; remaining 58 users receive 50GB data bonus and tariff discount instead', resolutionZh: '分层方案：仅180位非拥塞小区用户享有优先QoS；其余58位用户改为50GB流量赠送和资费折扣', decision: 'parameter-merge' },
+    { id: 'cr-cp-2', timestamp: '09:13:00', conflictingAgents: ['marketing', 'ops'], issue: 'Campaign launch window (09:00-22:00) overlaps with planned maintenance window (22:00-01:00) — risk of service disruption during peak user engagement period', issueZh: '营销启动窗口(09:00-22:00)与计划维护窗口(22:00-01:00)重叠 — 高峰用户互动期有服务中断风险', resolution: 'O&M shifted maintenance to 02:00-05:00 low-traffic window; marketing extended campaign to capture late-evening responses', resolutionZh: '运维将维护调整至02:00-05:00低流量窗口；营销延长活动以捕获晚间响应', decision: 'sequential-execution' },
+    { id: 'cr-cp-3', timestamp: '09:09:00', conflictingAgents: ['planning', 'marketing'], issue: 'Planning recommended allocating 60% of retention budget to new user acquisition in underserved areas, while Marketing insisted on 80% allocation to at-risk user retention for immediate revenue protection', issueZh: '规划建议将60%挽留预算用于未覆盖区域新用户获取，而营销坚持80%用于风险用户挽留以立即保护收入', resolution: 'Supervisor ruled 75% to retention (¥2.8M/month revenue at risk) and 25% to acquisition; acquisition budget supplemented from next quarter planning reserve', resolutionZh: 'Supervisor裁定75%用于挽留(280万/月收入面临风险)，25%用于获客；获客预算从下季度规划储备金补充', decision: 'priority-override' },
+  ],
 };

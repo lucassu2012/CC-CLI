@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Bot, ChevronDown, ChevronRight, Shield, Wrench, BarChart3, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Bot, ChevronRight, Wrench, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft, Activity, Share2, AlertTriangle, Crown, Radio, ArrowRightLeft } from 'lucide-react';
 import { useText } from '../hooks/useText';
-import { domainAgents as defaultAgents, type DomainAgent, type SubAgent } from '../data/agents';
+import { domainAgents as defaultAgents, defaultSupervisor, type DomainAgent, type SubAgent } from '../data/agents';
+import { defaultCollaborationEvents, defaultSharedContext, defaultConflictResolutions } from '../data/a2a-protocol';
 import { generatedSkills as defaultSkills } from '../data/knowledge';
 import { useScenario } from '../context/ScenarioContext';
 import StatusBadge from '../components/StatusBadge';
@@ -71,11 +72,6 @@ const SOP_TEMPLATES: Record<string, { name: string; nameEn: string; steps: strin
     { name: '离网维挽SOP', nameEn: 'Churn Prevention SOP', steps: ['流失预警→原因分析', '挽留策略制定', '触达执行→效果跟踪', '成功/失败归档'], stepsEn: ['Churn Alert → Root Cause', 'Retention Strategy Design', 'Outreach Execute → Track Results', 'Success/Failure Archive'] },
   ],
 };
-
-function PermissionBadge({ level }: { level: number }) {
-  const colors = ['', 'bg-status-green/20 text-status-green border-status-green/30', 'bg-accent-cyan/20 text-accent-cyan border-accent-cyan/30', 'bg-status-yellow/20 text-status-yellow border-status-yellow/30', 'bg-status-orange/20 text-status-orange border-status-orange/30', 'bg-status-red/20 text-status-red border-status-red/30'];
-  return <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${colors[level]}`}>L{level}</span>;
-}
 
 /* ─── Agent Editor (Full-page drill-down) ─── */
 
@@ -499,76 +495,181 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
   );
 }
 
-function AgentCard({ agent, onEdit, onEditSub }: { agent: DomainAgent; onEdit: (agent: DomainAgent) => void; onEditSub: (agent: DomainAgent, sub: SubAgent) => void }) {
-  const [expanded, setExpanded] = useState(false);
-  const { t } = useText();
+/* ─── Agent domain colors ─── */
+const AGENT_COLORS: Record<string, string> = {
+  planning: '#f59e0b', optimization: '#3b82f6', experience: '#8b5cf6', ops: '#ef4444', marketing: '#10b981',
+};
+const AGENT_ICONS: Record<string, string> = {
+  planning: '📐', optimization: '⚡', experience: '👤', ops: '🔧', marketing: '📊',
+};
 
+/* ─── Hub-and-Spoke SVG Visualization ─── */
+const SVG_W = 520;
+const SVG_H = 420;
+const CX = SVG_W / 2;
+const CY = SVG_H / 2;
+const RADIUS = 155;
+const AGENT_ANGLES: Record<string, number> = { planning: -90, optimization: -18, experience: 54, ops: 126, marketing: 198 };
+
+function agentPos(agentId: string): { x: number; y: number } {
+  const angle = (AGENT_ANGLES[agentId] ?? 0) * Math.PI / 180;
+  return { x: CX + RADIUS * Math.cos(angle), y: CY + RADIUS * Math.sin(angle) };
+}
+
+function arcPath(fx: number, fy: number, tx: number, ty: number, bend = 25): string {
+  const mx = (fx + tx) / 2, my = (fy + ty) / 2;
+  const dx = tx - fx, dy = ty - fy;
+  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  const cx = mx - (dy / len) * bend, cy = my + (dx / len) * bend;
+  return `M ${fx} ${fy} Q ${cx} ${cy} ${tx} ${ty}`;
+}
+
+function HubSpokeGraph({ agents, selectedId, onSelect, activeEdges, t }: {
+  agents: DomainAgent[]; selectedId: string | null; onSelect: (id: string) => void;
+  activeEdges: Set<string>; t: (en: string, zh: string) => string;
+}) {
   return (
-    <div className="bg-bg-card rounded-xl border border-border overflow-hidden hover:border-accent-cyan/30 transition-all">
-      <div className="flex items-center">
-        <button onClick={() => setExpanded(!expanded)} className="flex-1 text-left px-5 py-4 flex items-center gap-4 cursor-pointer min-w-0">
-          <div className="w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center shrink-0"><Bot className="w-5 h-5 text-accent-cyan" /></div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium text-text-primary truncate">{t(agent.name, agent.nameZh)}</h3>
-              <StatusBadge status={agent.status} />
-            </div>
-            <p className="text-xs text-text-muted mt-0.5 truncate">{t(agent.description, agent.descriptionZh)}</p>
-          </div>
-        </button>
-        <div className="flex items-center gap-5 text-xs text-text-secondary shrink-0 pr-2">
-          <div className="text-center"><p className="text-lg font-semibold text-text-primary">{agent.taskCount}</p><p className="text-text-muted">{t('Tasks', '任务')}</p></div>
-          <div className="text-center"><p className="text-lg font-semibold text-text-primary">{agent.successRate}%</p><p className="text-text-muted">{t('Success', '成功率')}</p></div>
-          <div className="text-center"><p className="text-lg font-semibold text-text-primary">{agent.subAgents.length}</p><p className="text-text-muted">{t('Sub-agents', '子Agent')}</p></div>
-          <button onClick={() => setExpanded(!expanded)} className="cursor-pointer text-text-muted hover:text-text-primary">
-            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); onEdit(agent); }}
-            className="px-2 py-2 text-text-muted hover:text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors cursor-pointer" title={t('Edit Agent', '编辑Agent')}>
-            <Settings className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+    <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full h-full" style={{ minHeight: 320 }}>
+      <defs>
+        <filter id="glow-hub"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+        <filter id="glow-node"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+        <linearGradient id="edge-grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" /><stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.8" /></linearGradient>
+        <style>{`
+          @keyframes dash-flow { to { stroke-dashoffset: -20; } }
+          @keyframes pulse-ring { 0%,100% { opacity:0.3; r:48; } 50% { opacity:0.6; r:52; } }
+          .edge-active { animation: dash-flow 1s linear infinite; }
+        `}</style>
+      </defs>
 
-      {expanded && (
-        <div className="border-t border-border divide-y divide-border">
-          {agent.subAgents.map(sub => (
-            <div key={sub.id} className="px-5 py-3 flex items-center gap-4 hover:bg-bg-hover/50 transition-colors group">
-              <div className="w-6 h-6 rounded bg-bg-tertiary flex items-center justify-center"><Wrench className="w-3.5 h-3.5 text-text-muted" /></div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-text-primary">{t(sub.name, sub.nameZh)}</span>
-                  <StatusBadge status={sub.status} />
-                  <PermissionBadge level={sub.permissionLevel} />
-                </div>
-                <p className="text-xs text-text-muted mt-0.5 truncate">{t(sub.currentTask, sub.currentTaskZh)}</p>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-text-secondary shrink-0">
-                <div className="flex items-center gap-1"><Wrench className="w-3 h-3" /><span>{sub.toolCalls.toLocaleString()}</span></div>
-                <div className="flex items-center gap-1"><BarChart3 className="w-3 h-3" /><span>{sub.successRate}%</span></div>
-                <div className="flex items-center gap-1"><Shield className="w-3 h-3" /><span>L{sub.permissionLevel}</span></div>
-                <button onClick={(e) => { e.stopPropagation(); onEditSub(agent, sub); }}
-                  className="px-1.5 py-1.5 text-text-muted hover:text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
-                  title={t('Edit Sub-Agent', '编辑子Agent')}>
-                  <Settings className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+      {/* Grid background */}
+      <rect width={SVG_W} height={SVG_H} fill="transparent" />
+      {Array.from({ length: 6 }, (_, i) => <line key={`gx${i}`} x1={0} y1={i * SVG_H / 5} x2={SVG_W} y2={i * SVG_H / 5} stroke="#1e293b" strokeWidth={0.5} />)}
+      {Array.from({ length: 7 }, (_, i) => <line key={`gy${i}`} x1={i * SVG_W / 6} y1={0} x2={i * SVG_W / 6} y2={SVG_H} stroke="#1e293b" strokeWidth={0.5} />)}
+
+      {/* Supervisor → Domain Agent edges */}
+      {agents.map(a => {
+        const p = agentPos(a.id);
+        const isActive = activeEdges.has(a.id);
+        const isSelected = selectedId === a.id;
+        return (
+          <g key={`edge-${a.id}`}>
+            <path d={arcPath(CX, CY, p.x, p.y)} fill="none"
+              stroke={isActive ? 'url(#edge-grad)' : '#334155'} strokeWidth={isActive ? 2 : 1}
+              strokeDasharray={isActive ? '6 4' : 'none'} className={isActive ? 'edge-active' : ''}
+              opacity={isSelected ? 1 : 0.7} />
+            {isActive && (
+              <circle r="3" fill="#06b6d4" filter="url(#glow-node)">
+                <animateMotion dur="2s" repeatCount="indefinite" path={arcPath(CX, CY, p.x, p.y)} />
+              </circle>
+            )}
+          </g>
+        );
+      })}
+
+      {/* Peer-to-peer edges (cross-agent collaboration) */}
+      {[['optimization', 'ops'], ['marketing', 'experience'], ['planning', 'optimization']].map(([a, b]) => {
+        const pa = agentPos(a), pb = agentPos(b);
+        const active = activeEdges.has(a) && activeEdges.has(b);
+        return active ? (
+          <path key={`peer-${a}-${b}`} d={arcPath(pa.x, pa.y, pb.x, pb.y, 15)} fill="none"
+            stroke="#8b5cf640" strokeWidth={1} strokeDasharray="4 3" className="edge-active" />
+        ) : null;
+      })}
+
+      {/* Supervisor center node */}
+      <circle cx={CX} cy={CY} r={48} fill="none" stroke="#06b6d4" strokeWidth={1} opacity={0.3}>
+        <animate attributeName="r" values="48;52;48" dur="3s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.3;0.6;0.3" dur="3s" repeatCount="indefinite" />
+      </circle>
+      <circle cx={CX} cy={CY} r={38} fill="#0e1726" stroke="#06b6d4" strokeWidth={2}
+        filter="url(#glow-hub)" className="cursor-pointer" onClick={() => onSelect('ioe-supervisor')} />
+      <text x={CX} y={CY - 6} fill="#06b6d4" fontSize="18" textAnchor="middle" dominantBaseline="middle" className="pointer-events-none">👑</text>
+      <text x={CX} y={CY + 14} fill="#a5f3fc" fontSize="8" textAnchor="middle" fontWeight={600} className="pointer-events-none">SUPERVISOR</text>
+
+      {/* Domain agent nodes */}
+      {agents.map(a => {
+        const p = agentPos(a.id);
+        const color = AGENT_COLORS[a.id] || '#06b6d4';
+        const isSelected = selectedId === a.id;
+        const isActive = a.status === 'active';
+        return (
+          <g key={a.id} className="cursor-pointer" onClick={() => onSelect(a.id)}>
+            {isSelected && <circle cx={p.x} cy={p.y} r={34} fill="none" stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 2" />}
+            <circle cx={p.x} cy={p.y} r={28} fill="#111827" stroke={color} strokeWidth={isActive ? 2 : 1}
+              filter={isActive ? 'url(#glow-node)' : undefined} />
+            <text x={p.x} y={p.y - 4} fill={color} fontSize="16" textAnchor="middle" dominantBaseline="middle" className="pointer-events-none">{AGENT_ICONS[a.id]}</text>
+            <text x={p.x} y={p.y + 14} fill="#94a3b8" fontSize="7" textAnchor="middle" className="pointer-events-none">{a.subAgents.length} subs</text>
+            <text x={p.x} y={p.y + 42} fill="#e2e8f0" fontSize="9" textAnchor="middle" fontWeight={600} className="pointer-events-none">{t(a.name, a.nameZh)}</text>
+            {/* Status dot */}
+            <circle cx={p.x + 22} cy={p.y - 22} r={4} fill={isActive ? '#22c55e' : a.status === 'warning' ? '#eab308' : a.status === 'error' ? '#ef4444' : '#64748b'} />
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 
+/* ─── Team panel tabs ─── */
+const TEAM_TABS = [
+  { key: 'activity' as const, label: 'Team Activity', labelZh: '团队活动', icon: Activity },
+  { key: 'context' as const, label: 'Context Pool', labelZh: '上下文池', icon: Share2 },
+  { key: 'conflicts' as const, label: 'Conflicts', labelZh: '冲突协调', icon: AlertTriangle },
+] as const;
+type TeamTab = typeof TEAM_TABS[number]['key'];
+
+const EVENT_ICONS: Record<string, string> = {
+  delegation: '📋', 'context-sync': '🔄', conflict: '⚠️', resolution: '✅', completion: '🎯', escalation: '🚨',
+};
+const EVENT_COLORS: Record<string, string> = {
+  delegation: 'border-accent-cyan/40', 'context-sync': 'border-purple-500/40', conflict: 'border-status-yellow/40',
+  resolution: 'border-status-green/40', completion: 'border-status-green/40', escalation: 'border-status-red/40',
+};
+
+const DECISION_LABELS: Record<string, { en: string; zh: string; color: string }> = {
+  'priority-override': { en: 'Priority Override', zh: '优先级覆盖', color: 'bg-status-orange/20 text-status-orange' },
+  'parameter-merge': { en: 'Parameter Merge', zh: '参数融合', color: 'bg-accent-cyan/20 text-accent-cyan' },
+  'sequential-execution': { en: 'Sequential Exec', zh: '顺序执行', color: 'bg-purple-500/20 text-purple-400' },
+  'rollback': { en: 'Rollback', zh: '回滚', color: 'bg-status-red/20 text-status-red' },
+};
+
+function AgentBadge({ agentId, agents, t }: { agentId: string; agents: DomainAgent[]; t: (en: string, zh: string) => string }) {
+  if (agentId === 'ioe-supervisor') return <span className="text-[9px] bg-accent-cyan/20 text-accent-cyan px-1.5 py-0.5 rounded">Supervisor</span>;
+  const a = agents.find(x => x.id === agentId);
+  const color = AGENT_COLORS[agentId] || '#06b6d4';
+  return <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ backgroundColor: `${color}20`, color }}>{a ? t(a.domain, a.domainZh) : agentId}</span>;
+}
+
+/* ─── Main export ─── */
 export default function Agents() {
   const { t } = useText();
   const { scenario } = useScenario();
   const domainAgents = scenario?.agents ?? defaultAgents;
+  const supervisor = scenario?.supervisor ?? defaultSupervisor;
+  const collaborationEvents = scenario?.collaborationEvents ?? defaultCollaborationEvents;
+  const sharedContext = scenario?.sharedContext ?? defaultSharedContext;
+  const conflictResolutions = scenario?.conflictResolutions ?? defaultConflictResolutions;
+
   const [editingAgent, setEditingAgent] = useState<DomainAgent | null>(null);
   const [editingSubAgent, setEditingSubAgent] = useState<SubAgent | undefined>(undefined);
-  const totalAgents = domainAgents.length;
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [teamTab, setTeamTab] = useState<TeamTab>('activity');
+  const [eventTick, setEventTick] = useState(0);
+
+  // Animate event feed
+  useEffect(() => {
+    const iv = setInterval(() => setEventTick(p => p + 1), 3000);
+    return () => clearInterval(iv);
+  }, []);
+
+  // Active edges based on scenario
+  const activeEdges = useMemo(() => {
+    const s = new Set<string>();
+    domainAgents.forEach(a => { if (a.status === 'active') s.add(a.id); });
+    return s;
+  }, [domainAgents]);
+
   const totalSubAgents = domainAgents.reduce((sum, a) => sum + a.subAgents.length, 0);
+  const visibleEvents = collaborationEvents.slice(0, Math.min(collaborationEvents.length, 3 + (eventTick % (collaborationEvents.length - 2))));
 
   // Full-page drill-down editor
   if (editingAgent) {
@@ -576,22 +677,190 @@ export default function Agents() {
   }
 
   return (
-    <div className="p-5 overflow-auto h-full">
-      <div className="flex items-center justify-between mb-5">
+    <div className="p-4 overflow-auto h-full space-y-4">
+      {/* ─── Header ─── */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-text-primary">{t('Agent Management', '智能体管理')}</h1>
-          <p className="text-xs text-text-muted mt-0.5">{totalAgents} {t('domain agents', '领域Agent')} · {totalSubAgents} {t('sub-agents', '子Agent')}</p>
+          <h1 className="text-lg font-semibold text-text-primary">{t('Multi-Agent Team', '多智能体团队')}</h1>
+          <p className="text-xs text-text-muted mt-0.5">1 Supervisor · {domainAgents.length} {t('domain agents', '领域Agent')} · {totalSubAgents} {t('sub-agents', '子Agent')}</p>
         </div>
-        <div className="flex items-center gap-3">
-          {['active', 'warning', 'error', 'idle'].map(status => {
-            const count = domainAgents.filter(a => a.status === status).length;
-            if (count === 0) return null;
-            return (<div key={status} className="flex items-center gap-1.5 text-xs text-text-secondary"><StatusBadge status={status as 'active'} /><span>{count} {status}</span></div>);
-          })}
+        <div className="flex items-center gap-3 text-xs">
+          <span className="text-text-muted">{t('Protocol', '协议')}: <span className="text-accent-cyan font-mono">A2A-T v2.1</span></span>
+          <span className="text-text-muted">{t('Uptime', '在线率')}: <span className="text-status-green">{supervisor.uptime}</span></span>
         </div>
       </div>
-      <div className="space-y-3">
-        {domainAgents.map(agent => <AgentCard key={agent.id} agent={agent} onEdit={setEditingAgent} onEditSub={(a, s) => { setEditingAgent(a); setEditingSubAgent(s); }} />)}
+
+      {/* ─── Supervisor Strip ─── */}
+      <div className="bg-bg-card rounded-xl border border-accent-cyan/20 p-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-accent-cyan/10 border border-accent-cyan/30 flex items-center justify-center shrink-0">
+            <Crown className="w-6 h-6 text-accent-cyan" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-text-primary">{supervisor.name}</h2>
+              <StatusBadge status={supervisor.status === 'emergency' ? 'error' : 'active'} />
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${supervisor.mode === 'emergency' ? 'bg-status-red/20 text-status-red' : 'bg-status-green/20 text-status-green'}`}>
+                {supervisor.mode === 'emergency' ? t('EMERGENCY MODE', '紧急模式') : t('ROUTINE MODE', '日常模式')}
+              </span>
+            </div>
+            <p className="text-xs text-text-muted mt-0.5 truncate">{t(supervisor.activePlan, supervisor.activePlanZh)}</p>
+          </div>
+          <div className="flex items-center gap-6 text-center text-xs shrink-0">
+            <div><p className="text-base font-semibold text-text-primary tabular-nums">{supervisor.tasksCoordinated.toLocaleString()}</p><p className="text-text-muted">{t('Tasks Coord.', '协调任务')}</p></div>
+            <div><p className="text-base font-semibold text-accent-cyan tabular-nums">{supervisor.contextSyncs.toLocaleString()}</p><p className="text-text-muted">{t('Context Syncs', '上下文同步')}</p></div>
+            <div><p className="text-base font-semibold text-status-yellow tabular-nums">{supervisor.conflictsResolved}</p><p className="text-text-muted">{t('Conflicts', '冲突解决')}</p></div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Main: Hub-Spoke + Team Panel ─── */}
+      <div className="flex gap-4" style={{ minHeight: 420 }}>
+        {/* Left: SVG visualization */}
+        <div className="flex-1 bg-bg-card rounded-xl border border-border overflow-hidden relative min-w-0">
+          <div className="absolute top-3 left-4 z-10 flex items-center gap-2">
+            <Radio className="w-4 h-4 text-accent-cyan" />
+            <span className="text-xs font-medium text-text-secondary">{t('Agent Topology', 'Agent拓扑')}</span>
+          </div>
+          <HubSpokeGraph agents={domainAgents} selectedId={selectedNode} onSelect={setSelectedNode} activeEdges={activeEdges} t={t} />
+          {/* Legend */}
+          <div className="absolute bottom-3 left-4 flex items-center gap-4 text-[10px] text-text-muted">
+            <span className="flex items-center gap-1"><span className="w-6 h-0.5 bg-accent-cyan inline-block" /> {t('A2A-T Link', 'A2A-T链路')}</span>
+            <span className="flex items-center gap-1"><span className="w-6 h-0.5 bg-purple-500/40 inline-block" style={{ borderTop: '1px dashed' }} /> {t('Peer Collab', '对等协作')}</span>
+          </div>
+        </div>
+
+        {/* Right: Team panel */}
+        <div className="w-[380px] bg-bg-card rounded-xl border border-border flex flex-col overflow-hidden shrink-0">
+          {/* Tabs */}
+          <div className="flex border-b border-border shrink-0">
+            {TEAM_TABS.map(tb => {
+              const Icon = tb.icon;
+              return (
+                <button key={tb.key} onClick={() => setTeamTab(tb.key)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-xs cursor-pointer transition-all ${teamTab === tb.key ? 'text-accent-cyan border-b-2 border-accent-cyan' : 'text-text-muted hover:text-text-secondary'}`}>
+                  <Icon className="w-3.5 h-3.5" />{t(tb.label, tb.labelZh)}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex-1 overflow-auto p-3">
+            {/* Activity Feed */}
+            {teamTab === 'activity' && (
+              <div className="space-y-2">
+                {visibleEvents.map(evt => (
+                  <div key={evt.id} className={`bg-bg-primary rounded-lg border-l-2 ${EVENT_COLORS[evt.type] || 'border-border'} p-2.5`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm">{EVENT_ICONS[evt.type]}</span>
+                      <span className="text-[10px] text-text-muted font-mono">{evt.timestamp}</span>
+                      <div className="flex items-center gap-1 ml-auto">
+                        {evt.agents.slice(0, 3).map(aid => <AgentBadge key={aid} agentId={aid} agents={domainAgents} t={t} />)}
+                      </div>
+                    </div>
+                    <p className="text-xs text-text-secondary leading-relaxed">{t(evt.description, evt.descriptionZh)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Context Pool */}
+            {teamTab === 'context' && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Share2 className="w-4 h-4 text-accent-cyan" />
+                  <span className="text-xs font-medium text-text-secondary">{t('Shared Context Pool', '共享上下文池')}</span>
+                  <span className="text-[10px] text-text-muted ml-auto">{sharedContext.length} {t('entries', '条目')}</span>
+                </div>
+                {sharedContext.map(sc => (
+                  <div key={sc.id} className="bg-bg-primary rounded-lg border border-border p-2.5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-medium text-text-primary">{t(sc.key, sc.keyZh)}</span>
+                      <span className="text-[10px] text-text-muted ml-auto font-mono">{sc.updatedAt}</span>
+                    </div>
+                    <p className="text-[11px] text-text-secondary mb-1.5">{t(sc.value, sc.valueZh)}</p>
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <span className="text-[9px] text-text-muted">{t('Source', '来源')}:</span>
+                      <AgentBadge agentId={sc.source} agents={domainAgents} t={t} />
+                      <span className="text-[9px] text-text-muted ml-1">→</span>
+                      {sc.consumers.map(c => <AgentBadge key={c} agentId={c} agents={domainAgents} t={t} />)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Conflict Resolution */}
+            {teamTab === 'conflicts' && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-4 h-4 text-status-yellow" />
+                  <span className="text-xs font-medium text-text-secondary">{t('Supervisor Conflict Resolution', 'Supervisor冲突协调')}</span>
+                </div>
+                {conflictResolutions.map(cr => {
+                  const dec = DECISION_LABELS[cr.decision];
+                  return (
+                    <div key={cr.id} className="bg-bg-primary rounded-lg border border-border p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] text-text-muted font-mono">{cr.timestamp}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded ${dec?.color || ''}`}>{dec ? t(dec.en, dec.zh) : cr.decision}</span>
+                      </div>
+                      <div className="flex items-center gap-1 mb-1.5">
+                        {cr.conflictingAgents.map(aid => <AgentBadge key={aid} agentId={aid} agents={domainAgents} t={t} />)}
+                        <ArrowRightLeft className="w-3 h-3 text-status-yellow mx-1" />
+                        <span className="text-[10px] text-status-yellow">{t('Conflict', '冲突')}</span>
+                      </div>
+                      <p className="text-xs text-text-muted mb-1.5">{t(cr.issue, cr.issueZh)}</p>
+                      <div className="bg-status-green/5 border border-status-green/20 rounded p-2">
+                        <p className="text-xs text-status-green"><span className="font-medium">{t('Resolution', '决策')}:</span> {t(cr.resolution, cr.resolutionZh)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Domain Agent Grid ─── */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Bot className="w-4 h-4 text-text-muted" />
+          <span className="text-sm font-medium text-text-secondary">{t('Domain Agents', '领域Agent')}</span>
+          <span className="text-xs text-text-muted">— {t('click to configure', '点击配置')}</span>
+        </div>
+        <div className="grid grid-cols-5 gap-3">
+          {domainAgents.map(agent => {
+            const color = AGENT_COLORS[agent.id] || '#06b6d4';
+            const activeSubCount = agent.subAgents.filter(s => s.status === 'active').length;
+            return (
+              <div key={agent.id} onClick={() => { setEditingAgent(agent); setEditingSubAgent(undefined); }}
+                className="bg-bg-card rounded-xl border border-border p-4 hover:border-accent-cyan/40 transition-all cursor-pointer group">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}15`, border: `1px solid ${color}40` }}>
+                    <span className="text-sm">{AGENT_ICONS[agent.id]}</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-xs font-semibold text-text-primary truncate">{t(agent.name, agent.nameZh)}</h3>
+                    </div>
+                    <StatusBadge status={agent.status} size="sm" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] mb-2">
+                  <div className="flex justify-between"><span className="text-text-muted">{t('Tasks', '任务')}</span><span className="text-text-secondary tabular-nums">{agent.taskCount}</span></div>
+                  <div className="flex justify-between"><span className="text-text-muted">{t('Success', '成功')}</span><span className="text-status-green tabular-nums">{agent.successRate}%</span></div>
+                  <div className="flex justify-between"><span className="text-text-muted">{t('Subs', '子Agent')}</span><span className="text-text-secondary">{activeSubCount}/{agent.subAgents.length}</span></div>
+                  <div className="flex justify-between"><span className="text-text-muted">{t('Perm', '权限')}</span><span className="text-text-secondary">L{Math.max(...agent.subAgents.map(s => s.permissionLevel))}</span></div>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-accent-cyan opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Settings className="w-3 h-3" /> {t('Configure', '配置')} <ChevronRight className="w-3 h-3 ml-auto" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
