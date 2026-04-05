@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Bot, ChevronRight, Wrench, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft, Activity, Share2, AlertTriangle, Crown, Radio, ArrowRightLeft } from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { domainAgents as defaultAgents, defaultSupervisor, type DomainAgent, type SubAgent } from '../data/agents';
@@ -503,108 +503,312 @@ const AGENT_ICONS: Record<string, string> = {
   planning: '📐', optimization: '⚡', experience: '👤', ops: '🔧', marketing: '📊',
 };
 
-/* ─── Hub-and-Spoke SVG Visualization ─── */
-const SVG_W = 520;
-const SVG_H = 420;
-const CX = SVG_W / 2;
-const CY = SVG_H / 2;
-const RADIUS = 155;
-const AGENT_ANGLES: Record<string, number> = { planning: -90, optimization: -18, experience: 54, ops: 126, marketing: 198 };
+/* ─── Agent Topology SVG — Dual Mode ─── */
+type TopoMode = 'direct' | 'hierarchical';
 
-function agentPos(agentId: string): { x: number; y: number } {
-  const angle = (AGENT_ANGLES[agentId] ?? 0) * Math.PI / 180;
-  return { x: CX + RADIUS * Math.cos(angle), y: CY + RADIUS * Math.sin(angle) };
+/* Shared SVG defs for both modes */
+function TopoDefs() {
+  return (
+    <defs>
+      <filter id="glow-hub"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+      <filter id="glow-node"><feGaussianBlur stdDeviation="2.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+      <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" /></marker>
+      <marker id="arr-cyan" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#06b6d4" /></marker>
+      <marker id="arr-blue" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" /></marker>
+      <pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#f59e0b" strokeWidth="1" opacity="0.15" /></pattern>
+      <style>{`
+        @keyframes dash-flow { to { stroke-dashoffset: -20; } }
+        .edge-anim { animation: dash-flow 1s linear infinite; }
+        @keyframes dot-pulse { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
+        .dot-pulse { animation: dot-pulse 2s ease-in-out infinite; }
+      `}</style>
+    </defs>
+  );
 }
 
-function arcPath(fx: number, fy: number, tx: number, ty: number, bend = 25): string {
-  const mx = (fx + tx) / 2, my = (fy + ty) / 2;
-  const dx = tx - fx, dy = ty - fy;
-  const len = Math.sqrt(dx * dx + dy * dy) || 1;
-  const cx = mx - (dy / len) * bend, cy = my + (dx / len) * bend;
-  return `M ${fx} ${fy} Q ${cx} ${cy} ${tx} ${ty}`;
+/* Grid background lines */
+function SvgGrid({ w, h }: { w: number; h: number }) {
+  return (
+    <g>
+      {Array.from({ length: 8 }, (_, i) => <line key={`gx${i}`} x1={0} y1={i * h / 7} x2={w} y2={i * h / 7} stroke="#1e293b" strokeWidth={0.5} />)}
+      {Array.from({ length: 11 }, (_, i) => <line key={`gy${i}`} x1={i * w / 10} y1={0} x2={i * w / 10} y2={h} stroke="#1e293b" strokeWidth={0.5} />)}
+    </g>
+  );
 }
 
-function HubSpokeGraph({ agents, selectedId, onSelect, activeEdges, t }: {
-  agents: DomainAgent[]; selectedId: string | null; onSelect: (id: string) => void;
-  activeEdges: Set<string>; t: (en: string, zh: string) => string;
+/* Rounded rect node with hatched fill (agent-squad style) */
+function AgentNode({ x, y, w, h, label, color, icon, onClick, isActive, selected }: {
+  x: number; y: number; w: number; h: number; label: string; color: string; icon?: string;
+  onClick?: () => void; isActive?: boolean; selected?: boolean;
 }) {
   return (
-    <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full h-full" style={{ minHeight: 320 }}>
-      <defs>
-        <filter id="glow-hub"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-        <filter id="glow-node"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-        <linearGradient id="edge-grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" /><stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.8" /></linearGradient>
-        <style>{`
-          @keyframes dash-flow { to { stroke-dashoffset: -20; } }
-          @keyframes pulse-ring { 0%,100% { opacity:0.3; r:48; } 50% { opacity:0.6; r:52; } }
-          .edge-active { animation: dash-flow 1s linear infinite; }
-        `}</style>
-      </defs>
+    <g className={onClick ? 'cursor-pointer' : ''} onClick={onClick}>
+      {selected && <rect x={x - 3} y={y - 3} width={w + 6} height={h + 6} rx={10} fill="none" stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 2" />}
+      <rect x={x} y={y} width={w} height={h} rx={8} fill="url(#hatch)" stroke={color} strokeWidth={isActive ? 2 : 1.5} />
+      <rect x={x} y={y} width={w} height={h} rx={8} fill="#111827" opacity={0.85} />
+      <rect x={x} y={y} width={w} height={h} rx={8} fill="none" stroke={color} strokeWidth={isActive ? 2 : 1.5} filter={isActive ? 'url(#glow-node)' : undefined} />
+      {icon && <text x={x + 14} y={y + h / 2 + 1} fill={color} fontSize="12" dominantBaseline="middle" className="pointer-events-none">{icon}</text>}
+      <text x={x + (icon ? 28 : w / 2)} y={y + h / 2 + 1} fill="#e2e8f0" fontSize="10" fontWeight={600}
+        dominantBaseline="middle" textAnchor={icon ? 'start' : 'middle'} className="pointer-events-none">{label}</text>
+      {isActive && <circle cx={x + w - 8} cy={y + 8} r={3} fill="#22c55e" className="dot-pulse" />}
+    </g>
+  );
+}
 
-      {/* Grid background */}
-      <rect width={SVG_W} height={SVG_H} fill="transparent" />
-      {Array.from({ length: 6 }, (_, i) => <line key={`gx${i}`} x1={0} y1={i * SVG_H / 5} x2={SVG_W} y2={i * SVG_H / 5} stroke="#1e293b" strokeWidth={0.5} />)}
-      {Array.from({ length: 7 }, (_, i) => <line key={`gy${i}`} x1={i * SVG_W / 6} y1={0} x2={i * SVG_W / 6} y2={SVG_H} stroke="#1e293b" strokeWidth={0.5} />)}
+/* Styled process box (Classifier, Select Agent, Agent Processing) */
+function ProcessBox({ x, y, w, h, label, bg, border, icon }: {
+  x: number; y: number; w: number; h: number; label: string; bg: string; border: string; icon?: string;
+}) {
+  return (
+    <g>
+      <rect x={x} y={y} width={w} height={h} rx={8} fill={bg} stroke={border} strokeWidth={1.5} />
+      {icon && <text x={x + w / 2} y={y + h / 2 - 7} fill={border} fontSize="14" textAnchor="middle" dominantBaseline="middle">{icon}</text>}
+      <text x={x + w / 2} y={y + h / 2 + (icon ? 8 : 1)} fill="#e2e8f0" fontSize="9.5" fontWeight={600} textAnchor="middle" dominantBaseline="middle">{label}</text>
+    </g>
+  );
+}
 
-      {/* Supervisor → Domain Agent edges */}
-      {agents.map(a => {
-        const p = agentPos(a.id);
-        const isActive = activeEdges.has(a.id);
-        const isSelected = selectedId === a.id;
+/* Memory cylinder */
+function MemoryCylinder({ x, y, label }: { x: number; y: number; label: string }) {
+  const w = 120, h = 50;
+  return (
+    <g>
+      <ellipse cx={x + w / 2} cy={y + h} rx={w / 2} ry={8} fill="#1e293b" stroke="#475569" strokeWidth={1} />
+      <rect x={x} y={y + 8} width={w} height={h - 8} fill="#1e293b" stroke="#475569" strokeWidth={1} />
+      <line x1={x} y1={y + 8} x2={x} y2={y + h} stroke="#475569" strokeWidth={1} />
+      <line x1={x + w} y1={y + 8} x2={x + w} y2={y + h} stroke="#475569" strokeWidth={1} />
+      <ellipse cx={x + w / 2} cy={y + 8} rx={w / 2} ry={8} fill="#1e293b" stroke="#475569" strokeWidth={1} />
+      <text x={x + w / 2} y={y + h / 2 + 10} fill="#94a3b8" fontSize="8" textAnchor="middle" dominantBaseline="middle">{label}</text>
+    </g>
+  );
+}
+
+/* Arrow helper */
+function Arrow({ x1, y1, x2, y2, color = '#64748b', dashed, animated, marker }: {
+  x1: number; y1: number; x2: number; y2: number; color?: string; dashed?: boolean; animated?: boolean; marker?: string;
+}) {
+  return (
+    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={1.5}
+      strokeDasharray={dashed ? '6 4' : 'none'} className={animated ? 'edge-anim' : ''}
+      markerEnd={`url(#${marker || 'arr'})`} />
+  );
+}
+
+/* Curved arrow */
+function CurvedArrow({ path, color = '#64748b', dashed, animated, marker }: {
+  path: string; color?: string; dashed?: boolean; animated?: boolean; marker?: string;
+}) {
+  return (
+    <path d={path} fill="none" stroke={color} strokeWidth={1.5}
+      strokeDasharray={dashed ? '6 4' : 'none'} className={animated ? 'edge-anim' : ''}
+      markerEnd={`url(#${marker || 'arr'})`} />
+  );
+}
+
+/* ─── Mode 1: Direct Routing (Classifier-Based) ─── */
+function DirectRoutingTopology({ agents, onSelectAgent, t }: {
+  agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void; t: (en: string, zh: string) => string;
+}) {
+  const W = 900, H = 420;
+  // Layout positions
+  const agentRowY = 42, agentW = 108, agentH = 38, agentGap = 12;
+  const totalAgentsW = agents.length * agentW + (agents.length - 1) * agentGap;
+  const agentStartX = (W - totalAgentsW) / 2;
+
+  const classifierX = 160, classifierY = 180, classifierW = 130, classifierH = 70;
+  const selectX = 370, selectY = 190, selectW = 120, selectH = 50;
+  const processX = 570, processY = 190, processW = 140, processH = 50;
+  const convHistX = 300, convHistY = 340;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 320 }}>
+      <TopoDefs />
+      <SvgGrid w={W} h={H} />
+
+      {/* Blue "User input" arrow on left */}
+      <line x1={20} y1={classifierY + classifierH / 2} x2={classifierX - 8} y2={classifierY + classifierH / 2} stroke="#3b82f6" strokeWidth={3} markerEnd="url(#arr-blue)" />
+      <text x={12} y={classifierY + classifierH / 2 - 12} fill="#3b82f6" fontSize="10" fontWeight={600}>{t('User input', '用户输入')}</text>
+
+      {/* Classifier box (green-ish) */}
+      <ProcessBox x={classifierX} y={classifierY} w={classifierW} h={classifierH} label={t('Classifier', '分类器')} bg="#14532d30" border="#22c55e" icon="🧠" />
+
+      {/* Arrow: Classifier → Select Agent */}
+      <Arrow x1={classifierX + classifierW} y1={classifierY + classifierH / 2} x2={selectX - 2} y2={selectY + selectH / 2} animated marker="arr-cyan" color="#06b6d4" />
+
+      {/* Select Agent box */}
+      <ProcessBox x={selectX} y={selectY} w={selectW} h={selectH} label={t('Select Agent', '选择Agent')} bg="#1e3a5f30" border="#06b6d4" />
+
+      {/* Arrow: Select Agent → Agent Processing */}
+      <Arrow x1={selectX + selectW} y1={selectY + selectH / 2} x2={processX - 2} y2={processY + processH / 2} animated marker="arr-cyan" color="#06b6d4" />
+
+      {/* Agent Processing box (blue-ish) */}
+      <ProcessBox x={processX} y={processY} w={processW} h={processH} label={t('Agent Processing', 'Agent处理')} bg="#1e3a5f30" border="#3b82f6" icon="⚡" />
+
+      {/* Blue "Response" arrow on right */}
+      <line x1={processX + processW + 8} y1={processY + processH / 2} x2={W - 20} y2={processY + processH / 2} stroke="#3b82f6" strokeWidth={3} markerEnd="url(#arr-blue)" />
+      <text x={W - 75} y={processY + processH / 2 - 12} fill="#3b82f6" fontSize="10" fontWeight={600}>{t('Response', '响应')}</text>
+
+      {/* Agent cards at top */}
+      {agents.map((a, i) => {
+        const x = agentStartX + i * (agentW + agentGap);
+        const color = AGENT_COLORS[a.id] || '#06b6d4';
         return (
-          <g key={`edge-${a.id}`}>
-            <path d={arcPath(CX, CY, p.x, p.y)} fill="none"
-              stroke={isActive ? 'url(#edge-grad)' : '#334155'} strokeWidth={isActive ? 2 : 1}
-              strokeDasharray={isActive ? '6 4' : 'none'} className={isActive ? 'edge-active' : ''}
-              opacity={isSelected ? 1 : 0.7} />
-            {isActive && (
-              <circle r="3" fill="#06b6d4" filter="url(#glow-node)">
-                <animateMotion dur="2s" repeatCount="indefinite" path={arcPath(CX, CY, p.x, p.y)} />
+          <AgentNode key={a.id} x={x} y={agentRowY} w={agentW} h={agentH} label={t(a.domain, a.domainZh)}
+            color={color} icon={AGENT_ICONS[a.id]} onClick={() => onSelectAgent(a)}
+            isActive={a.status === 'active'} />
+        );
+      })}
+
+      {/* "Fetch agents' characteristics" curved arrow from agents down to Classifier */}
+      <CurvedArrow path={`M ${agentStartX - 5} ${agentRowY + agentH / 2} Q ${classifierX - 50} ${agentRowY + agentH / 2}, ${classifierX + 10} ${classifierY - 2}`}
+        color="#94a3b8" dashed marker="arr" />
+      <text x={classifierX - 55} y={agentRowY + agentH + 22} fill="#94a3b8" fontSize="8" textAnchor="start">
+        {t("Fetch agents'", '获取Agent')}
+      </text>
+      <text x={classifierX - 55} y={agentRowY + agentH + 32} fill="#94a3b8" fontSize="8" textAnchor="start">
+        {t('characteristics', '特征信息')}
+      </text>
+
+      {/* Bidirectional arrow from Select Agent up to Agent cards */}
+      <Arrow x1={selectX + selectW / 2} y1={selectY - 2} x2={selectX + selectW / 2} y2={agentRowY + agentH + 4} color="#94a3b8" marker="arr" />
+      <Arrow x1={selectX + selectW / 2 + 8} y1={agentRowY + agentH + 4} x2={selectX + selectW / 2 + 8} y2={selectY - 2} color="#94a3b8" marker="arr" />
+
+      {/* Conversation History cylinder at bottom */}
+      <MemoryCylinder x={convHistX} y={convHistY} label={t('Conversation History', '会话历史')} />
+
+      {/* Curved arrow: Classifier down to Conversation History (fetch) */}
+      <CurvedArrow path={`M ${classifierX + classifierW / 2 - 10} ${classifierY + classifierH + 2} Q ${classifierX + classifierW / 2 - 10} ${convHistY + 10}, ${convHistX + 120 + 5} ${convHistY + 30}`}
+        color="#94a3b8" dashed marker="arr" />
+      <text x={classifierX - 10} y={convHistY - 5} fill="#94a3b8" fontSize="7.5">
+        {t("Fetch all agents'", '获取所有Agent')}
+      </text>
+      <text x={classifierX - 10} y={convHistY + 5} fill="#94a3b8" fontSize="7.5">
+        {t('conversation history', '会话历史')}
+      </text>
+
+      {/* Curved arrow: Agent Processing down to Conversation History (save) */}
+      <CurvedArrow path={`M ${processX + processW / 2} ${processY + processH + 2} Q ${processX + processW / 2} ${convHistY + 30}, ${convHistX + 120 + 5} ${convHistY + 40}`}
+        color="#94a3b8" dashed marker="arr" />
+      <text x={processX + 20} y={convHistY - 5} fill="#94a3b8" fontSize="7.5">
+        {t('Save agent', '保存Agent')}
+      </text>
+      <text x={processX + 20} y={convHistY + 5} fill="#94a3b8" fontSize="7.5">
+        {t('conversation', '会话')}
+      </text>
+    </svg>
+  );
+}
+
+/* ─── Mode 2: Hierarchical Teams (Supervisor) ─── */
+function HierarchicalTopology({ agents, onSelectAgent, t }: {
+  agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void; t: (en: string, zh: string) => string;
+}) {
+  const W = 900, H = 420;
+  // Lead Agent box
+  const leadX = 130, leadY = 30, leadW = 200, leadH = 230;
+  // Team box
+  const teamX = 380, teamY = 30, teamW = 420, teamH = 230;
+  // Supervisor node inside lead box
+  const supX = 170, supY = 100, supW = 130, supH = 50;
+  // Agent positions inside team box
+  const agentW = 115, agentH = 36;
+  const col1X = teamX + 30, col2X = teamX + 200;
+  const row1Y = teamY + 45, row2Y = teamY + 100, row3Y = teamY + 155;
+  const agentPositions = [
+    { x: col2X, y: row1Y },   // planning (top right)
+    { x: col2X, y: row2Y },   // optimization (mid right)
+    { x: col1X, y: row3Y },   // experience (bottom left)
+    { x: col2X, y: row3Y },   // ops (bottom right)
+    { x: col1X, y: row2Y },   // marketing (mid left)
+  ];
+  // Memory at bottom
+  const memY = 310;
+  const mem1X = 170, mem2X = 430;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 320 }}>
+      <TopoDefs />
+      <SvgGrid w={W} h={H} />
+
+      {/* Lead Agent dashed box */}
+      <rect x={leadX} y={leadY} width={leadW} height={leadH} rx={12} fill="none" stroke="#64748b" strokeWidth={1.5} strokeDasharray="8 4" />
+      <text x={leadX + leadW / 2} y={leadY - 8} fill="#94a3b8" fontSize="10" fontWeight={600} textAnchor="middle">{t('Lead Agent', '领导Agent')}</text>
+
+      {/* Team dashed box */}
+      <rect x={teamX} y={teamY} width={teamW} height={teamH} rx={12} fill="none" stroke="#64748b" strokeWidth={1.5} strokeDasharray="8 4" />
+      <text x={teamX + teamW / 2} y={teamY - 8} fill="#94a3b8" fontSize="10" fontWeight={600} textAnchor="middle">{t('Team', '团队')}</text>
+
+      {/* User input/response arrows */}
+      <line x1={20} y1={supY + supH / 2 - 8} x2={leadX - 2} y2={supY + supH / 2 - 8} stroke="#3b82f6" strokeWidth={3} markerEnd="url(#arr-blue)" />
+      <text x={12} y={supY + supH / 2 - 22} fill="#3b82f6" fontSize="10" fontWeight={600}>{t('User input', '用户输入')}</text>
+      <line x1={leadX - 2} y1={supY + supH / 2 + 12} x2={20} y2={supY + supH / 2 + 12} stroke="#3b82f6" strokeWidth={3} markerEnd="url(#arr-blue)" />
+      <text x={12} y={supY + supH / 2 + 28} fill="#3b82f6" fontSize="10" fontWeight={600}>{t('Response', '响应')}</text>
+
+      {/* Supervisor node inside lead box */}
+      <rect x={supX} y={supY} width={supW} height={supH} rx={8} fill="#0e172680" stroke="#06b6d4" strokeWidth={2} filter="url(#glow-hub)" />
+      <text x={supX + supW / 2} y={supY + 18} fill="#06b6d4" fontSize="13" textAnchor="middle">👑</text>
+      <text x={supX + supW / 2} y={supY + 36} fill="#a5f3fc" fontSize="9" textAnchor="middle" fontWeight={600}>IOE-Supervisor</text>
+
+      {/* Self-loop arrow on supervisor (internal reasoning) */}
+      <CurvedArrow path={`M ${supX + 15} ${supY - 2} Q ${supX - 20} ${supY - 30}, ${supX + supW / 2} ${supY - 5}`}
+        color="#06b6d4" dashed />
+
+      {/* Arrows from supervisor to each team agent */}
+      {agents.map((a, i) => {
+        const ap = agentPositions[i];
+        if (!ap) return null;
+        const fromX = supX + supW;
+        const fromY = supY + supH / 2;
+        const toX = ap.x;
+        const toY = ap.y + agentH / 2;
+        return (
+          <g key={`sup-${a.id}`}>
+            <Arrow x1={fromX + 2} y1={fromY} x2={toX - 2} y2={toY} color="#06b6d4" animated dashed marker="arr-cyan" />
+            {a.status === 'active' && (
+              <circle r="2.5" fill="#06b6d4" className="dot-pulse">
+                <animateMotion dur="2.5s" repeatCount="indefinite" path={`M ${fromX + 2} ${fromY} L ${toX - 2} ${toY}`} />
               </circle>
             )}
           </g>
         );
       })}
 
-      {/* Peer-to-peer edges (cross-agent collaboration) */}
-      {[['optimization', 'ops'], ['marketing', 'experience'], ['planning', 'optimization']].map(([a, b]) => {
-        const pa = agentPos(a), pb = agentPos(b);
-        const active = activeEdges.has(a) && activeEdges.has(b);
-        return active ? (
-          <path key={`peer-${a}-${b}`} d={arcPath(pa.x, pa.y, pb.x, pb.y, 15)} fill="none"
-            stroke="#8b5cf640" strokeWidth={1} strokeDasharray="4 3" className="edge-active" />
-        ) : null;
-      })}
-
-      {/* Supervisor center node */}
-      <circle cx={CX} cy={CY} r={48} fill="none" stroke="#06b6d4" strokeWidth={1} opacity={0.3}>
-        <animate attributeName="r" values="48;52;48" dur="3s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="0.3;0.6;0.3" dur="3s" repeatCount="indefinite" />
-      </circle>
-      <circle cx={CX} cy={CY} r={38} fill="#0e1726" stroke="#06b6d4" strokeWidth={2}
-        filter="url(#glow-hub)" className="cursor-pointer" onClick={() => onSelect('ioe-supervisor')} />
-      <text x={CX} y={CY - 6} fill="#06b6d4" fontSize="18" textAnchor="middle" dominantBaseline="middle" className="pointer-events-none">👑</text>
-      <text x={CX} y={CY + 14} fill="#a5f3fc" fontSize="8" textAnchor="middle" fontWeight={600} className="pointer-events-none">SUPERVISOR</text>
-
-      {/* Domain agent nodes */}
-      {agents.map(a => {
-        const p = agentPos(a.id);
-        const color = AGENT_COLORS[a.id] || '#06b6d4';
-        const isSelected = selectedId === a.id;
-        const isActive = a.status === 'active';
+      {/* Bidirectional arrow between adjacent agents (team collaboration) */}
+      {[[0, 1], [1, 3], [4, 2]].map(([ai, bi]) => {
+        const a = agentPositions[ai], b = agentPositions[bi];
+        if (!a || !b) return null;
         return (
-          <g key={a.id} className="cursor-pointer" onClick={() => onSelect(a.id)}>
-            {isSelected && <circle cx={p.x} cy={p.y} r={34} fill="none" stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 2" />}
-            <circle cx={p.x} cy={p.y} r={28} fill="#111827" stroke={color} strokeWidth={isActive ? 2 : 1}
-              filter={isActive ? 'url(#glow-node)' : undefined} />
-            <text x={p.x} y={p.y - 4} fill={color} fontSize="16" textAnchor="middle" dominantBaseline="middle" className="pointer-events-none">{AGENT_ICONS[a.id]}</text>
-            <text x={p.x} y={p.y + 14} fill="#94a3b8" fontSize="7" textAnchor="middle" className="pointer-events-none">{a.subAgents.length} subs</text>
-            <text x={p.x} y={p.y + 42} fill="#e2e8f0" fontSize="9" textAnchor="middle" fontWeight={600} className="pointer-events-none">{t(a.name, a.nameZh)}</text>
-            {/* Status dot */}
-            <circle cx={p.x + 22} cy={p.y - 22} r={4} fill={isActive ? '#22c55e' : a.status === 'warning' ? '#eab308' : a.status === 'error' ? '#ef4444' : '#64748b'} />
-          </g>
+          <line key={`peer-${ai}-${bi}`} x1={a.x + agentW / 2} y1={a.y + agentH + 2} x2={b.x + agentW / 2} y2={b.y - 2}
+            stroke="#8b5cf630" strokeWidth={1} strokeDasharray="3 3" markerEnd="url(#arr)" />
         );
       })}
+
+      {/* Team agent nodes */}
+      {agents.map((a, i) => {
+        const ap = agentPositions[i];
+        if (!ap) return null;
+        const color = AGENT_COLORS[a.id] || '#06b6d4';
+        return (
+          <AgentNode key={a.id} x={ap.x} y={ap.y} w={agentW} h={agentH}
+            label={t(a.domain, a.domainZh)} color={color} icon={AGENT_ICONS[a.id]}
+            onClick={() => onSelectAgent(a)} isActive={a.status === 'active'} />
+        );
+      })}
+
+      {/* Memory area background */}
+      <rect x={mem1X - 20} y={memY - 10} width={mem2X - mem1X + 160} height={90} rx={12} fill="#f59e0b08" stroke="#f59e0b20" strokeWidth={1} />
+
+      {/* Memory cylinders */}
+      <MemoryCylinder x={mem1X} y={memY} label={t('User ↔ Lead Agent', '用户 ↔ 领导Agent')} />
+      <MemoryCylinder x={mem2X} y={memY} label={t('Lead Agent ↔ Team', '领导Agent ↔ 团队')} />
+      <text x={mem1X + 60} y={memY - 2} fill="#94a3b8" fontSize="8" textAnchor="middle">{t('Memory', '记忆')}</text>
+      <text x={mem2X + 60} y={memY - 2} fill="#94a3b8" fontSize="8" textAnchor="middle">{t('Memory', '记忆')}</text>
+
+      {/* Bidirectional arrows from lead/team to memories */}
+      <Arrow x1={leadX + leadW / 2 - 10} y1={leadY + leadH + 2} x2={mem1X + 60} y2={memY - 2} color="#94a3b8" dashed marker="arr" />
+      <Arrow x1={mem1X + 70} y1={memY - 2} x2={leadX + leadW / 2 + 10} y2={leadY + leadH + 2} color="#94a3b8" dashed marker="arr" />
+      <Arrow x1={teamX + teamW / 2 - 50} y1={teamY + teamH + 2} x2={mem2X + 50} y2={memY - 2} color="#94a3b8" dashed marker="arr" />
+      <Arrow x1={mem2X + 70} y1={memY - 2} x2={teamX + teamW / 2 - 30} y2={teamY + teamH + 2} color="#94a3b8" dashed marker="arr" />
     </svg>
   );
 }
@@ -651,22 +855,15 @@ export default function Agents() {
 
   const [editingAgent, setEditingAgent] = useState<DomainAgent | null>(null);
   const [editingSubAgent, setEditingSubAgent] = useState<SubAgent | undefined>(undefined);
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [teamTab, setTeamTab] = useState<TeamTab>('activity');
   const [eventTick, setEventTick] = useState(0);
+  const [topoMode, setTopoMode] = useState<TopoMode>('hierarchical');
 
   // Animate event feed
   useEffect(() => {
     const iv = setInterval(() => setEventTick(p => p + 1), 3000);
     return () => clearInterval(iv);
   }, []);
-
-  // Active edges based on scenario
-  const activeEdges = useMemo(() => {
-    const s = new Set<string>();
-    domainAgents.forEach(a => { if (a.status === 'active') s.add(a.id); });
-    return s;
-  }, [domainAgents]);
 
   const totalSubAgents = domainAgents.reduce((sum, a) => sum + a.subAgents.length, 0);
   const visibleEvents = collaborationEvents.slice(0, Math.min(collaborationEvents.length, 3 + (eventTick % (collaborationEvents.length - 2))));
@@ -714,19 +911,38 @@ export default function Agents() {
         </div>
       </div>
 
-      {/* ─── Main: Hub-Spoke + Team Panel ─── */}
+      {/* ─── Main: Agent Topology + Team Panel ─── */}
       <div className="flex gap-4" style={{ minHeight: 420 }}>
-        {/* Left: SVG visualization */}
+        {/* Left: SVG topology */}
         <div className="flex-1 bg-bg-card rounded-xl border border-border overflow-hidden relative min-w-0">
-          <div className="absolute top-3 left-4 z-10 flex items-center gap-2">
-            <Radio className="w-4 h-4 text-accent-cyan" />
+          {/* Mode toggle header */}
+          <div className="absolute top-3 left-4 right-4 z-10 flex items-center gap-3">
+            <Radio className="w-4 h-4 text-accent-cyan shrink-0" />
             <span className="text-xs font-medium text-text-secondary">{t('Agent Topology', 'Agent拓扑')}</span>
+            <div className="ml-auto flex items-center bg-bg-primary rounded-lg border border-border overflow-hidden">
+              <button onClick={() => setTopoMode('direct')}
+                className={`px-3 py-1.5 text-[10px] font-medium cursor-pointer transition-all ${topoMode === 'direct' ? 'bg-accent-cyan/15 text-accent-cyan' : 'text-text-muted hover:text-text-secondary'}`}>
+                {t('Direct Routing', '直接路由')}
+              </button>
+              <button onClick={() => setTopoMode('hierarchical')}
+                className={`px-3 py-1.5 text-[10px] font-medium cursor-pointer transition-all ${topoMode === 'hierarchical' ? 'bg-accent-cyan/15 text-accent-cyan' : 'text-text-muted hover:text-text-secondary'}`}>
+                {t('Hierarchical Teams', '层级团队')}
+              </button>
+            </div>
           </div>
-          <HubSpokeGraph agents={domainAgents} selectedId={selectedNode} onSelect={setSelectedNode} activeEdges={activeEdges} t={t} />
+          <div className="pt-8">
+            {topoMode === 'direct'
+              ? <DirectRoutingTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} t={t} />
+              : <HierarchicalTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} t={t} />
+            }
+          </div>
           {/* Legend */}
           <div className="absolute bottom-3 left-4 flex items-center gap-4 text-[10px] text-text-muted">
             <span className="flex items-center gap-1"><span className="w-6 h-0.5 bg-accent-cyan inline-block" /> {t('A2A-T Link', 'A2A-T链路')}</span>
             <span className="flex items-center gap-1"><span className="w-6 h-0.5 bg-purple-500/40 inline-block" style={{ borderTop: '1px dashed' }} /> {t('Peer Collab', '对等协作')}</span>
+            <span className="flex items-center gap-1.5 ml-2">
+              <span className="w-2 h-2 rounded-full bg-status-green inline-block dot-pulse" /> {t('Active', '活跃')}
+            </span>
           </div>
         </div>
 
