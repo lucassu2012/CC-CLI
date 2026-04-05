@@ -504,74 +504,55 @@ const AGENT_ICONS: Record<string, string> = {
   planning: '📐', optimization: '⚡', experience: '👤', ops: '🔧', marketing: '📊',
 };
 
-/* ─── Agent Topology SVG — Dual Mode (n8n-style) ─── */
+/* ─── Agent Topology — Dual Mode (Connected Systems style) ─── */
 type TopoMode = 'direct' | 'hierarchical';
 
-/* n8n-style node sizes */
-const NODE_S = 48;   /* square icon node */
-const NODE_R = 10;   /* border radius */
+/* Agent tool descriptions */
+const AGENT_TOOL_LIST: Record<string, { icon: string; name: string; nameZh: string }[]> = {
+  planning: [
+    { icon: '📡', name: 'Coverage Analysis', nameZh: '覆盖分析' },
+    { icon: '📊', name: 'Capacity Planning', nameZh: '容量规划' },
+    { icon: '🗺️', name: 'Site Selection', nameZh: '站点选址' },
+  ],
+  optimization: [
+    { icon: '⚡', name: 'Parameter Tuning', nameZh: '参数调优' },
+    { icon: '📈', name: 'KPI Prediction', nameZh: 'KPI预测' },
+    { icon: '🔧', name: 'Auto-Optimization', nameZh: '自动优化' },
+  ],
+  experience: [
+    { icon: '👤', name: 'User Profiling', nameZh: '用户画像' },
+    { icon: '📱', name: 'QoE Analysis', nameZh: 'QoE分析' },
+    { icon: '💡', name: 'Recommendation', nameZh: '智能推荐' },
+  ],
+  ops: [
+    { icon: '🔧', name: 'Fault Diagnosis', nameZh: '故障诊断' },
+    { icon: '🚨', name: 'Alarm Correlation', nameZh: '告警关联' },
+    { icon: '📋', name: 'Change Mgmt', nameZh: '变更管理' },
+  ],
+  marketing: [
+    { icon: '📊', name: 'Campaign Analysis', nameZh: '营销分析' },
+    { icon: '🎯', name: 'Churn Prediction', nameZh: '流失预测' },
+    { icon: '💰', name: 'Revenue Forecast', nameZh: '收益预测' },
+  ],
+};
 
-/* Shared SVG defs — n8n style */
-function TopoDefs() {
-  return (
-    <defs>
-      <filter id="n-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-      <filter id="n-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#000" floodOpacity="0.35" /></filter>
-      <linearGradient id="card-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1e293b" stopOpacity="0.7" /><stop offset="100%" stopColor="#0f172a" stopOpacity="0.9" /></linearGradient>
-    </defs>
-  );
-}
-
-/* n8n-style square icon node */
-function N8nNode({ x, y, icon, label, color = '#64748b', onClick, active }: {
-  x: number; y: number; icon: string; label: string; color?: string;
-  onClick?: () => void; active?: boolean;
+/* Animated connection line component (matches Connected Systems style) */
+function FlowLine({ vertical, color = '#06b6d4', active = true, length }: {
+  vertical?: boolean; color?: string; active?: boolean; length?: string;
 }) {
-  const cx = x + NODE_S / 2, cy = y + NODE_S / 2;
+  const cls = vertical ? 'w-[2px]' : 'h-[2px]';
+  const size = length || (vertical ? 'h-full' : 'w-full');
   return (
-    <g className={onClick ? 'cursor-pointer' : ''} onClick={onClick}>
-      <rect x={x} y={y} width={NODE_S} height={NODE_S} rx={NODE_R} fill="#0f172a" stroke={color} strokeWidth={1.5} filter="url(#n-shadow)" />
-      {active && <rect x={x} y={y} width={NODE_S} height={NODE_S} rx={NODE_R} fill="none" stroke={color} strokeWidth={2} filter="url(#n-glow)" />}
-      <text x={cx} y={cy + 1} fill={color} fontSize="20" textAnchor="middle" dominantBaseline="middle" className="pointer-events-none">{icon}</text>
-      <text x={cx} y={y + NODE_S + 14} fill="#94a3b8" fontSize="9" fontWeight={500} textAnchor="middle" className="pointer-events-none">{label}</text>
-    </g>
-  );
-}
-
-/* n8n-style group container — translucent rounded box with title */
-function N8nGroup({ x, y, w, h, title, color = '#475569' }: {
-  x: number; y: number; w: number; h: number; title: string; color?: string;
-}) {
-  return (
-    <g>
-      <rect x={x} y={y} width={w} height={h} rx={14} fill="url(#card-bg)" stroke={color} strokeWidth={1} opacity={0.8} />
-      <text x={x + 14} y={y + 18} fill="#cbd5e1" fontSize="10" fontWeight={600} className="pointer-events-none">{title}</text>
-    </g>
-  );
-}
-
-/* Connector line with small dots at endpoints */
-function N8nLine({ x1, y1, x2, y2, color = '#475569', dashed }: {
-  x1: number; y1: number; x2: number; y2: number; color?: string; dashed?: boolean;
-}) {
-  return (
-    <g>
-      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={1.5} strokeDasharray={dashed ? '4 3' : 'none'} />
-      <circle cx={x1} cy={y1} r={3} fill={color} />
-      <circle cx={x2} cy={y2} r={3} fill={color} />
-    </g>
-  );
-}
-
-/* Curved connector with dots */
-function N8nCurve({ path, color = '#475569', dashed, dots }: {
-  path: string; color?: string; dashed?: boolean; dots?: [number, number][];
-}) {
-  return (
-    <g>
-      <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeDasharray={dashed ? '4 3' : 'none'} />
-      {dots?.map(([cx, cy], i) => <circle key={i} cx={cx} cy={cy} r={3} fill={color} />)}
-    </g>
+    <div className={`relative ${cls} ${size}`}>
+      <div className={`absolute inset-0 bg-border rounded-full`} />
+      {active && (
+        <div className="absolute inset-0 rounded-full" style={{
+          background: `linear-gradient(${vertical ? '180deg' : '90deg'}, transparent, ${color}, transparent)`,
+          boxShadow: `0 0 6px ${color}40`,
+          animation: 'flowPulse 2s ease-in-out infinite',
+        }} />
+      )}
+    </div>
   );
 }
 
@@ -581,94 +562,111 @@ function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onCl
   onClickConvHistory: () => void; onClickMemory: () => void;
   t: (en: string, zh: string) => string;
 }) {
-  const W = 860, H = 420;
-  const midY = 150;
-  const S = NODE_S;
-  /* Agent row across top */
-  const agentGap = 16;
-  const totalAW = agents.length * S + (agents.length - 1) * agentGap;
-  const agentStartX = (W - totalAW) / 2;
-  const agentY = 32;
-  /* Group around agents */
-  const gPad = 20;
-  const gX = agentStartX - gPad, gY = agentY - gPad;
-  const gW = totalAW + gPad * 2, gH = S + 24 + gPad * 2;
-  /* Process nodes */
-  const inputX = 60, classX = 220, selX = 380, procX = 540, outX = 700;
-  /* Bottom row */
-  const botY = 300;
-
+  const flowColor = '#8b5cf6';
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 320 }}>
-      <TopoDefs />
+    <div className="px-4 pb-4 pt-2">
+      {/* Main horizontal flow */}
+      <div className="flex items-stretch gap-0">
+        {/* User Input */}
+        <div className="flex flex-col items-center gap-1 shrink-0" style={{ width: 80 }}>
+          <div className="w-10 h-10 rounded-lg bg-bg-tertiary/50 border border-border flex items-center justify-center">
+            <span className="text-lg">💬</span>
+          </div>
+          <span className="text-[9px] text-text-muted">{t('User Input', '用户输入')}</span>
+        </div>
 
-      {/* Agent group container */}
-      <N8nGroup x={gX} y={gY} w={gW} h={gH} title={t('Domain Agents', '领域Agent')} color="#8b5cf6" />
+        {/* Arrow */}
+        <div className="flex items-center px-1 -mt-3"><FlowLine color={flowColor} length="w-8" /></div>
 
-      {/* Agent nodes */}
-      {agents.map((a, i) => {
-        const x = agentStartX + i * (S + agentGap);
-        return <N8nNode key={a.id} x={x} y={agentY} icon={AGENT_ICONS[a.id] || '🤖'} label={t(a.domain, a.domainZh)} color={AGENT_COLORS[a.id] || '#8b5cf6'} onClick={() => onSelectAgent(a)} />;
-      })}
+        {/* Classifier */}
+        <div className="flex-1 rounded-xl border-2 p-3 flex flex-col" style={{ borderColor: '#10b981' + '50', backgroundColor: '#10b981' + '06', maxWidth: 160 }}>
+          <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: '#10b981' + '20' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b981' + '18' }}>
+              <span className="text-sm">🔀</span>
+            </div>
+            <span className="text-[11px] font-bold" style={{ color: '#10b981' }}>{t('CLASSIFIER', '分类器')}</span>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-[9px] text-text-muted"><span className="w-1 h-1 rounded-full bg-status-green" />{t('Intent Detection', '意图检测')}</div>
+            <div className="flex items-center gap-1.5 text-[9px] text-text-muted"><span className="w-1 h-1 rounded-full bg-status-green" />{t('Agent Matching', 'Agent匹配')}</div>
+          </div>
+        </div>
 
-      {/* Main processing flow: Input → Classifier → Select → Process → Output */}
-      <N8nNode x={inputX} y={midY} icon="💬" label={t('User Input', '用户输入')} color="#64748b" />
-      <N8nNode x={classX} y={midY} icon="🔀" label={t('Classifier', '分类器')} color="#10b981" active />
-      <N8nNode x={selX} y={midY} icon="☑️" label={t('Select Agent', '选择Agent')} color="#8b5cf6" />
-      <N8nNode x={procX} y={midY} icon="⚙️" label={t('Agent Processing', 'Agent处理')} color="#06b6d4" active />
-      <N8nNode x={outX} y={midY} icon="📤" label={t('Response', '响应')} color="#64748b" />
+        {/* Arrow */}
+        <div className="flex items-center px-1 -mt-3"><FlowLine color={flowColor} length="w-6" /></div>
 
-      {/* Flow connectors (horizontal) */}
-      <N8nLine x1={inputX + S} y1={midY + S / 2} x2={classX} y2={midY + S / 2} color="#475569" />
-      <N8nLine x1={classX + S} y1={midY + S / 2} x2={selX} y2={midY + S / 2} color="#10b981" />
-      <N8nLine x1={selX + S} y1={midY + S / 2} x2={procX} y2={midY + S / 2} color="#8b5cf6" />
-      <N8nLine x1={procX + S} y1={midY + S / 2} x2={outX} y2={midY + S / 2} color="#06b6d4" />
+        {/* Agent Selection — contains clickable agent list */}
+        <div className="flex-[2] rounded-xl border-2 p-3" style={{ borderColor: flowColor + '50', backgroundColor: flowColor + '06' }}>
+          <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: flowColor + '20' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: flowColor + '18' }}>
+              <span className="text-sm">🤖</span>
+            </div>
+            <span className="text-[11px] font-bold" style={{ color: flowColor }}>{t('DOMAIN AGENTS', '领域AGENT')}</span>
+            <span className="text-[9px] text-text-muted ml-auto">{agents.length} {t('agents', '个')}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-1">
+            {agents.map(a => (
+              <div key={a.id} onClick={() => onSelectAgent(a)}
+                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium cursor-pointer transition-all hover:scale-[1.02]"
+                style={{ backgroundColor: (AGENT_COLORS[a.id] || flowColor) + '08', borderColor: (AGENT_COLORS[a.id] || flowColor) + '20', color: AGENT_COLORS[a.id] || flowColor }}>
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: AGENT_COLORS[a.id] || flowColor }} />
+                {t(a.domain, a.domainZh)}
+              </div>
+            ))}
+          </div>
+        </div>
 
-      {/* Classifier → agent group (curved up) */}
-      <N8nCurve
-        path={`M ${classX + S / 2} ${midY} Q ${classX + S / 2} ${gY + gH + 10}, ${gX + 30} ${gY + gH}`}
-        color="#10b981" dashed
-        dots={[[classX + S / 2, midY], [gX + 30, gY + gH]]}
-      />
-      <text x={gX + 36} y={gY + gH + 14} fill="#64748b" fontSize="8">{t('Fetch characteristics', '获取特征')}</text>
+        {/* Arrow */}
+        <div className="flex items-center px-1 -mt-3"><FlowLine color="#06b6d4" length="w-6" /></div>
 
-      {/* Select Agent ↔ agent group (vertical) */}
-      <N8nLine x1={selX + S / 2} y1={midY} x2={selX + S / 2} y2={gY + gH} color="#8b5cf6" dashed />
+        {/* Agent Processing */}
+        <div className="flex-1 rounded-xl border-2 p-3 flex flex-col" style={{ borderColor: '#06b6d4' + '50', backgroundColor: '#06b6d4' + '06', maxWidth: 160 }}>
+          <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: '#06b6d4' + '20' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#06b6d4' + '18' }}>
+              <span className="text-sm">⚙️</span>
+            </div>
+            <span className="text-[11px] font-bold text-accent-cyan">{t('PROCESSING', '处理引擎')}</span>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-[9px] text-text-muted"><span className="w-1 h-1 rounded-full bg-accent-cyan" />{t('Tool Invocation', '工具调用')}</div>
+            <div className="flex items-center gap-1.5 text-[9px] text-text-muted"><span className="w-1 h-1 rounded-full bg-accent-cyan" />{t('Response Gen', '响应生成')}</div>
+          </div>
+        </div>
 
-      {/* Agent Processing ↔ agent group */}
-      <N8nCurve
-        path={`M ${procX + S / 2} ${midY} Q ${procX + S / 2} ${gY + gH + 10}, ${gX + gW - 30} ${gY + gH}`}
-        color="#06b6d4" dashed
-        dots={[[procX + S / 2, midY], [gX + gW - 30, gY + gH]]}
-      />
+        {/* Arrow */}
+        <div className="flex items-center px-1 -mt-3"><FlowLine color="#06b6d4" length="w-8" /></div>
 
-      {/* Bottom: Conversation History & Memory */}
-      <N8nGroup x={classX - 30} y={botY - 16} w={220} h={78} title={t('Conversation History', '会话历史')} color="#8b5cf6" />
-      <g className="cursor-pointer" onClick={onClickConvHistory}>
-        <N8nNode x={classX + 20} y={botY + 6} icon="💬" label={t('View Context', '查看上下文')} color="#8b5cf6" />
-      </g>
-      <g className="cursor-pointer" onClick={onClickConvHistory}>
-        <N8nNode x={classX + 100} y={botY + 6} icon="📋" label={t('History Log', '历史记录')} color="#8b5cf6" />
-      </g>
+        {/* Output */}
+        <div className="flex flex-col items-center gap-1 shrink-0" style={{ width: 80 }}>
+          <div className="w-10 h-10 rounded-lg bg-bg-tertiary/50 border border-border flex items-center justify-center">
+            <span className="text-lg">📤</span>
+          </div>
+          <span className="text-[9px] text-text-muted">{t('Response', '响应')}</span>
+        </div>
+      </div>
 
-      {/* Classifier → Conversation History */}
-      <N8nLine x1={classX + S / 2} y1={midY + S} x2={classX + S / 2} y2={botY - 16} color="#475569" dashed />
-      {/* Agent Processing → Conversation History */}
-      <N8nCurve
-        path={`M ${procX + S / 2} ${midY + S} Q ${procX + S / 2} ${botY + 20}, ${classX + 190} ${botY + 20}`}
-        color="#475569" dashed
-        dots={[[procX + S / 2, midY + S], [classX + 190, botY + 20]]}
-      />
-
-      {/* Memory */}
-      <N8nGroup x={procX + 20} y={botY - 16} w={160} h={78} title={t('Memory', '记忆库')} color="#f59e0b" />
-      <g className="cursor-pointer" onClick={onClickMemory}>
-        <N8nNode x={procX + 60} y={botY + 6} icon="🧠" label={t('Knowledge Base', '知识库')} color="#f59e0b" />
-      </g>
-
-      {/* Agent Processing → Memory */}
-      <N8nLine x1={procX + S} y1={midY + S} x2={procX + 80} y2={botY - 16} color="#f59e0b" dashed />
-    </svg>
+      {/* Bottom row: Conversation History + Memory */}
+      <div className="flex gap-3 mt-3">
+        <div onClick={onClickConvHistory}
+          className="flex-1 rounded-lg border border-border px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
+          <span className="text-sm">💬</span>
+          <div>
+            <p className="text-[10px] font-medium text-text-secondary">{t('Conversation History', '会话历史')}</p>
+            <p className="text-[9px] text-text-muted">{t('View shared context pool', '查看共享上下文池')}</p>
+          </div>
+          <ChevronRight className="w-3 h-3 text-text-muted ml-auto" />
+        </div>
+        <div onClick={onClickMemory}
+          className="flex-1 rounded-lg border border-border px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
+          <span className="text-sm">🧠</span>
+          <div>
+            <p className="text-[10px] font-medium text-text-secondary">{t('Memory & Knowledge', '记忆与知识')}</p>
+            <p className="text-[9px] text-text-muted">{t('Short-term & long-term memory', '短期和长期记忆')}</p>
+          </div>
+          <ChevronRight className="w-3 h-3 text-text-muted ml-auto" />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -677,115 +675,119 @@ function HierarchicalTopology({ agents, onSelectAgent, onClickMemory, t }: {
   agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void;
   onClickMemory: () => void; t: (en: string, zh: string) => string;
 }) {
-  const W = 860, H = 420;
-  const S = NODE_S;
-  /* Supervisor group (left) */
-  const supGX = 40, supGY = 30, supGW = 200, supGH = 240;
-  const supX = supGX + 76, supY = supGY + 50;
-  /* Input/Output */
-  const inputY = supGY + 130, outputY = supGY + 190;
-  /* Team groups (right side — 3 rows of sub-agent groups) */
-  const teamBaseX = 310;
-  /* Each agent gets a group container with the agent node + tool nodes */
-  const agGroupW = 240, agGroupH = 90, agGroupGap = 10;
-  /* Two columns of agent groups */
-  const col1X = teamBaseX, col2X = teamBaseX + agGroupW + agGroupGap;
-  const row1Y = 18, row2Y = row1Y + agGroupH + agGroupGap, row3Y = row2Y + agGroupH + agGroupGap;
-  const agentGroupPos = [
-    { x: col1X, y: row1Y },
-    { x: col2X, y: row1Y },
-    { x: col1X, y: row2Y },
-    { x: col2X, y: row2Y },
-    { x: col1X, y: row3Y },
-  ];
-  /* Tool icons per agent */
-  const AGENT_TOOLS: Record<string, string[]> = {
-    planning: ['📡', '📊', '🗺️'],
-    optimization: ['⚡', '📈', '🔧'],
-    experience: ['👤', '📱', '💡'],
-    ops: ['🔧', '🚨', '📋'],
-    marketing: ['📊', '🎯', '💰'],
-  };
-  /* Memory row */
-  const memY = 350;
-
+  const supColor = '#06b6d4';
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 340 }}>
-      <TopoDefs />
+    <div className="px-4 pb-4 pt-2">
+      <div className="flex gap-3 items-stretch">
+        {/* Left: Supervisor container */}
+        <div className="rounded-xl border-2 p-4 flex flex-col shrink-0" style={{ borderColor: supColor + '50', backgroundColor: supColor + '06', width: 200 }}>
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b" style={{ borderColor: supColor + '20' }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: supColor + '18' }}>
+              <Crown className="w-4 h-4 text-accent-cyan" />
+            </div>
+            <div>
+              <div className="text-[11px] font-bold text-accent-cyan">IOE-SUPERVISOR</div>
+              <div className="text-[8px] text-text-muted">{t('Think → Act → Observe', '思考 → 行动 → 观察')}</div>
+            </div>
+          </div>
+          <div className="flex-1 space-y-1.5">
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
+              style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
+              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent-cyan" />
+              {t('Task Delegation', '任务分配')}
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
+              style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
+              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent-cyan" />
+              {t('Context Routing', '上下文路由')}
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
+              style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
+              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent-cyan" />
+              {t('Conflict Resolution', '冲突仲裁')}
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
+              style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
+              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent-cyan" />
+              {t('Result Aggregation', '结果聚合')}
+            </div>
+          </div>
+          {/* Footer metrics */}
+          <div className="mt-3 pt-2 border-t flex items-center justify-around text-[9px]" style={{ borderColor: supColor + '20' }}>
+            <div className="text-center"><span className="text-text-primary font-semibold">A2A-T</span><br /><span className="text-text-muted">{t('Protocol', '协议')}</span></div>
+            <div className="text-center"><span className="text-status-green font-semibold">{t('Active', '活跃')}</span><br /><span className="text-text-muted">{t('Status', '状态')}</span></div>
+          </div>
+        </div>
 
-      {/* Supervisor group */}
-      <N8nGroup x={supGX} y={supGY} w={supGW} h={supGH} title="IOE-Supervisor" color="#06b6d4" />
-      <N8nNode x={supX} y={supY} icon="👑" label="Supervisor" color="#06b6d4" active />
-      <N8nNode x={supGX + 20} y={inputY} icon="💬" label={t('Input', '输入')} color="#64748b" />
-      <N8nNode x={supGX + 132} y={outputY} icon="📤" label={t('Output', '输出')} color="#64748b" />
+        {/* Center: animated connection lines */}
+        <div className="flex flex-col justify-center gap-3 shrink-0 py-6" style={{ width: 40 }}>
+          {agents.map(a => (
+            <div key={a.id} className="flex items-center justify-center" style={{ height: 28 }}>
+              <FlowLine color={AGENT_COLORS[a.id] || supColor} length="w-10" />
+            </div>
+          ))}
+        </div>
 
-      {/* Input → Supervisor → Output flow */}
-      <N8nLine x1={supGX + 20 + S / 2} y1={inputY} x2={supX + S / 2} y2={supY + S} color="#475569" />
-      <N8nLine x1={supX + S / 2} y1={supY + S} x2={supGX + 132 + S / 2} y2={outputY} color="#475569" />
+        {/* Right: Domain Agent cards grid */}
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+          {agents.map(a => {
+            const color = AGENT_COLORS[a.id] || '#8b5cf6';
+            const tools = AGENT_TOOL_LIST[a.id] || [];
+            return (
+              <div key={a.id} onClick={() => onSelectAgent(a)}
+                className="rounded-lg border p-2.5 flex items-center gap-3 cursor-pointer transition-all hover:scale-[1.01]"
+                style={{ borderColor: color + '30', backgroundColor: color + '06' }}>
+                {/* Agent icon */}
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: color + '18' }}>
+                  <span className="text-sm">{AGENT_ICONS[a.id] || '🤖'}</span>
+                </div>
+                {/* Agent info */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold" style={{ color }}>{t(a.domain, a.domainZh)}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-status-green shrink-0" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {tools.map((tool, ti) => (
+                      <span key={ti} className="text-[8px] text-text-muted flex items-center gap-0.5">
+                        <span>{tool.icon}</span> {t(tool.name, tool.nameZh)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <ChevronRight className="w-3 h-3 text-text-muted shrink-0" />
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
-      {/* Agent sub-groups */}
-      {agents.map((a, i) => {
-        const pos = agentGroupPos[i];
-        if (!pos) return null;
-        const tools = AGENT_TOOLS[a.id] || ['🔧', '📊', '💡'];
-        const agNodeX = pos.x + 14, agNodeY = pos.y + 28;
-        return (
-          <g key={a.id}>
-            {/* Group container */}
-            <N8nGroup x={pos.x} y={pos.y} w={agGroupW} h={agGroupH} title={t(a.domain, a.domainZh) + ' Agent'} color={AGENT_COLORS[a.id] || '#8b5cf6'} />
-            {/* Main agent node */}
-            <N8nNode x={agNodeX} y={agNodeY} icon={AGENT_ICONS[a.id] || '🤖'} label={t(a.domain, a.domainZh)} color={AGENT_COLORS[a.id] || '#8b5cf6'} onClick={() => onSelectAgent(a)} />
-            {/* Tool nodes */}
-            {tools.map((tool, ti) => {
-              const toolX = agNodeX + 70 + ti * 46;
-              return (
-                <g key={ti}>
-                  <N8nNode x={toolX} y={agNodeY} icon={tool} label="" color="#475569" />
-                  <N8nLine x1={toolX > agNodeX + 70 ? toolX : agNodeX + S} y1={agNodeY + S / 2} x2={toolX > agNodeX + 70 ? toolX : toolX + S} y2={agNodeY + S / 2} color="#334155" />
-                </g>
-              );
-            })}
-            {/* Connect first tool to agent node */}
-            <N8nLine x1={agNodeX + S} y1={agNodeY + S / 2} x2={agNodeX + 70} y2={agNodeY + S / 2} color={AGENT_COLORS[a.id] || '#8b5cf6'} />
-          </g>
-        );
-      })}
-
-      {/* Supervisor → each agent group (fan-out lines) */}
-      {agents.map((a, i) => {
-        const pos = agentGroupPos[i];
-        if (!pos) return null;
-        const fromX = supGX + supGW, fromY = supY + S / 2;
-        const toX = pos.x, toY = pos.y + agGroupH / 2;
-        return (
-          <N8nCurve key={`s-${a.id}`}
-            path={`M ${fromX} ${fromY} C ${fromX + 40} ${fromY}, ${toX - 40} ${toY}, ${toX} ${toY}`}
-            color="#06b6d4" dashed
-            dots={[[fromX, fromY], [toX, toY]]}
-          />
-        );
-      })}
-
-      {/* Memory section */}
-      <N8nGroup x={supGX} y={memY} w={180} h={60} title={t('Memory', '记忆库')} color="#f59e0b" />
-      <g className="cursor-pointer" onClick={onClickMemory}>
-        <N8nNode x={supGX + 20} y={memY + 10} icon="🧠" label={t('Short-term', '短期记忆')} color="#f59e0b" />
-      </g>
-      <g className="cursor-pointer" onClick={onClickMemory}>
-        <N8nNode x={supGX + 100} y={memY + 10} icon="🗄️" label={t('Long-term', '长期记忆')} color="#f59e0b" />
-      </g>
-      <N8nLine x1={supGX + 20 + S / 2} y1={memY + 10} x2={supGX + 20 + S / 2} y2={supGY + supGH} color="#f59e0b" dashed />
-      <N8nLine x1={supGX + 100 + S / 2} y1={memY + 10} x2={supGX + supGW / 2 + 30} y2={supGY + supGH} color="#f59e0b" dashed />
-
-      <N8nGroup x={teamBaseX} y={memY} w={200} h={60} title={t('Shared Context', '共享上下文')} color="#8b5cf6" />
-      <g className="cursor-pointer" onClick={onClickMemory}>
-        <N8nNode x={teamBaseX + 30} y={memY + 10} icon="🔗" label={t('Context Pool', '上下文池')} color="#8b5cf6" />
-      </g>
-      <g className="cursor-pointer" onClick={onClickMemory}>
-        <N8nNode x={teamBaseX + 110} y={memY + 10} icon="📚" label={t('Knowledge', '知识库')} color="#8b5cf6" />
-      </g>
-      <N8nLine x1={teamBaseX + 30 + S / 2} y1={memY + 10} x2={col1X + agGroupW / 2} y2={row3Y + agGroupH} color="#8b5cf6" dashed />
-    </svg>
+      {/* Bottom: Memory & Context */}
+      <div className="flex gap-3 mt-3">
+        <div onClick={onClickMemory}
+          className="flex-1 rounded-lg border border-border px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b18' }}>
+            <span className="text-sm">🧠</span>
+          </div>
+          <div>
+            <p className="text-[10px] font-medium text-text-secondary">{t('State & Memory', '状态与记忆')}</p>
+            <p className="text-[9px] text-text-muted">{t('Short-term · Long-term · Knowledge', '短期 · 长期 · 知识库')}</p>
+          </div>
+          <ChevronRight className="w-3 h-3 text-text-muted ml-auto" />
+        </div>
+        <div onClick={onClickMemory}
+          className="flex-1 rounded-lg border border-border px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf618' }}>
+            <span className="text-sm">🔗</span>
+          </div>
+          <div>
+            <p className="text-[10px] font-medium text-text-secondary">{t('Shared Context', '共享上下文')}</p>
+            <p className="text-[9px] text-text-muted">{t('Agent ↔ Agent context pool', 'Agent ↔ Agent 上下文池')}</p>
+          </div>
+          <ChevronRight className="w-3 h-3 text-text-muted ml-auto" />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -890,10 +892,10 @@ export default function Agents() {
 
       {/* ─── Main: Agent Topology + Team Panel ─── */}
       <div className="flex gap-4" style={{ minHeight: 420 }}>
-        {/* Left: SVG topology */}
-        <div className="flex-1 bg-bg-card rounded-xl border border-border overflow-hidden relative min-w-0">
-          {/* Mode toggle header */}
-          <div className="absolute top-3 left-4 right-4 z-10 flex items-center gap-3">
+        {/* Left: Topology */}
+        <div className="flex-1 bg-bg-card rounded-xl border border-border overflow-hidden min-w-0 flex flex-col">
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border shrink-0">
             <Radio className="w-4 h-4 text-accent-cyan shrink-0" />
             <span className="text-xs font-medium text-text-secondary">{t('Agent Topology', 'Agent拓扑')}</span>
             <div className="ml-auto flex items-center bg-bg-primary rounded-lg border border-border overflow-hidden">
@@ -907,19 +909,12 @@ export default function Agents() {
               </button>
             </div>
           </div>
-          <div className="pt-8">
+          {/* Topology content */}
+          <div className="flex-1 overflow-auto">
             {topoMode === 'direct'
               ? <DirectRoutingTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onClickConvHistory={() => setTeamTab('context')} onClickMemory={() => navigate('/knowledge')} t={t} />
               : <HierarchicalTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onClickMemory={() => navigate('/knowledge')} t={t} />
             }
-          </div>
-          {/* Legend */}
-          <div className="absolute bottom-3 left-4 flex items-center gap-4 text-[10px] text-text-muted">
-            <span className="flex items-center gap-1"><span className="w-6 h-0.5 bg-accent-cyan inline-block" /> {t('A2A-T Link', 'A2A-T链路')}</span>
-            <span className="flex items-center gap-1"><span className="w-6 h-0.5 bg-purple-500/40 inline-block" style={{ borderTop: '1px dashed' }} /> {t('Peer Collab', '对等协作')}</span>
-            <span className="flex items-center gap-1.5 ml-2">
-              <span className="w-2 h-2 rounded-full bg-status-green inline-block dot-pulse" /> {t('Active', '活跃')}
-            </span>
           </div>
         </div>
 

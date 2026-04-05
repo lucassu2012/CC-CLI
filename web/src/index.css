@@ -82,3 +82,8 @@ body {
   animation: blink 0.8s infinite;
   color: #06b6d4;
 }
+
+@keyframes flowPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
