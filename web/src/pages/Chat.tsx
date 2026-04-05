@@ -131,7 +131,7 @@ export default function Chat() {
       const userEcho: ChatMessage = {
         id: `echo-${s.id}`,
         role: 'user',
-        content: s.textZh || s.text,
+        content: t(s.text, s.textZh),
         timestamp: response.timestamp,
       };
       setDisplayedMessages(prev => [...prev, userEcho]);
@@ -258,7 +258,7 @@ export default function Chat() {
             return steps.length > 0 ? steps.map((step, i) => (
               <div key={i} className={`border rounded-lg p-2.5 transition-all duration-300 ${phaseColors[step.phase]} ${isTyping && i === thinkingIdx ? 'ring-1 ring-accent-cyan/50' : ''}`}>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider">{step.phase}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider">{t(step.phase, step.phaseZh)}</span>
                   <span className="text-[10px] opacity-60">{step.timestamp}</span>
                   {isTyping && i === thinkingIdx && <Loader2 className="w-3 h-3 animate-spin ml-auto" />}
                 </div>

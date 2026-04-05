@@ -142,50 +142,148 @@ export const storyChurnPrevention: ScenarioData = {
   ],
   chatConversations: [
     {
-      id: 'conv-churn-analysis', title: 'High-Value Churn Prevention Campaign', titleZh: '高价值用户流失预防活动', domain: 'marketing',
+      id: 'conv-churn-analysis', title: 'High-Value Churn Prevention', titleZh: '高价值用户流失预防', domain: 'marketing',
       messages: [
-        { id: 'msg-c1', role: 'system', content: '⚠️ CHURN RISK ALERT: 2,847 high-value users (ARPU>¥300) flagged with elevated churn probability (avg 0.72).', timestamp: '09:00:00' },
-        { id: 'msg-c2', role: 'user', content: 'Analyze the churn risk situation and recommend retention strategies.', timestamp: '09:00:30' },
-        { id: 'msg-c3', role: 'assistant', content: '## Churn Risk Analysis Report\n\nI\'ve completed a comprehensive analysis of **2,847 high-value users** showing churn risk signals.\n\n### Churn Drivers (Ranked by Impact):\n1. **Competitor Promotion** (38%): China Unicom ¥99 5G package — aggressive SMS targeting our users\n2. **QoE Degradation** (28%): Avg QoE dropped to 3.2 in Futian CBD; 340 VIP users affected\n3. **Repeated Complaints** (22%): 156 Diamond users with 3+ calls in 30 days\n4. **Usage Decline** (12%): 892 users with >30% MoM data usage drop\n\n### User Micro-Segments:\n| Segment | Count | Primary Driver | Recommended Action |\n|---------|-------|---------------|--------------------|\n| Price-Sensitive Switchers | 892 | Competitor pricing | Matched value offer + loyalty bonus |\n| Experience Frustrated | 340 | QoE degradation | Network optimization + premium QoS |\n| Service Dissatisfied | 156 | Complaint history | Dedicated service + compensation |\n| Silent Churners | 1,459 | Usage decline | Proactive engagement + personalized content |\n\n### Projected Impact:\n- **Retention Rate**: 78.5% (vs 66.2% baseline)\n- **Revenue Protected**: ¥4.2M/month\n- **Campaign ROI**: 4.2x',
+        {
+          id: 'msg-c1', role: 'system',
+          content: '⚠️ 流失预警：2,847名高价值用户（ARPU>¥300）流失概率升高（均值0.72）。已自动启动多维分析。',
+          timestamp: '09:00:00',
+        },
+        {
+          id: 'msg-c2', role: 'user',
+          content: '分析当前流失风险态势，给出挽留建议。',
+          timestamp: '09:00:30',
+        },
+        {
+          id: 'msg-c3', role: 'assistant',
+          content: '**高价值用户流失风险分析完成**\n\n已完成 **2,847名** 高价值用户（ARPU>¥300）的多维流失分析。\n\n**流失驱动因素排名：**\n1. **竞对促销**（38%）：联通¥99 5G套餐，短信精准营销我方用户\n2. **QoE劣化**（28%）：福田CBD区QoE降至3.2，340名VIP受影响\n3. **重复投诉**（22%）：156名钻石卡用户30天内投诉3+次\n4. **用量衰减**（12%）：892名用户月环比数据用量下降>30%\n\n**用户微细分：**\n| 细分群 | 人数 | 主因 | 建议措施 |\n|--------|------|------|----------|\n| 价格敏感型 | 892 | 竞对资费 | 匹配价值方案+忠诚度奖励 |\n| 体验不满型 | 340 | QoE劣化 | 网络优化+VIP QoS |\n| 服务不满型 | 156 | 投诉历史 | 专属客服+补偿 |\n| 沉默流失型 | 1,459 | 用量下降 | 主动关怀+个性化内容 |\n\n**预期效果：**\n- 挽留率：78.5%（基线66.2%）\n- 保护月收入：**¥420万**\n- 营销ROI：**4.2倍**',
           timestamp: '09:01:15',
           toolCalls: [
-            { id: 'tc-c1', name: 'crm_get_churn_scores', status: 'completed', input: '{ "segment": "high-value", "arpu_min": 300, "risk_threshold": 0.6 }', output: '2,847 users, avg churn prob 0.72', duration: '3.2s' },
-            { id: 'tc-c2', name: 'cem_get_qoe_scores', status: 'completed', input: '{ "segment": "at-risk-high-value", "area": "all" }', output: 'Avg QoE 3.8, Futian 3.2, 340 below threshold', duration: '2.1s' },
-            { id: 'tc-c3', name: 'crm_get_complaints', status: 'completed', input: '{ "min_calls": 3, "days": 30, "tier": "diamond" }', output: '156 users: billing 45%, network 32%, service 23%', duration: '1.8s' },
-            { id: 'tc-c4', name: 'marketing_generate_offers', status: 'completed', input: '{ "segments": 8, "personalization": true }', output: '6 templates, 2847 variants, est. ROI 4.2x', duration: '5.5s' },
+            { id: 'tc-c1', name: 'ChurnScoringTool', status: 'completed', input: '高价值用户流失评分：ARPU>300, 阈值0.6', output: '2847用户, 均值流失概率0.72', duration: '3.2s' },
+            { id: 'tc-c2', name: 'CEMQueryTool', status: 'completed', input: '查询高危用户QoE评分', output: '均值3.8, 福田3.2, 340人低于阈值', duration: '2.1s' },
+            { id: 'tc-c3', name: 'ComplaintAnalysisTool', status: 'completed', input: '钻石卡30天投诉>=3次', output: '156用户: 资费45%, 网络32%, 服务23%', duration: '1.8s' },
+            { id: 'tc-c4', name: 'OfferGenerationTool', status: 'completed', input: '8细分群个性化方案生成', output: '6模板, 2847变体, 预估ROI 4.2倍', duration: '5.5s' },
           ],
           thinkingSteps: [
             { phase: 'Think', phaseZh: '思考', content: 'Detecting multi-dimensional churn signals: competitor promotion, QoE degradation in Futian, complaint clustering, and usage decline. Need cross-reference CRM, CEM, and usage analytics.', contentZh: '检测多维流失信号：竞对促销、福田区QoE劣化、投诉聚集、用量下降。需交叉分析CRM、CEM和使用分析数据。', timestamp: '09:00:32' },
-            { phase: 'Act', phaseZh: '行动', content: 'Querying CRM churn model, CEM QoE, complaint history, usage trends. Running micro-segmentation on 47 behavioral features.', contentZh: '查询CRM流失模型、CEM QoE、投诉历史和使用趋势。对47个行为特征运行微细分。', timestamp: '09:00:40' },
+            { phase: 'Act', phaseZh: '执行', content: 'Querying CRM churn model, CEM QoE, complaint history, usage trends. Running micro-segmentation on 47 behavioral features.', contentZh: '查询CRM流失模型、CEM QoE、投诉历史和使用趋势。对47个行为特征运行微细分。', timestamp: '09:00:40' },
             { phase: 'Observe', phaseZh: '观察', content: 'Identified 4 churn driver clusters. Competitor pricing #1 (38%), but QoE issues affect highest-value users. Multi-pronged strategy needed.', contentZh: '识别4个流失驱动聚类。竞对价格第一(38%)，但QoE影响最高价值用户。需多管齐下策略。', timestamp: '09:00:55' },
-            { phase: 'Reflect', phaseZh: '反思', content: 'Price matching alone insufficient — QoE frustrated users need network optimization first. Recommend parallel tracks: retention offers + network quality improvement + complaint resolution.', contentZh: '仅价格匹配不够——QoE不满用户需先网络优化。建议并行：挽留方案+网络质量提升+投诉解决。', timestamp: '09:01:05' },
+            { phase: 'Reflect', phaseZh: '评估', content: 'Price matching alone insufficient — QoE frustrated users need network optimization first. Recommend parallel tracks: retention offers + network quality + complaint resolution.', contentZh: '仅价格匹配不够——QoE不满用户需先网络优化。建议并行：挽留方案+网络质量提升+投诉解决。', timestamp: '09:01:05' },
           ],
           suggestions: [
-            { id: 'sug-c1', text: 'Launch retention campaign now', textZh: '立即启动挽留营销', type: 'approve' },
-            { id: 'sug-c2', text: 'Review compensation packages first', textZh: '先审核补偿方案', type: 'explore' },
-            { id: 'sug-c3', text: 'Escalate QoE issue to network team', textZh: '将QoE问题上报网络团队', type: 'explore' },
+            { id: 'sc1', text: 'Approve: Launch retention campaign', textZh: '批准：立即启动挽留营销', type: 'approve' },
+            { id: 'sc2', text: 'Explore: View per-segment offer details', textZh: '深入：查看各细分群方案详情', type: 'explore' },
+            { id: 'sc3', text: 'Modify: Escalate QoE issue to network team first', textZh: '调整：优先将QoE问题上报网络团队', type: 'modify' },
+            { id: 'sc4', text: 'Reject: Need finance approval first', textZh: '拒绝：需先获得财务审批', type: 'reject' },
           ],
+          suggestionResponses: {
+            'sc1': {
+              id: 'msg-r-sc1', role: 'assistant',
+              content: '**挽留营销已启动执行**\n\n**多渠道投放进度：**\n| 渠道 | 发送 | 送达 | 打开 | 接受 |\n|------|------|------|------|------|\n| APP推送 | 2,847 | 2,790(98%) | 1,450(52%) | 520(18.3%) |\n| 短信 | 2,847 | 2,820(99%) | 1,680(60%) | 380(13.5%) |\n| 微信 | 2,100 | 2,065(98%) | 1,230(60%) | 450(21.8%) |\n| 外呼 | 500 | 485(97%) | 485(100%) | 310(63.9%) |\n\n**实时指标（启动20分钟）：**\n- 触达去重用户：**1,890人**（多渠道去重）\n- 响应用户：**892人**（47.2%）\n- 接受方案：**698人**（响应者的78.3%）\n- 已保护月收入：**¥280万**\n\n**TOP3最佳方案：**\n1. 🏆 忠诚奖励包 — 89%接受率（8折+50GB赠送）\n2. VIP体验升级 — 76%接受率（优先QoS+专属客服）\n3. 续约奖励 — 71%接受率（终端优惠）\n\n**自动优化：** AI已根据实时数据调整投放策略，外呼优先分配给高风险用户。',
+              timestamp: '09:25:00',
+              toolCalls: [
+                { id: 'tc-sc1-1', name: 'CampaignLaunchTool', status: 'completed', input: '启动4渠道挽留营销, 2847用户', output: '营销启动成功, 4渠道并行投放', duration: '3.5s' },
+                { id: 'tc-sc1-2', name: 'CampaignMetricsTool', status: 'completed', input: '实时查询营销指标', output: '1890触达, 892响应, 698接受', duration: '1.5s' },
+              ],
+              thinkingSteps: [
+                { phase: 'Think', phaseZh: '思考', content: 'Campaign approved. Need to launch across 4 channels simultaneously with personalized variants for each micro-segment.', contentZh: '营销已批准。需在4个渠道同时启动，为每个微细分群提供个性化变体。', timestamp: '09:01:20' },
+                { phase: 'Act', phaseZh: '执行', content: 'Launching multi-channel campaign: APP push, SMS, WeChat, outbound calls. Personalizing 2,847 offer variants.', contentZh: '启动多渠道营销：APP推送、短信、微信、外呼。个性化2,847个方案变体。', timestamp: '09:01:30' },
+                { phase: 'Observe', phaseZh: '观察', content: 'After 20 min: 47.2% response rate, 78.3% acceptance among respondents. Outbound calls highest conversion at 63.9%.', contentZh: '20分钟后：47.2%响应率，响应者中78.3%接受。外呼转化率最高63.9%。', timestamp: '09:20:00' },
+                { phase: 'Reflect', phaseZh: '评估', content: 'Campaign exceeding 75% acceptance target. Auto-optimizing channel allocation — prioritizing outbound for highest-risk users.', contentZh: '营销超过75%接受率目标。自动优化渠道分配——对最高风险用户优先外呼。', timestamp: '09:24:00' },
+              ],
+              suggestions: [
+                { id: 'sc5', text: 'Scale up outbound calls for remaining high-risk', textZh: '扩大外呼覆盖剩余高风险用户', type: 'approve' },
+                { id: 'sc6', text: 'View A/B test results by segment', textZh: '查看各细分群A/B测试结果', type: 'explore' },
+              ],
+            },
+            'sc2': {
+              id: 'msg-r-sc2', role: 'assistant',
+              content: '**各细分群挽留方案详情**\n\n**1. 价格敏感型（892人，ARPU ¥320）**\n- 方案：匹配价值套餐¥99 + 忠诚度积分2000\n- 赠送：50GB流量/月 × 3个月\n- 预估挽留率：82%\n- 成本/人：¥45 | 预期LTV保护：¥3,840\n\n**2. 体验不满型（340人，ARPU ¥580）**\n- 方案：VIP体验升级（优先QoS承载+专属客服热线）\n- 网络侧：福田区定向优化已排期\n- 预估挽留率：75%\n- 成本/人：¥20 | 预期LTV保护：¥6,960\n\n**3. 服务不满型（156人，ARPU ¥450）**\n- 方案：专属客服经理 + ¥100话费补偿 + 问题跟进\n- 投诉根因已分析：资费45%、网络32%、服务23%\n- 预估挽留率：68%\n- 成本/人：¥100 | 预期LTV保护：¥5,400\n\n**4. 沉默流失型（1,459人，ARPU ¥310）**\n- 方案：主动关怀电话 + 个性化内容推荐 + 限时福利\n- AI分析用户偏好：视频62%、游戏21%、阅读17%\n- 预估挽留率：71%\n- 成本/人：¥30 | 预期LTV保护：¥3,720\n\n**总预算：** ¥98,500 | **预期保护收入：** ¥420万/月 | **ROI：42.6倍**',
+              timestamp: '09:02:00',
+              toolCalls: [
+                { id: 'tc-sc2-1', name: 'OfferDetailTool', status: 'completed', input: '查询4细分群方案详情及ROI', output: '4方案, 总预算¥98,500, ROI 42.6x', duration: '2.8s' },
+                { id: 'tc-sc2-2', name: 'UserPreferenceTool', status: 'completed', input: '沉默流失群体偏好分析', output: '视频62%, 游戏21%, 阅读17%', duration: '1.9s' },
+              ],
+              thinkingSteps: [
+                { phase: 'Think', phaseZh: '思考', content: 'User wants segment-level detail. Need per-segment offer specifics, cost analysis, and expected ROI breakdown.', contentZh: '用户需要细分群级别的详情。需每群方案具体内容、成本分析和预期ROI拆分。', timestamp: '09:00:32' },
+                { phase: 'Act', phaseZh: '执行', content: 'Querying offer engine for 4-segment detailed plans with cost/LTV modeling.', contentZh: '查询方案引擎获取4个细分群的详细计划及成本/LTV模型。', timestamp: '09:00:40' },
+                { phase: 'Observe', phaseZh: '观察', content: 'Total budget ¥98,500 for 2,847 users. Expected ROI 42.6x. Price-sensitive segment highest volume, experience segment highest per-user value.', contentZh: '2,847用户总预算¥98,500。预期ROI 42.6倍。价格敏感群数量最多，体验不满群人均价值最高。', timestamp: '09:01:50' },
+                { phase: 'Reflect', phaseZh: '评估', content: 'ROI very strong. Recommend prioritizing experience-frustrated segment (highest ARPU) and scaling outbound for silent churners.', contentZh: 'ROI非常强。建议优先体验不满群（最高ARPU），对沉默流失群扩大外呼。', timestamp: '09:01:55' },
+              ],
+            },
+            'sc3': {
+              id: 'msg-r-sc3', role: 'assistant',
+              content: '**QoE问题已上报网络优化团队**\n\n**福田CBD QoE劣化详情：**\n- 区域：福田CBD 3.2km²范围\n- 受影响站点：8个5G基站\n- QoE评分：3.2（目标4.0）\n- 根因：频繁切换+上行干扰\n\n**网络侧已触发：**\n1. ✅ Optimization Agent已接收工单\n2. ✅ 自动参数优化启动（A3偏移+CIO调整）\n3. ✅ 8站点RF优化排期（今日14:00前完成）\n4. 🔄 QoE预计恢复至3.8+（优化后2小时内）\n\n**并行挽留策略调整：**\n- 340名体验不满用户暂缓营销触达\n- 待QoE恢复后发送"网络已优化"关怀通知\n- 预计挽留率从75%提升至85%（先修后留更有效）\n\n**剩余2,507名用户** 可先行启动营销，是否批准？',
+              timestamp: '09:02:30',
+              toolCalls: [
+                { id: 'tc-sc3-1', name: 'NetworkOptTriggerTool', status: 'completed', input: '触发福田CBD区域优化工单', output: '工单已派发, 8站点优化排期14:00', duration: '2.1s' },
+                { id: 'tc-sc3-2', name: 'CampaignAdjustTool', status: 'completed', input: '暂缓体验不满群340人营销', output: '已调整, 剩余2507人可先行', duration: '0.8s' },
+              ],
+              thinkingSteps: [
+                { phase: 'Think', phaseZh: '思考', content: 'User prefers fixing network first before retention marketing for QoE-frustrated users. Smart approach — fixing root cause improves retention effectiveness.', contentZh: '用户倾向先修网络再做挽留营销。聪明的方法——修复根因可提高挽留效果。', timestamp: '09:00:35' },
+                { phase: 'Act', phaseZh: '执行', content: 'Triggering network optimization work order for Futian CBD. Adjusting campaign to exclude 340 QoE-affected users temporarily.', contentZh: '触发福田CBD网络优化工单。调整营销方案临时排除340名QoE受影响用户。', timestamp: '09:00:50' },
+                { phase: 'Observe', phaseZh: '观察', content: 'Network optimization scheduled for today 14:00. 340 users paused from campaign. Remaining 2,507 ready for immediate campaign.', contentZh: '网络优化排期今日14:00。340用户暂停营销。剩余2,507人可立即启动营销。', timestamp: '09:02:20' },
+                { phase: 'Reflect', phaseZh: '评估', content: 'Parallel approach: fix network for 340 high-ARPU users while campaigning 2,507 others. Expected overall retention improvement from 78.5% to 82%.', contentZh: '并行方案：修网络服务340高ARPU用户，同时营销其余2,507人。预计整体挽留率从78.5%提升至82%。', timestamp: '09:02:25' },
+              ],
+            },
+          },
         },
       ],
     },
     {
-      id: 'conv-retention-exec', title: 'Retention Campaign Execution', titleZh: '挽留营销执行', domain: 'marketing',
+      id: 'conv-retention-exec', title: 'Retention Campaign Live Tracking', titleZh: '挽留营销实时追踪', domain: 'marketing',
       messages: [
-        { id: 'msg-r1', role: 'system', content: '📊 Retention campaign launched: 6 offer templates, 2,847 personalized variants across 4 channels.', timestamp: '09:10:00' },
-        { id: 'msg-r2', role: 'user', content: 'How is the retention campaign performing? Show me real-time metrics.', timestamp: '09:30:00' },
-        { id: 'msg-r3', role: 'assistant', content: '## Campaign Performance Dashboard\n\n### Channel Performance:\n| Channel | Sent | Delivered | Opened | Accepted |\n|---------|------|-----------|--------|----------|\n| APP Push | 2,847 | 2,790 (98%) | 1,450 (52%) | 520 (18.3%) |\n| SMS | 2,847 | 2,820 (99%) | 1,680 (60%) | 380 (13.5%) |\n| WeChat | 2,100 | 2,065 (98.3%) | 1,230 (60%) | 450 (21.8%) |\n| Outbound Call | 500 | 485 (97%) | 485 (100%) | 310 (63.9%) |\n\n### Overall Metrics:\n- **Total Contacted**: 1,890 unique users (multi-channel dedup)\n- **Total Responded**: 892 (47.2%)\n- **Offers Accepted**: 698 (78.3% of respondents)\n- **Revenue Protected So Far**: ¥2.8M/month\n\n### Top Performing Offers:\n1. 🏆 **Loyalty Bonus Pack** — 89% acceptance (20% discount + 50GB bonus)\n2. **VIP Experience Upgrade** — 76% acceptance (priority QoS + dedicated support)\n3. **Contract Renewal Reward** — 71% acceptance (device upgrade discount)',
+        { id: 'msg-r1', role: 'system', content: '📊 挽留营销已启动：6套方案模板，2,847个个性化变体，4渠道并行投放中。', timestamp: '09:10:00' },
+        { id: 'msg-r2', role: 'user', content: '营销活动效果如何？给我实时数据。', timestamp: '09:30:00' },
+        {
+          id: 'msg-r3', role: 'assistant',
+          content: '**营销活动实时效果报告（启动20分钟）**\n\n**渠道表现：**\n| 渠道 | 发送 | 送达率 | 打开率 | 接受率 |\n|------|------|--------|--------|--------|\n| APP推送 | 2,847 | 98% | 52% | 18.3% |\n| 短信 | 2,847 | 99% | 60% | 13.5% |\n| 微信 | 2,100 | 98% | 60% | 21.8% |\n| 外呼 | 500 | 97% | 100% | 63.9% |\n\n**汇总指标：**\n- 触达去重用户：1,890人\n- 总响应：892人（47.2%）\n- 方案接受：698人（78.3%响应率）\n- 已保护月收入：**¥280万**（目标¥420万的66.7%）\n\n**AI洞察：**\n- 外呼转化率最高（63.9%）但覆盖有限\n- 微信数字渠道效果最佳（21.8%）\n- "忠诚奖励包"方案跨渠道表现一致优秀\n- 建议：扩大高风险用户外呼覆盖',
           timestamp: '09:30:30',
           toolCalls: [
-            { id: 'tc-r1', name: 'campaign_get_metrics', status: 'completed', input: '{ "campaign_id": "churn-retention-2847", "realtime": true }', output: '1890 contacted, 892 responded, 698 accepted', duration: '1.5s' },
+            { id: 'tc-r1', name: 'CampaignMetricsTool', status: 'completed', input: '查询营销实时指标(去重)', output: '1890触达, 892响应, 698接受', duration: '1.5s' },
+            { id: 'tc-r2', name: 'ChannelAnalysisTool', status: 'completed', input: '渠道效果对比分析', output: '外呼63.9%最高, 微信21.8%数字最佳', duration: '2.0s' },
           ],
           thinkingSteps: [
-            { phase: 'Think', phaseZh: '思考', content: 'Campaign running for 20 minutes. Need real-time performance across all 4 channels with deduplication.', contentZh: '营销活动运行20分钟。需要跨4个渠道的实时去重表现数据。', timestamp: '09:30:02' },
-            { phase: 'Observe', phaseZh: '观察', content: 'Outbound calls have highest acceptance (63.9%) but lowest scale. WeChat has best digital acceptance (21.8%). Overall 78.3% of respondents accepted — exceeding 75% target.', contentZh: '外呼接受率最高(63.9%)但规模最小。微信数字接受率最佳(21.8%)。整体78.3%响应者接受——超过75%目标。', timestamp: '09:30:25' },
+            { phase: 'Think', phaseZh: '思考', content: 'Campaign running 20 minutes. Need real-time cross-channel metrics with deduplication and conversion funnel analysis.', contentZh: '营销运行20分钟。需实时跨渠道去重指标和转化漏斗分析。', timestamp: '09:30:02' },
+            { phase: 'Act', phaseZh: '执行', content: 'Querying campaign metrics API with real-time deduplication across 4 channels.', contentZh: '查询营销指标API，实时跨4渠道去重统计。', timestamp: '09:30:05' },
+            { phase: 'Observe', phaseZh: '观察', content: 'Outbound highest conversion (63.9%) but limited scale. WeChat best digital (21.8%). Overall 78.3% acceptance exceeds 75% target.', contentZh: '外呼转化最高(63.9%)但规模有限。微信数字渠道最佳(21.8%)。整体78.3%接受率超过75%目标。', timestamp: '09:30:25' },
+            { phase: 'Reflect', phaseZh: '评估', content: 'Good trajectory. Recommend scaling outbound for remaining high-risk users to maximize conversion. Revenue protection on track.', contentZh: '趋势良好。建议扩大外呼覆盖剩余高风险用户以最大化转化。收入保护进度正常。', timestamp: '09:30:28' },
           ],
           suggestions: [
-            { id: 'sug-r1', text: 'Scale up outbound calls for high-risk users', textZh: '对高风险用户扩大外呼规模', type: 'approve' },
-            { id: 'sug-r2', text: 'View per-segment breakdown', textZh: '查看各细分群详情', type: 'explore' },
+            { id: 'sr1', text: 'Approve: Scale up outbound calls', textZh: '批准：扩大外呼规模', type: 'approve' },
+            { id: 'sr2', text: 'Explore: View per-segment breakdown', textZh: '深入：查看各细分群详情', type: 'explore' },
+            { id: 'sr3', text: 'Explore: Competitor response analysis', textZh: '深入：竞对响应分析', type: 'explore' },
           ],
+          suggestionResponses: {
+            'sr1': {
+              id: 'msg-r-sr1', role: 'assistant',
+              content: '**外呼扩容已执行**\n\n**调整措施：**\n1. ✅ 外呼坐席从50人扩至120人\n2. ✅ 优先拨打流失概率>0.85的用户（326人）\n3. ✅ AI话术推荐已启用（根据用户画像匹配最佳话术）\n4. ✅ 实时情感分析辅助坐席\n\n**预测效果：**\n- 新增外呼触达：+800人\n- 预计新增接受：+480人（60%转化率）\n- 累计保护月收入：¥280万→**¥380万**\n- 剩余缺口约¥40万将通过二次触达覆盖\n\n**自动化排期：**\n- 10:00 — 第二波外呼启动\n- 14:00 — 福田网络优化完成后触发340人关怀\n- 18:00 — 未响应用户第二次推送',
+              timestamp: '09:31:00',
+              toolCalls: [
+                { id: 'tc-sr1-1', name: 'OutboundScaleTool', status: 'completed', input: '外呼坐席扩容50→120, AI话术启用', output: '扩容完成, 326高风险用户优先队列', duration: '2.5s' },
+              ],
+              thinkingSteps: [
+                { phase: 'Think', phaseZh: '思考', content: 'Outbound has highest conversion. Scaling from 50 to 120 agents. Need to prioritize highest-risk users.', contentZh: '外呼转化率最高。从50人扩至120人。需优先处理最高风险用户。', timestamp: '09:30:32' },
+                { phase: 'Act', phaseZh: '执行', content: 'Scaling outbound capacity and enabling AI script recommendation for personalized conversations.', contentZh: '扩大外呼容量并启用AI话术推荐实现个性化对话。', timestamp: '09:30:40' },
+                { phase: 'Observe', phaseZh: '观察', content: 'Scale-up complete. 326 high-risk users queued first. AI sentiment analysis active to assist agents.', contentZh: '扩容完成。326高风险用户优先排队。AI情感分析辅助坐席已启用。', timestamp: '09:30:55' },
+                { phase: 'Reflect', phaseZh: '评估', content: 'Projected to reach ¥380M monthly protection. Second-wave campaigns scheduled for remaining gaps.', contentZh: '预计达到月保护收入380万。二次触达已排期覆盖剩余缺口。', timestamp: '09:30:58' },
+              ],
+            },
+            'sr2': {
+              id: 'msg-r-sr2', role: 'assistant',
+              content: '**各细分群营销效果详情**\n\n**1. 价格敏感型（892人）**\n- 触达率：95% | 接受率：72%\n- 最佳方案："忠诚奖励包"（8折+50GB）\n- 状态：✅ 超出预期\n\n**2. 体验不满型（340人）**\n- 状态：⏳ 暂缓（等待网络优化14:00完成）\n- 预计优化后挽留率：85%\n\n**3. 服务不满型（156人）**\n- 触达率：88% | 接受率：58%\n- 专属客服分配：89人已接受\n- 补偿发放：¥8,900\n- 状态：🔄 持续跟进中\n\n**4. 沉默流失型（1,459人）**\n- 触达率：62% | 接受率：45%\n- 主动关怀电话完成：380人\n- AI推荐内容点击率：34%\n- 状态：🔄 二次触达排期中\n\n**关键发现：** 沉默流失群触达率偏低（62%），建议增加晚间时段推送。',
+              timestamp: '09:31:30',
+              toolCalls: [
+                { id: 'tc-sr2-1', name: 'SegmentMetricsTool', status: 'completed', input: '按4细分群拆分营销指标', output: '价格敏感72%, 服务不满58%, 沉默45%', duration: '2.2s' },
+              ],
+              thinkingSteps: [
+                { phase: 'Think', phaseZh: '思考', content: 'Need per-segment breakdown to identify which segments are underperforming and need strategy adjustment.', contentZh: '需要分群拆分以识别哪些细分群表现不佳需要策略调整。', timestamp: '09:30:32' },
+                { phase: 'Act', phaseZh: '执行', content: 'Querying segment-level campaign metrics with conversion funnel analysis.', contentZh: '查询细分群级别营销指标及转化漏斗分析。', timestamp: '09:30:38' },
+                { phase: 'Observe', phaseZh: '观察', content: 'Price-sensitive exceeding target (72%). Silent churners underperforming (45% acceptance, 62% reach). Need evening push timing adjustment.', contentZh: '价格敏感群超出目标(72%)。沉默流失群表现不佳(45%接受率, 62%触达率)。需调整晚间推送时间。', timestamp: '09:31:20' },
+                { phase: 'Reflect', phaseZh: '评估', content: 'Silent churners need different engagement approach. Recommend evening push + video content recommendations aligned with preferences.', contentZh: '沉默流失群需不同触达方式。建议晚间推送+匹配偏好的视频内容推荐。', timestamp: '09:31:25' },
+              ],
+            },
+          },
         },
       ],
     },

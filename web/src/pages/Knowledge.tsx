@@ -448,40 +448,7 @@ export default function Knowledge() {
         </div>
       </div>
 
-      {/* ── SECTION 0: Network.md ── */}
-      <NetworkMdSection />
-
-      {/* ── SECTION 1: Skill Gallery ── */}
-      <div className="mb-5">
-        <div className="flex items-center gap-3 mb-3">
-          <Zap className="w-4 h-4 text-accent-cyan" />
-          <h2 className="text-sm font-semibold text-text-primary">{t('Skill Gallery', 'Skill库')}</h2>
-          <span className="text-xs bg-bg-tertiary text-text-muted px-1.5 py-0.5 rounded-full">{skills.length}</span>
-          <div className="flex items-center gap-1 ml-auto">
-            {SKILL_DOMAINS.map(d => (
-              <button key={d.key} onClick={() => setSkillDomain(d.key)}
-                className={`px-2.5 py-1 rounded-md text-[11px] transition-colors cursor-pointer ${skillDomain === d.key ? `bg-bg-card border border-border ${d.color} font-medium` : 'text-text-muted hover:text-text-secondary'}`}>
-                {t(d.label, d.labelZh)}
-                {d.key !== 'all' && <span className="ml-1 text-[9px] opacity-60">{skills.filter(s => s.domain === d.key).length}</span>}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="grid grid-cols-5 gap-2">
-          {filteredSkills.map(skill => (
-            <SkillCard key={skill.id} skill={skill} selected={selectedSkill?.id === skill.id}
-              onClick={() => { setSelectedSkill(prev => prev?.id === skill.id ? null : skill); setSelected(null); setGenerating(false); }} />
-          ))}
-        </div>
-        {/* Skill Detail inline below gallery */}
-        {selectedSkill && !generating && (
-          <div className="mt-3">
-            <SkillDetail skill={selectedSkill} onClose={() => setSelectedSkill(null)} />
-          </div>
-        )}
-      </div>
-
-      {/* ── SECTION 2: Auto-Generate ── */}
+      {/* ── SECTION 1: Auto-Generate ── */}
       <div className="mb-5">
         <div className="bg-bg-card rounded-xl border border-border p-4">
           <div className="flex items-center justify-between">
@@ -516,7 +483,40 @@ export default function Knowledge() {
         </div>
       </div>
 
-      {/* ── SECTION 3: Knowledge Entries ── */}
+      {/* ── SECTION 2: Skill Gallery ── */}
+      <div className="mb-5">
+        <div className="flex items-center gap-3 mb-3">
+          <Zap className="w-4 h-4 text-accent-cyan" />
+          <h2 className="text-sm font-semibold text-text-primary">{t('Skill Gallery', 'Skill库')}</h2>
+          <span className="text-xs bg-bg-tertiary text-text-muted px-1.5 py-0.5 rounded-full">{skills.length}</span>
+          <div className="flex items-center gap-1 ml-auto">
+            {SKILL_DOMAINS.map(d => (
+              <button key={d.key} onClick={() => setSkillDomain(d.key)}
+                className={`px-2.5 py-1 rounded-md text-[11px] transition-colors cursor-pointer ${skillDomain === d.key ? `bg-bg-card border border-border ${d.color} font-medium` : 'text-text-muted hover:text-text-secondary'}`}>
+                {t(d.label, d.labelZh)}
+                {d.key !== 'all' && <span className="ml-1 text-[9px] opacity-60">{skills.filter(s => s.domain === d.key).length}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-5 gap-2">
+          {filteredSkills.map(skill => (
+            <SkillCard key={skill.id} skill={skill} selected={selectedSkill?.id === skill.id}
+              onClick={() => { setSelectedSkill(prev => prev?.id === skill.id ? null : skill); setSelected(null); setGenerating(false); }} />
+          ))}
+        </div>
+        {/* Skill Detail inline below gallery */}
+        {selectedSkill && !generating && (
+          <div className="mt-3">
+            <SkillDetail skill={selectedSkill} onClose={() => setSelectedSkill(null)} />
+          </div>
+        )}
+      </div>
+
+      {/* ── SECTION 3: Network.md ── */}
+      <NetworkMdSection />
+
+      {/* ── SECTION 4: Knowledge Entries ── */}
       <div className="flex items-center gap-2 mb-3">
         <Book className="w-4 h-4 text-text-muted" />
         <h2 className="text-sm font-semibold text-text-primary">{t('Knowledge Entries', '知识条目')}</h2>

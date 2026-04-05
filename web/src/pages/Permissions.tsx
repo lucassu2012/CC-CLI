@@ -263,11 +263,10 @@ export default function Permissions() {
               </thead>
               <tbody className="divide-y divide-border">
                 {matrix.map((op, i) => (
-                  <tr key={i} className={`transition-colors ${op.highRisk ? 'bg-status-red/5' : 'hover:bg-bg-hover/30'}`}>
+                  <tr key={i} className="transition-colors hover:bg-bg-hover/30">
                     <td className="px-4 py-2 text-text-secondary flex items-center gap-1.5">
-                      {op.highRisk && <AlertTriangle className="w-3 h-3 text-status-red shrink-0" />}
-                      <span className={op.highRisk ? 'text-status-red font-medium' : ''}>{t(op.en, op.zh)}</span>
-                      {op.highRisk && <span className="text-[8px] text-status-red bg-status-red/10 px-1 py-0.5 rounded ml-1 shrink-0">{t('HIGH RISK', '高风险')}</span>}
+                      <span>{t(op.en, op.zh)}</span>
+                      {op.highRisk && <span className="text-[8px] text-text-muted bg-bg-tertiary px-1 py-0.5 rounded ml-1 shrink-0">{t('HIGH RISK', '高风险')}</span>}
                     </td>
                     {op.levels.map((allowed, j) => (
                       <td key={j} className="px-3 py-2 text-center">
@@ -286,7 +285,6 @@ export default function Permissions() {
               <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-status-green" /> {t('Allowed', '允许')}</span>
               <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-status-yellow" /> {t('Approval Required', '需审批')}</span>
               <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-text-muted/30" /> {t('Denied', '禁止')}</span>
-              <span className="flex items-center gap-1 ml-auto"><AlertTriangle className="w-3 h-3 text-status-red" /> {t('High-risk ops require human intervention', '高风险操作需人工干预与决策')}</span>
             </div>
           </div>
         </section>
@@ -335,18 +333,6 @@ export default function Permissions() {
             </div>
           </div>
         </section>
-      </div>
-
-      {/* High-risk operations warning banner */}
-      <div className="bg-status-red/10 border border-status-red/30 rounded-xl px-5 py-3 flex items-center gap-3">
-        <AlertTriangle className="w-5 h-5 text-status-red shrink-0" />
-        <div className="flex-1">
-          <p className="text-xs font-medium text-status-red">{t('High-Risk Operations Require Human Intervention', '高风险操作必须人工干预与决策')}</p>
-          <p className="text-[10px] text-text-muted mt-0.5">{t(
-            'Operations marked as high-risk (Execute changes, Auto-fix, Cross-domain ops, Emergency override, Batch deployment) must have explicit human approval or real-time oversight before execution.',
-            '标记为高风险的操作（执行变更、自动修复、跨域操作、紧急覆盖、批量部署）在执行前必须获得明确的人工审批或实时监督。'
-          )}</p>
-        </div>
       </div>
 
       {/* Level Edit Modal */}
