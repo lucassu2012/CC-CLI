@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bot, ChevronRight, Wrench, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft, Activity, Share2, AlertTriangle, Crown, Radio, ArrowRightLeft } from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { domainAgents as defaultAgents, defaultSupervisor, type DomainAgent, type SubAgent } from '../data/agents';
@@ -506,309 +507,266 @@ const AGENT_ICONS: Record<string, string> = {
 /* ─── Agent Topology SVG — Dual Mode ─── */
 type TopoMode = 'direct' | 'hierarchical';
 
-/* Shared SVG defs for both modes */
+/* Consistent box sizes */
+const BOX_W = 140, BOX_H = 52, AGENT_BOX_W = 120, AGENT_BOX_H = 40;
+
+/* Shared SVG defs */
 function TopoDefs() {
   return (
     <defs>
-      <filter id="glow-hub"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-      <filter id="glow-node"><feGaussianBlur stdDeviation="2.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-      <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" /></marker>
-      <marker id="arr-cyan" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#06b6d4" /></marker>
-      <marker id="arr-blue" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" /></marker>
-      <pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#f59e0b" strokeWidth="1" opacity="0.15" /></pattern>
+      <filter id="glow-n"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+      <marker id="av" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 8 4 L 0 8 z" fill="#64748b" /></marker>
+      <marker id="ac" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 8 4 L 0 8 z" fill="#06b6d4" /></marker>
       <style>{`
-        @keyframes dash-flow { to { stroke-dashoffset: -20; } }
-        .edge-anim { animation: dash-flow 1s linear infinite; }
-        @keyframes dot-pulse { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
-        .dot-pulse { animation: dot-pulse 2s ease-in-out infinite; }
+        @keyframes topo-dash { to { stroke-dashoffset: -16; } }
+        .topo-anim { animation: topo-dash 1.2s linear infinite; }
       `}</style>
     </defs>
   );
 }
 
-/* Grid background lines */
-function SvgGrid({ w, h }: { w: number; h: number }) {
-  return (
-    <g>
-      {Array.from({ length: 8 }, (_, i) => <line key={`gx${i}`} x1={0} y1={i * h / 7} x2={w} y2={i * h / 7} stroke="#1e293b" strokeWidth={0.5} />)}
-      {Array.from({ length: 11 }, (_, i) => <line key={`gy${i}`} x1={i * w / 10} y1={0} x2={i * w / 10} y2={h} stroke="#1e293b" strokeWidth={0.5} />)}
-    </g>
-  );
-}
-
-/* Rounded rect node with hatched fill (agent-squad style) */
-function AgentNode({ x, y, w, h, label, color, icon, onClick, isActive, selected }: {
-  x: number; y: number; w: number; h: number; label: string; color: string; icon?: string;
-  onClick?: () => void; isActive?: boolean; selected?: boolean;
+/* Uniform rounded-rect box — dark fill, single accent border, SVG icon */
+function TopoBox({ x, y, w, h, label, borderColor = '#8b5cf6', svgIcon, onClick, glow }: {
+  x: number; y: number; w: number; h: number; label: string; borderColor?: string;
+  svgIcon?: string; onClick?: () => void; glow?: boolean;
 }) {
   return (
     <g className={onClick ? 'cursor-pointer' : ''} onClick={onClick}>
-      {selected && <rect x={x - 3} y={y - 3} width={w + 6} height={h + 6} rx={10} fill="none" stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 2" />}
-      <rect x={x} y={y} width={w} height={h} rx={8} fill="url(#hatch)" stroke={color} strokeWidth={isActive ? 2 : 1.5} />
-      <rect x={x} y={y} width={w} height={h} rx={8} fill="#111827" opacity={0.85} />
-      <rect x={x} y={y} width={w} height={h} rx={8} fill="none" stroke={color} strokeWidth={isActive ? 2 : 1.5} filter={isActive ? 'url(#glow-node)' : undefined} />
-      {icon && <text x={x + 14} y={y + h / 2 + 1} fill={color} fontSize="12" dominantBaseline="middle" className="pointer-events-none">{icon}</text>}
-      <text x={x + (icon ? 28 : w / 2)} y={y + h / 2 + 1} fill="#e2e8f0" fontSize="10" fontWeight={600}
-        dominantBaseline="middle" textAnchor={icon ? 'start' : 'middle'} className="pointer-events-none">{label}</text>
-      {isActive && <circle cx={x + w - 8} cy={y + 8} r={3} fill="#22c55e" className="dot-pulse" />}
+      {/* Dark pill body */}
+      <rect x={x} y={y} width={w} height={h} rx={h / 2} fill="#0f172a" stroke={borderColor}
+        strokeWidth={1.5} filter={glow ? 'url(#glow-n)' : undefined} />
+      {/* Icon above label */}
+      {svgIcon && (
+        <text x={x + w / 2} y={y + h / 2 - 7} fill={borderColor} fontSize="14" textAnchor="middle" dominantBaseline="middle" className="pointer-events-none">{svgIcon}</text>
+      )}
+      <text x={x + w / 2} y={y + h / 2 + (svgIcon ? 9 : 1)} fill="#e2e8f0" fontSize="10" fontWeight={600} textAnchor="middle" dominantBaseline="middle" className="pointer-events-none">{label}</text>
     </g>
   );
 }
 
-/* Styled process box (Classifier, Select Agent, Agent Processing) */
-function ProcessBox({ x, y, w, h, label, bg, border, icon }: {
-  x: number; y: number; w: number; h: number; label: string; bg: string; border: string; icon?: string;
+/* Agent pill — uniform size with AI icon + domain color left strip */
+function AgentPill({ x, y, label, color, onClick }: {
+  x: number; y: number; label: string; color: string; onClick?: () => void;
+}) {
+  return (
+    <g className={onClick ? 'cursor-pointer' : ''} onClick={onClick}>
+      <rect x={x} y={y} width={AGENT_BOX_W} height={AGENT_BOX_H} rx={8} fill="#0f172a" stroke={color} strokeWidth={1.5} />
+      {/* Left color strip */}
+      <rect x={x} y={y} width={4} height={AGENT_BOX_H} rx={2} fill={color} />
+      {/* AI icon */}
+      <text x={x + 18} y={y + AGENT_BOX_H / 2 + 1} fill={color} fontSize="11" dominantBaseline="middle" className="pointer-events-none">🤖</text>
+      <text x={x + 32} y={y + AGENT_BOX_H / 2 + 1} fill="#e2e8f0" fontSize="9.5" fontWeight={600} dominantBaseline="middle" className="pointer-events-none">{label}</text>
+    </g>
+  );
+}
+
+/* Flat label box (User Input / Response) */
+function LabelBox({ x, y, w, h, label, borderColor = '#475569' }: {
+  x: number; y: number; w: number; h: number; label: string; borderColor?: string;
 }) {
   return (
     <g>
-      <rect x={x} y={y} width={w} height={h} rx={8} fill={bg} stroke={border} strokeWidth={1.5} />
-      {icon && <text x={x + w / 2} y={y + h / 2 - 7} fill={border} fontSize="14" textAnchor="middle" dominantBaseline="middle">{icon}</text>}
-      <text x={x + w / 2} y={y + h / 2 + (icon ? 8 : 1)} fill="#e2e8f0" fontSize="9.5" fontWeight={600} textAnchor="middle" dominantBaseline="middle">{label}</text>
+      <rect x={x} y={y} width={w} height={h} rx={6} fill="#1e293b" stroke={borderColor} strokeWidth={1} />
+      <text x={x + w / 2} y={y + h / 2 + 1} fill="#cbd5e1" fontSize="10" fontWeight={500} textAnchor="middle" dominantBaseline="middle">{label}</text>
     </g>
   );
 }
 
-/* Memory cylinder */
-function MemoryCylinder({ x, y, label }: { x: number; y: number; label: string }) {
-  const w = 120, h = 50;
-  return (
-    <g>
-      <ellipse cx={x + w / 2} cy={y + h} rx={w / 2} ry={8} fill="#1e293b" stroke="#475569" strokeWidth={1} />
-      <rect x={x} y={y + 8} width={w} height={h - 8} fill="#1e293b" stroke="#475569" strokeWidth={1} />
-      <line x1={x} y1={y + 8} x2={x} y2={y + h} stroke="#475569" strokeWidth={1} />
-      <line x1={x + w} y1={y + 8} x2={x + w} y2={y + h} stroke="#475569" strokeWidth={1} />
-      <ellipse cx={x + w / 2} cy={y + 8} rx={w / 2} ry={8} fill="#1e293b" stroke="#475569" strokeWidth={1} />
-      <text x={x + w / 2} y={y + h / 2 + 10} fill="#94a3b8" fontSize="8" textAnchor="middle" dominantBaseline="middle">{label}</text>
-    </g>
-  );
+/* Thin connector line with optional dashed + arrowhead */
+function Conn({ x1, y1, x2, y2, dashed, color = '#64748b', marker = 'av' }: {
+  x1: number; y1: number; x2: number; y2: number; dashed?: boolean; color?: string; marker?: string;
+}) {
+  return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={1} strokeDasharray={dashed ? '5 3' : 'none'} markerEnd={`url(#${marker})`} />;
 }
 
-/* Arrow helper */
-function Arrow({ x1, y1, x2, y2, color = '#64748b', dashed, animated, marker }: {
-  x1: number; y1: number; x2: number; y2: number; color?: string; dashed?: boolean; animated?: boolean; marker?: string;
+/* Curved connector */
+function CConn({ path, dashed, color = '#64748b', marker = 'av' }: {
+  path: string; dashed?: boolean; color?: string; marker?: string;
 }) {
-  return (
-    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={1.5}
-      strokeDasharray={dashed ? '6 4' : 'none'} className={animated ? 'edge-anim' : ''}
-      markerEnd={`url(#${marker || 'arr'})`} />
-  );
-}
-
-/* Curved arrow */
-function CurvedArrow({ path, color = '#64748b', dashed, animated, marker }: {
-  path: string; color?: string; dashed?: boolean; animated?: boolean; marker?: string;
-}) {
-  return (
-    <path d={path} fill="none" stroke={color} strokeWidth={1.5}
-      strokeDasharray={dashed ? '6 4' : 'none'} className={animated ? 'edge-anim' : ''}
-      markerEnd={`url(#${marker || 'arr'})`} />
-  );
+  return <path d={path} fill="none" stroke={color} strokeWidth={1} strokeDasharray={dashed ? '5 3' : 'none'} markerEnd={`url(#${marker})`} />;
 }
 
 /* ─── Mode 1: Direct Routing (Classifier-Based) ─── */
-function DirectRoutingTopology({ agents, onSelectAgent, t }: {
-  agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void; t: (en: string, zh: string) => string;
+function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onClickMemory, t }: {
+  agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void;
+  onClickConvHistory: () => void; onClickMemory: () => void;
+  t: (en: string, zh: string) => string;
 }) {
-  const W = 900, H = 420;
-  // Layout positions
-  const agentRowY = 42, agentW = 108, agentH = 38, agentGap = 12;
-  const totalAgentsW = agents.length * agentW + (agents.length - 1) * agentGap;
-  const agentStartX = (W - totalAgentsW) / 2;
-
-  const classifierX = 160, classifierY = 180, classifierW = 130, classifierH = 70;
-  const selectX = 370, selectY = 190, selectW = 120, selectH = 50;
-  const processX = 570, processY = 190, processW = 140, processH = 50;
-  const convHistX = 300, convHistY = 340;
+  const W = 860, H = 400;
+  // Center row Y
+  const rowY = 170;
+  // Agents row
+  const agentY = 30, agentGap = 10;
+  const totalW = agents.length * AGENT_BOX_W + (agents.length - 1) * agentGap;
+  const agentStartX = (W - totalW) / 2;
+  // Dashed group box around agents
+  const groupPad = 14;
+  const groupX = agentStartX - groupPad, groupY = agentY - groupPad;
+  const groupW = totalW + groupPad * 2, groupH = AGENT_BOX_H + groupPad * 2;
+  // Process boxes
+  const classX = 190, selX = 370, procX = 550;
+  // Conversation history
+  const convX = 340, convY = 310;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 320 }}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 300 }}>
       <TopoDefs />
-      <SvgGrid w={W} h={H} />
+      {/* Subtle background radial */}
+      <circle cx={W / 2} cy={H / 2} r={280} fill="none" stroke="#1e293b" strokeWidth={0.5} opacity={0.4} />
+      <circle cx={W / 2} cy={H / 2} r={180} fill="none" stroke="#1e293b" strokeWidth={0.5} opacity={0.3} />
 
-      {/* Blue "User input" arrow on left */}
-      <line x1={20} y1={classifierY + classifierH / 2} x2={classifierX - 8} y2={classifierY + classifierH / 2} stroke="#3b82f6" strokeWidth={3} markerEnd="url(#arr-blue)" />
-      <text x={12} y={classifierY + classifierH / 2 - 12} fill="#3b82f6" fontSize="10" fontWeight={600}>{t('User input', '用户输入')}</text>
+      {/* User Input label */}
+      <LabelBox x={20} y={rowY} w={100} h={BOX_H} label={t('User Input', '用户输入')} />
+      {/* Arrow → Classifier */}
+      <Conn x1={122} y1={rowY + BOX_H / 2} x2={classX - 2} y2={rowY + BOX_H / 2} />
 
-      {/* Classifier box (green-ish) */}
-      <ProcessBox x={classifierX} y={classifierY} w={classifierW} h={classifierH} label={t('Classifier', '分类器')} bg="#14532d30" border="#22c55e" icon="🧠" />
+      {/* Classifier */}
+      <TopoBox x={classX} y={rowY} w={BOX_W} h={BOX_H} label={t('Classifier', '分类器')} borderColor="#8b5cf6" svgIcon="🔍" glow />
+      {/* Arrow → Select Agent */}
+      <Conn x1={classX + BOX_W} y1={rowY + BOX_H / 2} x2={selX - 2} y2={rowY + BOX_H / 2} />
 
-      {/* Arrow: Classifier → Select Agent */}
-      <Arrow x1={classifierX + classifierW} y1={classifierY + classifierH / 2} x2={selectX - 2} y2={selectY + selectH / 2} animated marker="arr-cyan" color="#06b6d4" />
+      {/* Select Agent */}
+      <TopoBox x={selX} y={rowY} w={BOX_W} h={BOX_H} label={t('Select Agent', '选择Agent')} borderColor="#8b5cf6" svgIcon="☑" />
+      {/* Arrow → Agent Processing */}
+      <Conn x1={selX + BOX_W} y1={rowY + BOX_H / 2} x2={procX - 2} y2={rowY + BOX_H / 2} />
 
-      {/* Select Agent box */}
-      <ProcessBox x={selectX} y={selectY} w={selectW} h={selectH} label={t('Select Agent', '选择Agent')} bg="#1e3a5f30" border="#06b6d4" />
+      {/* Agent Processing */}
+      <TopoBox x={procX} y={rowY} w={BOX_W} h={BOX_H} label={t('Agent Processing', 'Agent处理')} borderColor="#8b5cf6" svgIcon="🔄" glow />
+      {/* Arrow → Response */}
+      <Conn x1={procX + BOX_W} y1={rowY + BOX_H / 2} x2={W - 122} y2={rowY + BOX_H / 2} />
 
-      {/* Arrow: Select Agent → Agent Processing */}
-      <Arrow x1={selectX + selectW} y1={selectY + selectH / 2} x2={processX - 2} y2={processY + processH / 2} animated marker="arr-cyan" color="#06b6d4" />
+      {/* Response label */}
+      <LabelBox x={W - 120} y={rowY} w={100} h={BOX_H} label={t('Response', '响应')} />
 
-      {/* Agent Processing box (blue-ish) */}
-      <ProcessBox x={processX} y={processY} w={processW} h={processH} label={t('Agent Processing', 'Agent处理')} bg="#1e3a5f30" border="#3b82f6" icon="⚡" />
+      {/* Dashed group box for agents */}
+      <rect x={groupX} y={groupY} width={groupW} height={groupH} rx={10} fill="none" stroke="#8b5cf6" strokeWidth={1} strokeDasharray="6 3" opacity={0.5} />
 
-      {/* Blue "Response" arrow on right */}
-      <line x1={processX + processW + 8} y1={processY + processH / 2} x2={W - 20} y2={processY + processH / 2} stroke="#3b82f6" strokeWidth={3} markerEnd="url(#arr-blue)" />
-      <text x={W - 75} y={processY + processH / 2 - 12} fill="#3b82f6" fontSize="10" fontWeight={600}>{t('Response', '响应')}</text>
-
-      {/* Agent cards at top */}
+      {/* Agent pills */}
       {agents.map((a, i) => {
-        const x = agentStartX + i * (agentW + agentGap);
-        const color = AGENT_COLORS[a.id] || '#06b6d4';
-        return (
-          <AgentNode key={a.id} x={x} y={agentRowY} w={agentW} h={agentH} label={t(a.domain, a.domainZh)}
-            color={color} icon={AGENT_ICONS[a.id]} onClick={() => onSelectAgent(a)}
-            isActive={a.status === 'active'} />
-        );
+        const x = agentStartX + i * (AGENT_BOX_W + agentGap);
+        return <AgentPill key={a.id} x={x} y={agentY} label={t(a.domain, a.domainZh)} color={AGENT_COLORS[a.id] || '#8b5cf6'} onClick={() => onSelectAgent(a)} />;
       })}
 
-      {/* "Fetch agents' characteristics" curved arrow from agents down to Classifier */}
-      <CurvedArrow path={`M ${agentStartX - 5} ${agentRowY + agentH / 2} Q ${classifierX - 50} ${agentRowY + agentH / 2}, ${classifierX + 10} ${classifierY - 2}`}
-        color="#94a3b8" dashed marker="arr" />
-      <text x={classifierX - 55} y={agentRowY + agentH + 22} fill="#94a3b8" fontSize="8" textAnchor="start">
-        {t("Fetch agents'", '获取Agent')}
-      </text>
-      <text x={classifierX - 55} y={agentRowY + agentH + 32} fill="#94a3b8" fontSize="8" textAnchor="start">
-        {t('characteristics', '特征信息')}
-      </text>
+      {/* Fetch agent characteristics: curved line from left of agent group down to Classifier */}
+      <CConn path={`M ${groupX} ${agentY + AGENT_BOX_H / 2} Q ${classX - 20} ${agentY + AGENT_BOX_H / 2}, ${classX + 20} ${rowY - 3}`} dashed />
+      <text x={groupX - 8} y={agentY + AGENT_BOX_H + 16} fill="#94a3b8" fontSize="8" textAnchor="start">{t('Fetch agent', '获取Agent')}</text>
+      <text x={groupX - 8} y={agentY + AGENT_BOX_H + 26} fill="#94a3b8" fontSize="8" textAnchor="start">{t('characteristics', '特征信息')}</text>
 
-      {/* Bidirectional arrow from Select Agent up to Agent cards */}
-      <Arrow x1={selectX + selectW / 2} y1={selectY - 2} x2={selectX + selectW / 2} y2={agentRowY + agentH + 4} color="#94a3b8" marker="arr" />
-      <Arrow x1={selectX + selectW / 2 + 8} y1={agentRowY + agentH + 4} x2={selectX + selectW / 2 + 8} y2={selectY - 2} color="#94a3b8" marker="arr" />
+      {/* Select Agent ↔ agent group: vertical bidirectional */}
+      <Conn x1={selX + BOX_W / 2} y1={rowY - 2} x2={selX + BOX_W / 2} y2={groupY + groupH + 3} dashed />
+      <Conn x1={selX + BOX_W / 2 + 8} y1={groupY + groupH + 3} x2={selX + BOX_W / 2 + 8} y2={rowY - 2} dashed />
 
-      {/* Conversation History cylinder at bottom */}
-      <MemoryCylinder x={convHistX} y={convHistY} label={t('Conversation History', '会话历史')} />
+      {/* Conversation History box (clickable) */}
+      <g className="cursor-pointer" onClick={onClickConvHistory}>
+        <TopoBox x={convX} y={convY} w={180} h={BOX_H} label={t('Conversation History', '会话历史')} borderColor="#8b5cf6" svgIcon="💬" />
+      </g>
 
-      {/* Curved arrow: Classifier down to Conversation History (fetch) */}
-      <CurvedArrow path={`M ${classifierX + classifierW / 2 - 10} ${classifierY + classifierH + 2} Q ${classifierX + classifierW / 2 - 10} ${convHistY + 10}, ${convHistX + 120 + 5} ${convHistY + 30}`}
-        color="#94a3b8" dashed marker="arr" />
-      <text x={classifierX - 10} y={convHistY - 5} fill="#94a3b8" fontSize="7.5">
-        {t("Fetch all agents'", '获取所有Agent')}
-      </text>
-      <text x={classifierX - 10} y={convHistY + 5} fill="#94a3b8" fontSize="7.5">
-        {t('conversation history', '会话历史')}
-      </text>
+      {/* Fetch conversation: Classifier → conv history */}
+      <CConn path={`M ${classX + BOX_W / 2} ${rowY + BOX_H + 2} Q ${classX + BOX_W / 2} ${convY + BOX_H / 2}, ${convX - 2} ${convY + BOX_H / 2}`} dashed />
+      <text x={classX + 10} y={convY - 8} fill="#94a3b8" fontSize="7.5">{t('Fetch all agent', '获取所有Agent')}</text>
+      <text x={classX + 10} y={convY + 2} fill="#94a3b8" fontSize="7.5">{t('conversation', '会话')}</text>
 
-      {/* Curved arrow: Agent Processing down to Conversation History (save) */}
-      <CurvedArrow path={`M ${processX + processW / 2} ${processY + processH + 2} Q ${processX + processW / 2} ${convHistY + 30}, ${convHistX + 120 + 5} ${convHistY + 40}`}
-        color="#94a3b8" dashed marker="arr" />
-      <text x={processX + 20} y={convHistY - 5} fill="#94a3b8" fontSize="7.5">
-        {t('Save agent', '保存Agent')}
-      </text>
-      <text x={processX + 20} y={convHistY + 5} fill="#94a3b8" fontSize="7.5">
-        {t('conversation', '会话')}
-      </text>
+      {/* Save conversation: Agent Processing → conv history */}
+      <CConn path={`M ${procX + BOX_W / 2} ${rowY + BOX_H + 2} Q ${procX + BOX_W / 2} ${convY + BOX_H / 2}, ${convX + 182} ${convY + BOX_H / 2}`} dashed />
+      <text x={procX + 20} y={convY - 8} fill="#94a3b8" fontSize="7.5">{t('Save agent', '保存Agent')}</text>
+      <text x={procX + 20} y={convY + 2} fill="#94a3b8" fontSize="7.5">{t('conversation', '会话')}</text>
+
+      {/* Memory box (clickable → Knowledge page) */}
+      <g className="cursor-pointer" onClick={onClickMemory}>
+        <TopoBox x={procX + BOX_W + 40} y={convY} w={130} h={BOX_H} label={t('Memory', '记忆库')} borderColor="#8b5cf6" svgIcon="🗄" />
+      </g>
+      <Conn x1={procX + BOX_W} y1={rowY + BOX_H} x2={procX + BOX_W + 40} y2={convY} dashed />
     </svg>
   );
 }
 
 /* ─── Mode 2: Hierarchical Teams (Supervisor) ─── */
-function HierarchicalTopology({ agents, onSelectAgent, t }: {
-  agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void; t: (en: string, zh: string) => string;
+function HierarchicalTopology({ agents, onSelectAgent, onClickMemory, t }: {
+  agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void;
+  onClickMemory: () => void; t: (en: string, zh: string) => string;
 }) {
-  const W = 900, H = 420;
+  const W = 860, H = 400;
   // Lead Agent box
-  const leadX = 130, leadY = 30, leadW = 200, leadH = 230;
+  const leadX = 110, leadY = 20, leadW = 180, leadH = 210;
   // Team box
-  const teamX = 380, teamY = 30, teamW = 420, teamH = 230;
-  // Supervisor node inside lead box
-  const supX = 170, supY = 100, supW = 130, supH = 50;
-  // Agent positions inside team box
-  const agentW = 115, agentH = 36;
-  const col1X = teamX + 30, col2X = teamX + 200;
-  const row1Y = teamY + 45, row2Y = teamY + 100, row3Y = teamY + 155;
-  const agentPositions = [
-    { x: col2X, y: row1Y },   // planning (top right)
-    { x: col2X, y: row2Y },   // optimization (mid right)
-    { x: col1X, y: row3Y },   // experience (bottom left)
-    { x: col2X, y: row3Y },   // ops (bottom right)
-    { x: col1X, y: row2Y },   // marketing (mid left)
+  const teamX = 360, teamY = 20, teamW = 400, teamH = 210;
+  // Supervisor inside lead
+  const supX = leadX + 20, supY = leadY + 75, supW = BOX_W, supH = BOX_H;
+  // Agent positions (2 cols × 3 rows max)
+  const col1 = teamX + 30, col2 = teamX + 200;
+  const r1 = teamY + 25, r2 = teamY + 85, r3 = teamY + 145;
+  const agentPos = [
+    { x: col1, y: r1 }, // planning
+    { x: col2, y: r1 }, // optimization
+    { x: col1, y: r2 }, // experience
+    { x: col2, y: r2 }, // ops
+    { x: col1, y: r3 }, // marketing
   ];
-  // Memory at bottom
-  const memY = 310;
-  const mem1X = 170, mem2X = 430;
+  // Memory row
+  const memY = 290;
+  const mem1X = leadX + 10, mem2X = teamX + 80;
+  const memW = 150, memH = BOX_H;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 320 }}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 300 }}>
       <TopoDefs />
-      <SvgGrid w={W} h={H} />
+      <circle cx={W / 2} cy={H / 2 - 30} r={260} fill="none" stroke="#1e293b" strokeWidth={0.5} opacity={0.4} />
+
+      {/* User Input / Response */}
+      <LabelBox x={10} y={supY - 16} w={80} h={32} label={t('User Input', '用户输入')} />
+      <Conn x1={92} y1={supY} x2={leadX - 2} y2={supY} />
+      <LabelBox x={10} y={supY + supH - 16} w={80} h={32} label={t('Response', '响应')} />
+      <Conn x1={leadX - 2} y1={supY + supH} x2={92} y2={supY + supH} />
 
       {/* Lead Agent dashed box */}
-      <rect x={leadX} y={leadY} width={leadW} height={leadH} rx={12} fill="none" stroke="#64748b" strokeWidth={1.5} strokeDasharray="8 4" />
-      <text x={leadX + leadW / 2} y={leadY - 8} fill="#94a3b8" fontSize="10" fontWeight={600} textAnchor="middle">{t('Lead Agent', '领导Agent')}</text>
+      <rect x={leadX} y={leadY} width={leadW} height={leadH} rx={10} fill="none" stroke="#64748b" strokeWidth={1} strokeDasharray="6 3" />
+      <text x={leadX + leadW / 2} y={leadY - 6} fill="#94a3b8" fontSize="9" fontWeight={600} textAnchor="middle">{t('Lead Agent', '领导Agent')}</text>
 
       {/* Team dashed box */}
-      <rect x={teamX} y={teamY} width={teamW} height={teamH} rx={12} fill="none" stroke="#64748b" strokeWidth={1.5} strokeDasharray="8 4" />
-      <text x={teamX + teamW / 2} y={teamY - 8} fill="#94a3b8" fontSize="10" fontWeight={600} textAnchor="middle">{t('Team', '团队')}</text>
+      <rect x={teamX} y={teamY} width={teamW} height={teamH} rx={10} fill="none" stroke="#64748b" strokeWidth={1} strokeDasharray="6 3" />
+      <text x={teamX + teamW / 2} y={teamY - 6} fill="#94a3b8" fontSize="9" fontWeight={600} textAnchor="middle">{t('Team', '团队')}</text>
 
-      {/* User input/response arrows */}
-      <line x1={20} y1={supY + supH / 2 - 8} x2={leadX - 2} y2={supY + supH / 2 - 8} stroke="#3b82f6" strokeWidth={3} markerEnd="url(#arr-blue)" />
-      <text x={12} y={supY + supH / 2 - 22} fill="#3b82f6" fontSize="10" fontWeight={600}>{t('User input', '用户输入')}</text>
-      <line x1={leadX - 2} y1={supY + supH / 2 + 12} x2={20} y2={supY + supH / 2 + 12} stroke="#3b82f6" strokeWidth={3} markerEnd="url(#arr-blue)" />
-      <text x={12} y={supY + supH / 2 + 28} fill="#3b82f6" fontSize="10" fontWeight={600}>{t('Response', '响应')}</text>
+      {/* Supervisor pill */}
+      <TopoBox x={supX} y={supY} w={supW} h={supH} label="IOE-Supervisor" borderColor="#06b6d4" svgIcon="👑" glow />
 
-      {/* Supervisor node inside lead box */}
-      <rect x={supX} y={supY} width={supW} height={supH} rx={8} fill="#0e172680" stroke="#06b6d4" strokeWidth={2} filter="url(#glow-hub)" />
-      <text x={supX + supW / 2} y={supY + 18} fill="#06b6d4" fontSize="13" textAnchor="middle">👑</text>
-      <text x={supX + supW / 2} y={supY + 36} fill="#a5f3fc" fontSize="9" textAnchor="middle" fontWeight={600}>IOE-Supervisor</text>
+      {/* Self-loop on supervisor */}
+      <CConn path={`M ${supX + 20} ${supY - 2} Q ${supX - 15} ${supY - 25}, ${supX + supW / 2} ${supY - 3}`} dashed color="#06b6d4" marker="ac" />
 
-      {/* Self-loop arrow on supervisor (internal reasoning) */}
-      <CurvedArrow path={`M ${supX + 15} ${supY - 2} Q ${supX - 20} ${supY - 30}, ${supX + supW / 2} ${supY - 5}`}
-        color="#06b6d4" dashed />
-
-      {/* Arrows from supervisor to each team agent */}
+      {/* Supervisor → each agent */}
       {agents.map((a, i) => {
-        const ap = agentPositions[i];
+        const ap = agentPos[i];
         if (!ap) return null;
-        const fromX = supX + supW;
-        const fromY = supY + supH / 2;
-        const toX = ap.x;
-        const toY = ap.y + agentH / 2;
         return (
-          <g key={`sup-${a.id}`}>
-            <Arrow x1={fromX + 2} y1={fromY} x2={toX - 2} y2={toY} color="#06b6d4" animated dashed marker="arr-cyan" />
-            {a.status === 'active' && (
-              <circle r="2.5" fill="#06b6d4" className="dot-pulse">
-                <animateMotion dur="2.5s" repeatCount="indefinite" path={`M ${fromX + 2} ${fromY} L ${toX - 2} ${toY}`} />
-              </circle>
-            )}
+          <g key={`s-${a.id}`}>
+            <Conn x1={supX + supW} y1={supY + supH / 2} x2={ap.x - 2} y2={ap.y + AGENT_BOX_H / 2} dashed color="#06b6d4" marker="ac" />
           </g>
         );
       })}
 
-      {/* Bidirectional arrow between adjacent agents (team collaboration) */}
-      {[[0, 1], [1, 3], [4, 2]].map(([ai, bi]) => {
-        const a = agentPositions[ai], b = agentPositions[bi];
-        if (!a || !b) return null;
-        return (
-          <line key={`peer-${ai}-${bi}`} x1={a.x + agentW / 2} y1={a.y + agentH + 2} x2={b.x + agentW / 2} y2={b.y - 2}
-            stroke="#8b5cf630" strokeWidth={1} strokeDasharray="3 3" markerEnd="url(#arr)" />
-        );
-      })}
-
-      {/* Team agent nodes */}
+      {/* Agent pills */}
       {agents.map((a, i) => {
-        const ap = agentPositions[i];
+        const ap = agentPos[i];
         if (!ap) return null;
-        const color = AGENT_COLORS[a.id] || '#06b6d4';
-        return (
-          <AgentNode key={a.id} x={ap.x} y={ap.y} w={agentW} h={agentH}
-            label={t(a.domain, a.domainZh)} color={color} icon={AGENT_ICONS[a.id]}
-            onClick={() => onSelectAgent(a)} isActive={a.status === 'active'} />
-        );
+        return <AgentPill key={a.id} x={ap.x} y={ap.y} label={t(a.domain, a.domainZh)} color={AGENT_COLORS[a.id] || '#8b5cf6'} onClick={() => onSelectAgent(a)} />;
       })}
 
-      {/* Memory area background */}
-      <rect x={mem1X - 20} y={memY - 10} width={mem2X - mem1X + 160} height={90} rx={12} fill="#f59e0b08" stroke="#f59e0b20" strokeWidth={1} />
+      {/* Peer collaboration lines */}
+      <Conn x1={col1 + AGENT_BOX_W} y1={r1 + AGENT_BOX_H / 2} x2={col2 - 2} y2={r1 + AGENT_BOX_H / 2} dashed color="#475569" />
+      <Conn x1={col1 + AGENT_BOX_W} y1={r2 + AGENT_BOX_H / 2} x2={col2 - 2} y2={r2 + AGENT_BOX_H / 2} dashed color="#475569" />
 
-      {/* Memory cylinders */}
-      <MemoryCylinder x={mem1X} y={memY} label={t('User ↔ Lead Agent', '用户 ↔ 领导Agent')} />
-      <MemoryCylinder x={mem2X} y={memY} label={t('Lead Agent ↔ Team', '领导Agent ↔ 团队')} />
-      <text x={mem1X + 60} y={memY - 2} fill="#94a3b8" fontSize="8" textAnchor="middle">{t('Memory', '记忆')}</text>
-      <text x={mem2X + 60} y={memY - 2} fill="#94a3b8" fontSize="8" textAnchor="middle">{t('Memory', '记忆')}</text>
+      {/* Memory boxes (clickable) */}
+      <g className="cursor-pointer" onClick={onClickMemory}>
+        <TopoBox x={mem1X} y={memY} w={memW} h={memH} label={t('User ↔ Lead Memory', '用户 ↔ 领导记忆')} borderColor="#8b5cf6" svgIcon="🗄" />
+      </g>
+      <g className="cursor-pointer" onClick={onClickMemory}>
+        <TopoBox x={mem2X} y={memY} w={memW + 40} h={memH} label={t('Lead ↔ Team Memory', '领导 ↔ 团队记忆')} borderColor="#8b5cf6" svgIcon="🗄" />
+      </g>
 
-      {/* Bidirectional arrows from lead/team to memories */}
-      <Arrow x1={leadX + leadW / 2 - 10} y1={leadY + leadH + 2} x2={mem1X + 60} y2={memY - 2} color="#94a3b8" dashed marker="arr" />
-      <Arrow x1={mem1X + 70} y1={memY - 2} x2={leadX + leadW / 2 + 10} y2={leadY + leadH + 2} color="#94a3b8" dashed marker="arr" />
-      <Arrow x1={teamX + teamW / 2 - 50} y1={teamY + teamH + 2} x2={mem2X + 50} y2={memY - 2} color="#94a3b8" dashed marker="arr" />
-      <Arrow x1={mem2X + 70} y1={memY - 2} x2={teamX + teamW / 2 - 30} y2={teamY + teamH + 2} color="#94a3b8" dashed marker="arr" />
+      {/* Arrows to memory */}
+      <Conn x1={leadX + leadW / 2} y1={leadY + leadH + 2} x2={mem1X + memW / 2} y2={memY - 2} dashed />
+      <Conn x1={mem1X + memW / 2 + 10} y1={memY - 2} x2={leadX + leadW / 2 + 10} y2={leadY + leadH + 2} dashed />
+      <Conn x1={teamX + teamW / 2 - 30} y1={teamY + teamH + 2} x2={mem2X + (memW + 40) / 2} y2={memY - 2} dashed />
+      <Conn x1={mem2X + (memW + 40) / 2 + 10} y1={memY - 2} x2={teamX + teamW / 2 - 20} y2={teamY + teamH + 2} dashed />
     </svg>
   );
 }
@@ -846,6 +804,7 @@ function AgentBadge({ agentId, agents, t }: { agentId: string; agents: DomainAge
 /* ─── Main export ─── */
 export default function Agents() {
   const { t } = useText();
+  const navigate = useNavigate();
   const { scenario } = useScenario();
   const domainAgents = scenario?.agents ?? defaultAgents;
   const supervisor = scenario?.supervisor ?? defaultSupervisor;
@@ -932,8 +891,8 @@ export default function Agents() {
           </div>
           <div className="pt-8">
             {topoMode === 'direct'
-              ? <DirectRoutingTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} t={t} />
-              : <HierarchicalTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} t={t} />
+              ? <DirectRoutingTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onClickConvHistory={() => setTeamTab('context')} onClickMemory={() => navigate('/knowledge')} t={t} />
+              : <HierarchicalTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onClickMemory={() => navigate('/knowledge')} t={t} />
             }
           </div>
           {/* Legend */}
@@ -961,7 +920,7 @@ export default function Agents() {
             })}
           </div>
 
-          <div className="flex-1 overflow-auto p-3">
+          <div className="p-3" style={{ maxHeight: 360, overflowY: 'auto' }}>
             {/* Activity Feed */}
             {teamTab === 'activity' && (
               <div className="space-y-2">
