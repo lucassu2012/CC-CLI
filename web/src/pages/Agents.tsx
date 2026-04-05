@@ -504,86 +504,75 @@ const AGENT_ICONS: Record<string, string> = {
   planning: '📐', optimization: '⚡', experience: '👤', ops: '🔧', marketing: '📊',
 };
 
-/* ─── Agent Topology SVG — Dual Mode ─── */
+/* ─── Agent Topology SVG — Dual Mode (n8n-style) ─── */
 type TopoMode = 'direct' | 'hierarchical';
 
-/* Consistent box sizes */
-const BOX_W = 140, BOX_H = 52, AGENT_BOX_W = 120, AGENT_BOX_H = 40;
+/* n8n-style node sizes */
+const NODE_S = 48;   /* square icon node */
+const NODE_R = 10;   /* border radius */
 
-/* Shared SVG defs */
+/* Shared SVG defs — n8n style */
 function TopoDefs() {
   return (
     <defs>
-      <filter id="glow-n"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-      <marker id="av" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 8 4 L 0 8 z" fill="#64748b" /></marker>
-      <marker id="ac" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 8 4 L 0 8 z" fill="#06b6d4" /></marker>
-      <style>{`
-        @keyframes topo-dash { to { stroke-dashoffset: -16; } }
-        .topo-anim { animation: topo-dash 1.2s linear infinite; }
-      `}</style>
+      <filter id="n-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+      <filter id="n-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#000" floodOpacity="0.35" /></filter>
+      <linearGradient id="card-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1e293b" stopOpacity="0.7" /><stop offset="100%" stopColor="#0f172a" stopOpacity="0.9" /></linearGradient>
     </defs>
   );
 }
 
-/* Uniform rounded-rect box — dark fill, single accent border, SVG icon */
-function TopoBox({ x, y, w, h, label, borderColor = '#8b5cf6', svgIcon, onClick, glow }: {
-  x: number; y: number; w: number; h: number; label: string; borderColor?: string;
-  svgIcon?: string; onClick?: () => void; glow?: boolean;
+/* n8n-style square icon node */
+function N8nNode({ x, y, icon, label, color = '#64748b', onClick, active }: {
+  x: number; y: number; icon: string; label: string; color?: string;
+  onClick?: () => void; active?: boolean;
 }) {
+  const cx = x + NODE_S / 2, cy = y + NODE_S / 2;
   return (
     <g className={onClick ? 'cursor-pointer' : ''} onClick={onClick}>
-      {/* Dark pill body */}
-      <rect x={x} y={y} width={w} height={h} rx={h / 2} fill="#0f172a" stroke={borderColor}
-        strokeWidth={1.5} filter={glow ? 'url(#glow-n)' : undefined} />
-      {/* Icon above label */}
-      {svgIcon && (
-        <text x={x + w / 2} y={y + h / 2 - 7} fill={borderColor} fontSize="14" textAnchor="middle" dominantBaseline="middle" className="pointer-events-none">{svgIcon}</text>
-      )}
-      <text x={x + w / 2} y={y + h / 2 + (svgIcon ? 9 : 1)} fill="#e2e8f0" fontSize="10" fontWeight={600} textAnchor="middle" dominantBaseline="middle" className="pointer-events-none">{label}</text>
+      <rect x={x} y={y} width={NODE_S} height={NODE_S} rx={NODE_R} fill="#0f172a" stroke={color} strokeWidth={1.5} filter="url(#n-shadow)" />
+      {active && <rect x={x} y={y} width={NODE_S} height={NODE_S} rx={NODE_R} fill="none" stroke={color} strokeWidth={2} filter="url(#n-glow)" />}
+      <text x={cx} y={cy + 1} fill={color} fontSize="20" textAnchor="middle" dominantBaseline="middle" className="pointer-events-none">{icon}</text>
+      <text x={cx} y={y + NODE_S + 14} fill="#94a3b8" fontSize="9" fontWeight={500} textAnchor="middle" className="pointer-events-none">{label}</text>
     </g>
   );
 }
 
-/* Agent pill — uniform size with AI icon + domain color left strip */
-function AgentPill({ x, y, label, color, onClick }: {
-  x: number; y: number; label: string; color: string; onClick?: () => void;
-}) {
-  return (
-    <g className={onClick ? 'cursor-pointer' : ''} onClick={onClick}>
-      <rect x={x} y={y} width={AGENT_BOX_W} height={AGENT_BOX_H} rx={8} fill="#0f172a" stroke={color} strokeWidth={1.5} />
-      {/* Left color strip */}
-      <rect x={x} y={y} width={4} height={AGENT_BOX_H} rx={2} fill={color} />
-      {/* AI icon */}
-      <text x={x + 18} y={y + AGENT_BOX_H / 2 + 1} fill={color} fontSize="11" dominantBaseline="middle" className="pointer-events-none">🤖</text>
-      <text x={x + 32} y={y + AGENT_BOX_H / 2 + 1} fill="#e2e8f0" fontSize="9.5" fontWeight={600} dominantBaseline="middle" className="pointer-events-none">{label}</text>
-    </g>
-  );
-}
-
-/* Flat label box (User Input / Response) */
-function LabelBox({ x, y, w, h, label, borderColor = '#475569' }: {
-  x: number; y: number; w: number; h: number; label: string; borderColor?: string;
+/* n8n-style group container — translucent rounded box with title */
+function N8nGroup({ x, y, w, h, title, color = '#475569' }: {
+  x: number; y: number; w: number; h: number; title: string; color?: string;
 }) {
   return (
     <g>
-      <rect x={x} y={y} width={w} height={h} rx={6} fill="#1e293b" stroke={borderColor} strokeWidth={1} />
-      <text x={x + w / 2} y={y + h / 2 + 1} fill="#cbd5e1" fontSize="10" fontWeight={500} textAnchor="middle" dominantBaseline="middle">{label}</text>
+      <rect x={x} y={y} width={w} height={h} rx={14} fill="url(#card-bg)" stroke={color} strokeWidth={1} opacity={0.8} />
+      <text x={x + 14} y={y + 18} fill="#cbd5e1" fontSize="10" fontWeight={600} className="pointer-events-none">{title}</text>
     </g>
   );
 }
 
-/* Thin connector line with optional dashed + arrowhead */
-function Conn({ x1, y1, x2, y2, dashed, color = '#64748b', marker = 'av' }: {
-  x1: number; y1: number; x2: number; y2: number; dashed?: boolean; color?: string; marker?: string;
+/* Connector line with small dots at endpoints */
+function N8nLine({ x1, y1, x2, y2, color = '#475569', dashed }: {
+  x1: number; y1: number; x2: number; y2: number; color?: string; dashed?: boolean;
 }) {
-  return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={1} strokeDasharray={dashed ? '5 3' : 'none'} markerEnd={`url(#${marker})`} />;
+  return (
+    <g>
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={1.5} strokeDasharray={dashed ? '4 3' : 'none'} />
+      <circle cx={x1} cy={y1} r={3} fill={color} />
+      <circle cx={x2} cy={y2} r={3} fill={color} />
+    </g>
+  );
 }
 
-/* Curved connector */
-function CConn({ path, dashed, color = '#64748b', marker = 'av' }: {
-  path: string; dashed?: boolean; color?: string; marker?: string;
+/* Curved connector with dots */
+function N8nCurve({ path, color = '#475569', dashed, dots }: {
+  path: string; color?: string; dashed?: boolean; dots?: [number, number][];
 }) {
-  return <path d={path} fill="none" stroke={color} strokeWidth={1} strokeDasharray={dashed ? '5 3' : 'none'} markerEnd={`url(#${marker})`} />;
+  return (
+    <g>
+      <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeDasharray={dashed ? '4 3' : 'none'} />
+      {dots?.map(([cx, cy], i) => <circle key={i} cx={cx} cy={cy} r={3} fill={color} />)}
+    </g>
+  );
 }
 
 /* ─── Mode 1: Direct Routing (Classifier-Based) ─── */
@@ -592,90 +581,93 @@ function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onCl
   onClickConvHistory: () => void; onClickMemory: () => void;
   t: (en: string, zh: string) => string;
 }) {
-  const W = 860, H = 400;
-  // Center row Y
-  const rowY = 170;
-  // Agents row
-  const agentY = 30, agentGap = 10;
-  const totalW = agents.length * AGENT_BOX_W + (agents.length - 1) * agentGap;
-  const agentStartX = (W - totalW) / 2;
-  // Dashed group box around agents
-  const groupPad = 14;
-  const groupX = agentStartX - groupPad, groupY = agentY - groupPad;
-  const groupW = totalW + groupPad * 2, groupH = AGENT_BOX_H + groupPad * 2;
-  // Process boxes
-  const classX = 190, selX = 370, procX = 550;
-  // Conversation history
-  const convX = 340, convY = 310;
+  const W = 860, H = 420;
+  const midY = 150;
+  const S = NODE_S;
+  /* Agent row across top */
+  const agentGap = 16;
+  const totalAW = agents.length * S + (agents.length - 1) * agentGap;
+  const agentStartX = (W - totalAW) / 2;
+  const agentY = 32;
+  /* Group around agents */
+  const gPad = 20;
+  const gX = agentStartX - gPad, gY = agentY - gPad;
+  const gW = totalAW + gPad * 2, gH = S + 24 + gPad * 2;
+  /* Process nodes */
+  const inputX = 60, classX = 220, selX = 380, procX = 540, outX = 700;
+  /* Bottom row */
+  const botY = 300;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 300 }}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 320 }}>
       <TopoDefs />
-      {/* Subtle background radial */}
-      <circle cx={W / 2} cy={H / 2} r={280} fill="none" stroke="#1e293b" strokeWidth={0.5} opacity={0.4} />
-      <circle cx={W / 2} cy={H / 2} r={180} fill="none" stroke="#1e293b" strokeWidth={0.5} opacity={0.3} />
 
-      {/* User Input label */}
-      <LabelBox x={20} y={rowY} w={100} h={BOX_H} label={t('User Input', '用户输入')} />
-      {/* Arrow → Classifier */}
-      <Conn x1={122} y1={rowY + BOX_H / 2} x2={classX - 2} y2={rowY + BOX_H / 2} />
+      {/* Agent group container */}
+      <N8nGroup x={gX} y={gY} w={gW} h={gH} title={t('Domain Agents', '领域Agent')} color="#8b5cf6" />
 
-      {/* Classifier */}
-      <TopoBox x={classX} y={rowY} w={BOX_W} h={BOX_H} label={t('Classifier', '分类器')} borderColor="#8b5cf6" svgIcon="🔍" glow />
-      {/* Arrow → Select Agent */}
-      <Conn x1={classX + BOX_W} y1={rowY + BOX_H / 2} x2={selX - 2} y2={rowY + BOX_H / 2} />
-
-      {/* Select Agent */}
-      <TopoBox x={selX} y={rowY} w={BOX_W} h={BOX_H} label={t('Select Agent', '选择Agent')} borderColor="#8b5cf6" svgIcon="☑" />
-      {/* Arrow → Agent Processing */}
-      <Conn x1={selX + BOX_W} y1={rowY + BOX_H / 2} x2={procX - 2} y2={rowY + BOX_H / 2} />
-
-      {/* Agent Processing */}
-      <TopoBox x={procX} y={rowY} w={BOX_W} h={BOX_H} label={t('Agent Processing', 'Agent处理')} borderColor="#8b5cf6" svgIcon="🔄" glow />
-      {/* Arrow → Response */}
-      <Conn x1={procX + BOX_W} y1={rowY + BOX_H / 2} x2={W - 122} y2={rowY + BOX_H / 2} />
-
-      {/* Response label */}
-      <LabelBox x={W - 120} y={rowY} w={100} h={BOX_H} label={t('Response', '响应')} />
-
-      {/* Dashed group box for agents */}
-      <rect x={groupX} y={groupY} width={groupW} height={groupH} rx={10} fill="none" stroke="#8b5cf6" strokeWidth={1} strokeDasharray="6 3" opacity={0.5} />
-
-      {/* Agent pills */}
+      {/* Agent nodes */}
       {agents.map((a, i) => {
-        const x = agentStartX + i * (AGENT_BOX_W + agentGap);
-        return <AgentPill key={a.id} x={x} y={agentY} label={t(a.domain, a.domainZh)} color={AGENT_COLORS[a.id] || '#8b5cf6'} onClick={() => onSelectAgent(a)} />;
+        const x = agentStartX + i * (S + agentGap);
+        return <N8nNode key={a.id} x={x} y={agentY} icon={AGENT_ICONS[a.id] || '🤖'} label={t(a.domain, a.domainZh)} color={AGENT_COLORS[a.id] || '#8b5cf6'} onClick={() => onSelectAgent(a)} />;
       })}
 
-      {/* Fetch agent characteristics: curved line from left of agent group down to Classifier */}
-      <CConn path={`M ${groupX} ${agentY + AGENT_BOX_H / 2} Q ${classX - 20} ${agentY + AGENT_BOX_H / 2}, ${classX + 20} ${rowY - 3}`} dashed />
-      <text x={groupX - 8} y={agentY + AGENT_BOX_H + 16} fill="#94a3b8" fontSize="8" textAnchor="start">{t('Fetch agent', '获取Agent')}</text>
-      <text x={groupX - 8} y={agentY + AGENT_BOX_H + 26} fill="#94a3b8" fontSize="8" textAnchor="start">{t('characteristics', '特征信息')}</text>
+      {/* Main processing flow: Input → Classifier → Select → Process → Output */}
+      <N8nNode x={inputX} y={midY} icon="💬" label={t('User Input', '用户输入')} color="#64748b" />
+      <N8nNode x={classX} y={midY} icon="🔀" label={t('Classifier', '分类器')} color="#10b981" active />
+      <N8nNode x={selX} y={midY} icon="☑️" label={t('Select Agent', '选择Agent')} color="#8b5cf6" />
+      <N8nNode x={procX} y={midY} icon="⚙️" label={t('Agent Processing', 'Agent处理')} color="#06b6d4" active />
+      <N8nNode x={outX} y={midY} icon="📤" label={t('Response', '响应')} color="#64748b" />
 
-      {/* Select Agent ↔ agent group: vertical bidirectional */}
-      <Conn x1={selX + BOX_W / 2} y1={rowY - 2} x2={selX + BOX_W / 2} y2={groupY + groupH + 3} dashed />
-      <Conn x1={selX + BOX_W / 2 + 8} y1={groupY + groupH + 3} x2={selX + BOX_W / 2 + 8} y2={rowY - 2} dashed />
+      {/* Flow connectors (horizontal) */}
+      <N8nLine x1={inputX + S} y1={midY + S / 2} x2={classX} y2={midY + S / 2} color="#475569" />
+      <N8nLine x1={classX + S} y1={midY + S / 2} x2={selX} y2={midY + S / 2} color="#10b981" />
+      <N8nLine x1={selX + S} y1={midY + S / 2} x2={procX} y2={midY + S / 2} color="#8b5cf6" />
+      <N8nLine x1={procX + S} y1={midY + S / 2} x2={outX} y2={midY + S / 2} color="#06b6d4" />
 
-      {/* Conversation History box (clickable) */}
+      {/* Classifier → agent group (curved up) */}
+      <N8nCurve
+        path={`M ${classX + S / 2} ${midY} Q ${classX + S / 2} ${gY + gH + 10}, ${gX + 30} ${gY + gH}`}
+        color="#10b981" dashed
+        dots={[[classX + S / 2, midY], [gX + 30, gY + gH]]}
+      />
+      <text x={gX + 36} y={gY + gH + 14} fill="#64748b" fontSize="8">{t('Fetch characteristics', '获取特征')}</text>
+
+      {/* Select Agent ↔ agent group (vertical) */}
+      <N8nLine x1={selX + S / 2} y1={midY} x2={selX + S / 2} y2={gY + gH} color="#8b5cf6" dashed />
+
+      {/* Agent Processing ↔ agent group */}
+      <N8nCurve
+        path={`M ${procX + S / 2} ${midY} Q ${procX + S / 2} ${gY + gH + 10}, ${gX + gW - 30} ${gY + gH}`}
+        color="#06b6d4" dashed
+        dots={[[procX + S / 2, midY], [gX + gW - 30, gY + gH]]}
+      />
+
+      {/* Bottom: Conversation History & Memory */}
+      <N8nGroup x={classX - 30} y={botY - 16} w={220} h={78} title={t('Conversation History', '会话历史')} color="#8b5cf6" />
       <g className="cursor-pointer" onClick={onClickConvHistory}>
-        <TopoBox x={convX} y={convY} w={180} h={BOX_H} label={t('Conversation History', '会话历史')} borderColor="#8b5cf6" svgIcon="💬" />
+        <N8nNode x={classX + 20} y={botY + 6} icon="💬" label={t('View Context', '查看上下文')} color="#8b5cf6" />
+      </g>
+      <g className="cursor-pointer" onClick={onClickConvHistory}>
+        <N8nNode x={classX + 100} y={botY + 6} icon="📋" label={t('History Log', '历史记录')} color="#8b5cf6" />
       </g>
 
-      {/* Fetch conversation: Classifier → conv history */}
-      <CConn path={`M ${classX + BOX_W / 2} ${rowY + BOX_H + 2} Q ${classX + BOX_W / 2} ${convY + BOX_H / 2}, ${convX - 2} ${convY + BOX_H / 2}`} dashed />
-      <text x={classX + 10} y={convY - 8} fill="#94a3b8" fontSize="7.5">{t('Fetch all agent', '获取所有Agent')}</text>
-      <text x={classX + 10} y={convY + 2} fill="#94a3b8" fontSize="7.5">{t('conversation', '会话')}</text>
+      {/* Classifier → Conversation History */}
+      <N8nLine x1={classX + S / 2} y1={midY + S} x2={classX + S / 2} y2={botY - 16} color="#475569" dashed />
+      {/* Agent Processing → Conversation History */}
+      <N8nCurve
+        path={`M ${procX + S / 2} ${midY + S} Q ${procX + S / 2} ${botY + 20}, ${classX + 190} ${botY + 20}`}
+        color="#475569" dashed
+        dots={[[procX + S / 2, midY + S], [classX + 190, botY + 20]]}
+      />
 
-      {/* Save conversation: Agent Processing → conv history */}
-      <CConn path={`M ${procX + BOX_W / 2} ${rowY + BOX_H + 2} Q ${procX + BOX_W / 2} ${convY + BOX_H / 2}, ${convX + 182} ${convY + BOX_H / 2}`} dashed />
-      <text x={procX + 20} y={convY - 8} fill="#94a3b8" fontSize="7.5">{t('Save agent', '保存Agent')}</text>
-      <text x={procX + 20} y={convY + 2} fill="#94a3b8" fontSize="7.5">{t('conversation', '会话')}</text>
-
-      {/* Memory box (clickable → Knowledge page) */}
+      {/* Memory */}
+      <N8nGroup x={procX + 20} y={botY - 16} w={160} h={78} title={t('Memory', '记忆库')} color="#f59e0b" />
       <g className="cursor-pointer" onClick={onClickMemory}>
-        <TopoBox x={procX + BOX_W + 40} y={convY} w={130} h={BOX_H} label={t('Memory', '记忆库')} borderColor="#8b5cf6" svgIcon="🗄" />
+        <N8nNode x={procX + 60} y={botY + 6} icon="🧠" label={t('Knowledge Base', '知识库')} color="#f59e0b" />
       </g>
-      <Conn x1={procX + BOX_W} y1={rowY + BOX_H} x2={procX + BOX_W + 40} y2={convY} dashed />
+
+      {/* Agent Processing → Memory */}
+      <N8nLine x1={procX + S} y1={midY + S} x2={procX + 80} y2={botY - 16} color="#f59e0b" dashed />
     </svg>
   );
 }
@@ -685,95 +677,121 @@ function HierarchicalTopology({ agents, onSelectAgent, onClickMemory, t }: {
   agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void;
   onClickMemory: () => void; t: (en: string, zh: string) => string;
 }) {
-  const W = 860, H = 400;
-  // Lead Agent box
-  const leadX = 110, leadY = 20, leadW = 180, leadH = 210;
-  // Team box
-  const teamX = 360, teamY = 20, teamW = 400, teamH = 210;
-  // Supervisor inside lead
-  const supX = leadX + 20, supY = leadY + 75, supW = BOX_W, supH = BOX_H;
-  // Agent positions (2 cols × 3 rows max)
-  const col1 = teamX + 30, col2 = teamX + 200;
-  const r1 = teamY + 25, r2 = teamY + 85, r3 = teamY + 145;
-  const agentPos = [
-    { x: col1, y: r1 }, // planning
-    { x: col2, y: r1 }, // optimization
-    { x: col1, y: r2 }, // experience
-    { x: col2, y: r2 }, // ops
-    { x: col1, y: r3 }, // marketing
+  const W = 860, H = 420;
+  const S = NODE_S;
+  /* Supervisor group (left) */
+  const supGX = 40, supGY = 30, supGW = 200, supGH = 240;
+  const supX = supGX + 76, supY = supGY + 50;
+  /* Input/Output */
+  const inputY = supGY + 130, outputY = supGY + 190;
+  /* Team groups (right side — 3 rows of sub-agent groups) */
+  const teamBaseX = 310;
+  /* Each agent gets a group container with the agent node + tool nodes */
+  const agGroupW = 240, agGroupH = 90, agGroupGap = 10;
+  /* Two columns of agent groups */
+  const col1X = teamBaseX, col2X = teamBaseX + agGroupW + agGroupGap;
+  const row1Y = 18, row2Y = row1Y + agGroupH + agGroupGap, row3Y = row2Y + agGroupH + agGroupGap;
+  const agentGroupPos = [
+    { x: col1X, y: row1Y },
+    { x: col2X, y: row1Y },
+    { x: col1X, y: row2Y },
+    { x: col2X, y: row2Y },
+    { x: col1X, y: row3Y },
   ];
-  // Memory row
-  const memY = 290;
-  const mem1X = leadX + 10, mem2X = teamX + 80;
-  const memW = 150, memH = BOX_H;
+  /* Tool icons per agent */
+  const AGENT_TOOLS: Record<string, string[]> = {
+    planning: ['📡', '📊', '🗺️'],
+    optimization: ['⚡', '📈', '🔧'],
+    experience: ['👤', '📱', '💡'],
+    ops: ['🔧', '🚨', '📋'],
+    marketing: ['📊', '🎯', '💰'],
+  };
+  /* Memory row */
+  const memY = 350;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 300 }}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ minHeight: 340 }}>
       <TopoDefs />
-      <circle cx={W / 2} cy={H / 2 - 30} r={260} fill="none" stroke="#1e293b" strokeWidth={0.5} opacity={0.4} />
 
-      {/* User Input / Response */}
-      <LabelBox x={10} y={supY - 16} w={80} h={32} label={t('User Input', '用户输入')} />
-      <Conn x1={92} y1={supY} x2={leadX - 2} y2={supY} />
-      <LabelBox x={10} y={supY + supH - 16} w={80} h={32} label={t('Response', '响应')} />
-      <Conn x1={leadX - 2} y1={supY + supH} x2={92} y2={supY + supH} />
+      {/* Supervisor group */}
+      <N8nGroup x={supGX} y={supGY} w={supGW} h={supGH} title="IOE-Supervisor" color="#06b6d4" />
+      <N8nNode x={supX} y={supY} icon="👑" label="Supervisor" color="#06b6d4" active />
+      <N8nNode x={supGX + 20} y={inputY} icon="💬" label={t('Input', '输入')} color="#64748b" />
+      <N8nNode x={supGX + 132} y={outputY} icon="📤" label={t('Output', '输出')} color="#64748b" />
 
-      {/* Lead Agent dashed box */}
-      <rect x={leadX} y={leadY} width={leadW} height={leadH} rx={10} fill="none" stroke="#64748b" strokeWidth={1} strokeDasharray="6 3" />
-      <text x={leadX + leadW / 2} y={leadY - 6} fill="#94a3b8" fontSize="9" fontWeight={600} textAnchor="middle">{t('Lead Agent', '领导Agent')}</text>
+      {/* Input → Supervisor → Output flow */}
+      <N8nLine x1={supGX + 20 + S / 2} y1={inputY} x2={supX + S / 2} y2={supY + S} color="#475569" />
+      <N8nLine x1={supX + S / 2} y1={supY + S} x2={supGX + 132 + S / 2} y2={outputY} color="#475569" />
 
-      {/* Team dashed box */}
-      <rect x={teamX} y={teamY} width={teamW} height={teamH} rx={10} fill="none" stroke="#64748b" strokeWidth={1} strokeDasharray="6 3" />
-      <text x={teamX + teamW / 2} y={teamY - 6} fill="#94a3b8" fontSize="9" fontWeight={600} textAnchor="middle">{t('Team', '团队')}</text>
-
-      {/* Supervisor pill */}
-      <TopoBox x={supX} y={supY} w={supW} h={supH} label="IOE-Supervisor" borderColor="#06b6d4" svgIcon="👑" glow />
-
-      {/* Self-loop on supervisor */}
-      <CConn path={`M ${supX + 20} ${supY - 2} Q ${supX - 15} ${supY - 25}, ${supX + supW / 2} ${supY - 3}`} dashed color="#06b6d4" marker="ac" />
-
-      {/* Supervisor → each agent */}
+      {/* Agent sub-groups */}
       {agents.map((a, i) => {
-        const ap = agentPos[i];
-        if (!ap) return null;
+        const pos = agentGroupPos[i];
+        if (!pos) return null;
+        const tools = AGENT_TOOLS[a.id] || ['🔧', '📊', '💡'];
+        const agNodeX = pos.x + 14, agNodeY = pos.y + 28;
         return (
-          <g key={`s-${a.id}`}>
-            <Conn x1={supX + supW} y1={supY + supH / 2} x2={ap.x - 2} y2={ap.y + AGENT_BOX_H / 2} dashed color="#06b6d4" marker="ac" />
+          <g key={a.id}>
+            {/* Group container */}
+            <N8nGroup x={pos.x} y={pos.y} w={agGroupW} h={agGroupH} title={t(a.domain, a.domainZh) + ' Agent'} color={AGENT_COLORS[a.id] || '#8b5cf6'} />
+            {/* Main agent node */}
+            <N8nNode x={agNodeX} y={agNodeY} icon={AGENT_ICONS[a.id] || '🤖'} label={t(a.domain, a.domainZh)} color={AGENT_COLORS[a.id] || '#8b5cf6'} onClick={() => onSelectAgent(a)} />
+            {/* Tool nodes */}
+            {tools.map((tool, ti) => {
+              const toolX = agNodeX + 70 + ti * 46;
+              return (
+                <g key={ti}>
+                  <N8nNode x={toolX} y={agNodeY} icon={tool} label="" color="#475569" />
+                  <N8nLine x1={toolX > agNodeX + 70 ? toolX : agNodeX + S} y1={agNodeY + S / 2} x2={toolX > agNodeX + 70 ? toolX : toolX + S} y2={agNodeY + S / 2} color="#334155" />
+                </g>
+              );
+            })}
+            {/* Connect first tool to agent node */}
+            <N8nLine x1={agNodeX + S} y1={agNodeY + S / 2} x2={agNodeX + 70} y2={agNodeY + S / 2} color={AGENT_COLORS[a.id] || '#8b5cf6'} />
           </g>
         );
       })}
 
-      {/* Agent pills */}
+      {/* Supervisor → each agent group (fan-out lines) */}
       {agents.map((a, i) => {
-        const ap = agentPos[i];
-        if (!ap) return null;
-        return <AgentPill key={a.id} x={ap.x} y={ap.y} label={t(a.domain, a.domainZh)} color={AGENT_COLORS[a.id] || '#8b5cf6'} onClick={() => onSelectAgent(a)} />;
+        const pos = agentGroupPos[i];
+        if (!pos) return null;
+        const fromX = supGX + supGW, fromY = supY + S / 2;
+        const toX = pos.x, toY = pos.y + agGroupH / 2;
+        return (
+          <N8nCurve key={`s-${a.id}`}
+            path={`M ${fromX} ${fromY} C ${fromX + 40} ${fromY}, ${toX - 40} ${toY}, ${toX} ${toY}`}
+            color="#06b6d4" dashed
+            dots={[[fromX, fromY], [toX, toY]]}
+          />
+        );
       })}
 
-      {/* Peer collaboration lines */}
-      <Conn x1={col1 + AGENT_BOX_W} y1={r1 + AGENT_BOX_H / 2} x2={col2 - 2} y2={r1 + AGENT_BOX_H / 2} dashed color="#475569" />
-      <Conn x1={col1 + AGENT_BOX_W} y1={r2 + AGENT_BOX_H / 2} x2={col2 - 2} y2={r2 + AGENT_BOX_H / 2} dashed color="#475569" />
-
-      {/* Memory boxes (clickable) */}
+      {/* Memory section */}
+      <N8nGroup x={supGX} y={memY} w={180} h={60} title={t('Memory', '记忆库')} color="#f59e0b" />
       <g className="cursor-pointer" onClick={onClickMemory}>
-        <TopoBox x={mem1X} y={memY} w={memW} h={memH} label={t('User ↔ Lead Memory', '用户 ↔ 领导记忆')} borderColor="#8b5cf6" svgIcon="🗄" />
+        <N8nNode x={supGX + 20} y={memY + 10} icon="🧠" label={t('Short-term', '短期记忆')} color="#f59e0b" />
       </g>
       <g className="cursor-pointer" onClick={onClickMemory}>
-        <TopoBox x={mem2X} y={memY} w={memW + 40} h={memH} label={t('Lead ↔ Team Memory', '领导 ↔ 团队记忆')} borderColor="#8b5cf6" svgIcon="🗄" />
+        <N8nNode x={supGX + 100} y={memY + 10} icon="🗄️" label={t('Long-term', '长期记忆')} color="#f59e0b" />
       </g>
+      <N8nLine x1={supGX + 20 + S / 2} y1={memY + 10} x2={supGX + 20 + S / 2} y2={supGY + supGH} color="#f59e0b" dashed />
+      <N8nLine x1={supGX + 100 + S / 2} y1={memY + 10} x2={supGX + supGW / 2 + 30} y2={supGY + supGH} color="#f59e0b" dashed />
 
-      {/* Arrows to memory */}
-      <Conn x1={leadX + leadW / 2} y1={leadY + leadH + 2} x2={mem1X + memW / 2} y2={memY - 2} dashed />
-      <Conn x1={mem1X + memW / 2 + 10} y1={memY - 2} x2={leadX + leadW / 2 + 10} y2={leadY + leadH + 2} dashed />
-      <Conn x1={teamX + teamW / 2 - 30} y1={teamY + teamH + 2} x2={mem2X + (memW + 40) / 2} y2={memY - 2} dashed />
-      <Conn x1={mem2X + (memW + 40) / 2 + 10} y1={memY - 2} x2={teamX + teamW / 2 - 20} y2={teamY + teamH + 2} dashed />
+      <N8nGroup x={teamBaseX} y={memY} w={200} h={60} title={t('Shared Context', '共享上下文')} color="#8b5cf6" />
+      <g className="cursor-pointer" onClick={onClickMemory}>
+        <N8nNode x={teamBaseX + 30} y={memY + 10} icon="🔗" label={t('Context Pool', '上下文池')} color="#8b5cf6" />
+      </g>
+      <g className="cursor-pointer" onClick={onClickMemory}>
+        <N8nNode x={teamBaseX + 110} y={memY + 10} icon="📚" label={t('Knowledge', '知识库')} color="#8b5cf6" />
+      </g>
+      <N8nLine x1={teamBaseX + 30 + S / 2} y1={memY + 10} x2={col1X + agGroupW / 2} y2={row3Y + agGroupH} color="#8b5cf6" dashed />
     </svg>
   );
 }
 
 /* ─── Team panel tabs ─── */
 const TEAM_TABS = [
-  { key: 'activity' as const, label: 'Team Activity', labelZh: '团队活动', icon: Activity },
+  { key: 'activity' as const, label: 'Agent Activity', labelZh: 'Agent活动', icon: Activity },
   { key: 'context' as const, label: 'Context Pool', labelZh: '上下文池', icon: Share2 },
   { key: 'conflicts' as const, label: 'Conflicts', labelZh: '冲突协调', icon: AlertTriangle },
 ] as const;
