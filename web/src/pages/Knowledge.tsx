@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Book, AlertCircle, Lightbulb, FileText, Tag, X, Zap, CheckCircle2, Loader2, ChevronRight, Shield, ChevronDown, Globe, Clock, Server } from 'lucide-react';
+import { Search, Book, AlertCircle, Lightbulb, FileText, Tag, X, Zap, CheckCircle2, Loader2, ChevronRight, Shield, ChevronDown, Globe, Clock, Server, Edit3, Save } from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { knowledgeEntries, generatedSkills, type KnowledgeEntry, type Skill } from '../data/knowledge';
 
@@ -312,7 +312,13 @@ const NETWORK_MD_SECTIONS = [
 
 function NetworkMdSection() {
   const { t } = useText();
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['topology', 'sla']));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [editMode, setEditMode] = useState(false);
+  const [editContents, setEditContents] = useState<Record<string, { en: string; zh: string }>>(() => {
+    const init: Record<string, { en: string; zh: string }> = {};
+    NETWORK_MD_SECTIONS.forEach(s => { init[s.key] = { en: s.contentEn, zh: s.contentZh }; });
+    return init;
+  });
 
   const toggleSection = (key: string) => {
     setExpandedSections(prev => {
@@ -320,6 +326,10 @@ function NetworkMdSection() {
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
+  };
+
+  const handleSave = () => {
+    setEditMode(false);
   };
 
   return (
@@ -336,7 +346,15 @@ function NetworkMdSection() {
             </div>
             <p className="text-xs text-text-muted">{t('Telecom CLAUDE.md — engineer-editable knowledge defining network rules, SLA, forbidden ops, and compliance', '电信版CLAUDE.md — 工程师可编辑的知识文件，定义网络规则、SLA、禁止操作与合规要求')}</p>
           </div>
-          <span className="text-xs text-text-muted shrink-0">{NETWORK_MD_SECTIONS.length} {t('sections', '章节')}</span>
+          {editMode ? (
+            <button onClick={handleSave} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-accent-cyan rounded-lg hover:bg-accent-cyan/80 transition-colors cursor-pointer">
+              <Save className="w-3 h-3" />{t('Save', '保存')}
+            </button>
+          ) : (
+            <button onClick={() => setEditMode(true)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-text-muted hover:text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors cursor-pointer" title={t('Edit Network.md', '编辑 Network.md')}>
+              <Edit3 className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
         <div className="divide-y divide-border">
           {NETWORK_MD_SECTIONS.map(sec => {
@@ -352,9 +370,23 @@ function NetworkMdSection() {
                 </button>
                 {expanded && (
                   <div className="px-5 pb-4">
-                    <pre className="bg-bg-primary border border-border rounded-lg px-4 py-3 text-xs text-text-secondary font-mono whitespace-pre-wrap leading-relaxed overflow-auto max-h-64">
-                      {t(sec.contentEn, sec.contentZh)}
-                    </pre>
+                    {editMode ? (
+                      <textarea
+                        className="w-full bg-bg-primary border border-accent-cyan/30 rounded-lg px-4 py-3 text-xs text-text-secondary font-mono whitespace-pre-wrap leading-relaxed min-h-[200px] max-h-80 resize-y focus:border-accent-cyan focus:outline-none"
+                        value={t(editContents[sec.key]?.en ?? sec.contentEn, editContents[sec.key]?.zh ?? sec.contentZh)}
+                        onChange={e => {
+                          const isEn = t('_', '中') === '_';
+                          setEditContents(prev => ({
+                            ...prev,
+                            [sec.key]: { ...prev[sec.key], [isEn ? 'en' : 'zh']: e.target.value },
+                          }));
+                        }}
+                      />
+                    ) : (
+                      <pre className="bg-bg-primary border border-border rounded-lg px-4 py-3 text-xs text-text-secondary font-mono whitespace-pre-wrap leading-relaxed overflow-auto max-h-64">
+                        {t(editContents[sec.key]?.en ?? sec.contentEn, editContents[sec.key]?.zh ?? sec.contentZh)}
+                      </pre>
+                    )}
                   </div>
                 )}
               </div>
