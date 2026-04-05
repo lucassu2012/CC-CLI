@@ -861,147 +861,172 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
         </div>
 
         <div className="p-6 space-y-5">
-          {/* ── Unified Architecture Diagram ── */}
-          {/* Horizontal flow: External System ← Integration/Adapter → IOE Orchestrator → Domain Agents */}
+          {/* ── Unified Architecture Diagram: 3 columns ── */}
           <div className="bg-bg-primary rounded-xl border border-border p-5">
-            <div className="flex items-stretch gap-0 min-h-[280px]">
+            <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-0" style={{ minHeight: 320 }}>
 
-              {/* Column 1: External System (left) */}
-              <div className="flex flex-col items-center justify-center w-[160px] shrink-0">
-                <div className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: sys.color }}>{t('Enterprise System', '企业系统')}</div>
-                <div className="rounded-xl border-2 p-3 w-full" style={{ borderColor: sys.color + '60', backgroundColor: sys.color + '08' }}>
-                  <div className="text-xs font-semibold text-center mb-2" style={{ color: sys.color }}>{t(sys.nameEn, sys.name)}</div>
-                  <div className="space-y-1.5">
+              {/* Column 1: External System */}
+              <div className="flex flex-col">
+                <div className="text-[10px] font-semibold uppercase tracking-wider mb-3 text-center flex items-center justify-center gap-1.5" style={{ color: sys.color }}>
+                  <Plug className="w-3.5 h-3.5" />
+                  {t('Existing System', '现有系统')}
+                </div>
+                <div className="flex-1 rounded-xl border-2 p-4 flex flex-col" style={{ borderColor: sys.color + '50', backgroundColor: sys.color + '06' }}>
+                  {/* System icon & name */}
+                  <div className="flex items-center justify-center gap-2 mb-3 pb-3 border-b" style={{ borderColor: sys.color + '20' }}>
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: sys.color + '18' }}>
+                      <Plug className="w-4 h-4" style={{ color: sys.color }} />
+                    </div>
+                    <div className="text-sm font-bold" style={{ color: sys.color }}>{t(sys.nameEn, sys.name)}</div>
+                  </div>
+                  {/* Components */}
+                  <div className="flex-1 space-y-1.5">
                     {sys.systemLayer.components.map((c, i) => (
-                      <div key={i} className="text-[9px] px-2 py-1 rounded border text-center font-medium" style={{ backgroundColor: sys.color + '10', borderColor: sys.color + '25', color: sys.color }}>{c}</div>
+                      <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]" style={{ backgroundColor: sys.color + '08', borderColor: sys.color + '20', color: sys.color }}>
+                        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: sys.color }} />
+                        {c}
+                      </div>
                     ))}
                   </div>
-                </div>
-                {/* Data labels below system */}
-                <div className="mt-2 space-y-1 w-full">
-                  {sys.dataFlows.filter(f => f.direction === 'inbound').slice(0, 2).map((f, i) => (
-                    <div key={i} className="text-[8px] text-text-muted text-center truncate">{f.from.replace(sys.nameEn.split(' ')[0], '').replace('SmartCare ', '').trim()}: {f.rate}</div>
-                  ))}
+                  {/* Metrics footer */}
+                  <div className="mt-3 pt-2 border-t flex items-center justify-around text-[9px]" style={{ borderColor: sys.color + '20' }}>
+                    <div className="text-center">
+                      <div className="font-semibold" style={{ color: sys.color }}>{sys.protocols.length}</div>
+                      <div className="text-text-muted">{t('APIs', 'API数')}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-semibold text-status-green">{sys.protocols[0]?.latency}</div>
+                      <div className="text-text-muted">{t('Latency', '延迟')}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Column 2: Integration/Adapter Layer (center-left) — with protocol arrows */}
-              <div className="flex flex-col items-center justify-center w-[200px] shrink-0 px-2">
-                {/* Animated data flow arrows from system → adapter */}
-                <div className="w-full space-y-0">
+              {/* Arrow column 1→2: Data flows with animated protocols */}
+              <div className="flex flex-col items-center justify-center px-3 pt-8">
+                <div className="space-y-2">
                   {sys.dataFlows.map((flow, i) => {
                     const active = (flowTick + i) % sys.dataFlows.length === 0;
                     const isIn = flow.direction === 'inbound';
                     const isBi = flow.direction === 'bidirectional';
                     return (
-                      <div key={i} className="flex items-center gap-1 py-[3px]">
-                        {/* Left arrow (inbound) or right arrow (outbound) */}
-                        <div className="flex-1 relative h-[2px]">
+                      <div key={i} className="flex flex-col items-center">
+                        <span className={`text-[7px] font-mono px-1.5 py-0.5 rounded mb-0.5 transition-all duration-500 ${active ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30' : 'bg-bg-tertiary text-text-muted border border-transparent'}`}>
+                          {flow.protocol}
+                        </span>
+                        <div className="relative w-16 h-[2px]">
                           <div className="absolute inset-0 bg-border rounded-full" />
-                          <div className={`absolute top-0 h-full rounded-full transition-all duration-1000 ${active ? 'bg-accent-cyan' : 'bg-border'}`}
+                          <div className={`absolute top-0 h-full rounded-full transition-all duration-1000 ${active ? 'bg-accent-cyan shadow-[0_0_6px_rgba(6,182,212,0.4)]' : 'bg-border'}`}
                             style={{ width: active ? '100%' : '0%', [isIn ? 'right' : 'left']: 0 }} />
                         </div>
-                        <div className="shrink-0 flex flex-col items-center">
-                          <span className={`text-[7px] font-mono px-1 py-0.5 rounded ${active ? 'bg-accent-cyan/20 text-accent-cyan' : 'bg-bg-tertiary text-text-muted'}`}>{flow.protocol}</span>
-                          <span className={`text-[7px] ${active ? 'text-accent-cyan' : 'text-text-muted'}`}>{isBi ? '⇄' : isIn ? '←' : '→'}</span>
-                        </div>
-                        <div className="flex-1 relative h-[2px]">
-                          <div className="absolute inset-0 bg-border rounded-full" />
-                          <div className={`absolute top-0 h-full rounded-full transition-all duration-1000 ${active ? 'bg-accent-cyan' : 'bg-border'}`}
-                            style={{ width: active ? '100%' : '0%', [isIn ? 'left' : 'right']: 0 }} />
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className={`text-[8px] font-bold ${active ? 'text-accent-cyan' : 'text-text-muted'}`}>{isBi ? '⇄' : isIn ? '→' : '←'}</span>
+                          <span className={`text-[7px] font-mono ${active ? 'text-status-green' : 'text-text-muted'}`}>{flow.rate}</span>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                {/* Adapter box */}
-                <div className="rounded-lg border border-status-yellow/40 bg-status-yellow/5 p-2.5 w-full mt-2">
-                  <div className="text-[9px] font-semibold text-status-yellow uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <ArrowRightLeft className="w-3 h-3" /> {t('Integration Layer', '集成适配层')}
-                  </div>
-                  <div className="space-y-1">
-                    {sys.adapterLayer.components.map((c, i) => (
-                      <div key={i} className="text-[8px] px-1.5 py-0.5 rounded bg-status-yellow/8 border border-status-yellow/15 text-status-yellow font-medium text-center">{c}</div>
+              </div>
+
+              {/* Column 2: Integration / Adapter Layer */}
+              <div className="flex flex-col">
+                <div className="text-[10px] font-semibold text-status-yellow uppercase tracking-wider mb-3 text-center flex items-center justify-center gap-1.5">
+                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                  {t('Integration Layer', '集成适配层')}
+                </div>
+                <div className="flex-1 rounded-xl border-2 border-status-yellow/40 bg-status-yellow/5 p-4 flex flex-col">
+                  {/* Protocol badges header */}
+                  <div className="flex flex-wrap justify-center gap-1 mb-3 pb-3 border-b border-status-yellow/20">
+                    {sys.protocols.map((p, i) => (
+                      <span key={i} className={`text-[8px] font-mono px-2 py-0.5 rounded-full border transition-all duration-700 ${(flowTick + i) % sys.protocols.length === 0 ? 'bg-accent-cyan/15 border-accent-cyan/30 text-accent-cyan shadow-[0_0_4px_rgba(6,182,212,0.3)]' : 'bg-bg-tertiary border-border text-text-muted'}`}>
+                        {p.name}
+                      </span>
                     ))}
                   </div>
-                </div>
-                {/* Protocol summary */}
-                <div className="mt-2 flex flex-wrap justify-center gap-1">
-                  {sys.protocols.map((p, i) => (
-                    <span key={i} className={`text-[7px] font-mono px-1.5 py-0.5 rounded border transition-all duration-700 ${(flowTick + i) % sys.protocols.length === 0 ? 'bg-accent-cyan/15 border-accent-cyan/30 text-accent-cyan' : 'bg-bg-tertiary border-border text-text-muted'}`}>
-                      {p.name} {p.latency}
-                    </span>
-                  ))}
+                  {/* Adapter components */}
+                  <div className="flex-1 space-y-1.5">
+                    {sys.adapterLayer.components.map((c, i) => (
+                      <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-status-yellow/8 border border-status-yellow/15 text-[10px] text-status-yellow font-medium transition-all hover:scale-[1.02]">
+                        <ArrowRightLeft className="w-3 h-3 shrink-0 opacity-50" />
+                        {c}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Mode & latency footer */}
+                  <div className="mt-3 pt-2 border-t border-status-yellow/20 flex items-center justify-around text-[9px]">
+                    <div className="text-center">
+                      <div className="font-semibold text-status-yellow">{t('Real-time', '实时')}</div>
+                      <div className="text-text-muted">&lt;100ms</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-semibold text-status-yellow">{t('Batch', '批量')}</div>
+                      <div className="text-text-muted">{t('Scheduled', '定时')}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Column 3: IOE Orchestrator (center) */}
-              <div className="flex flex-col items-center justify-center w-[190px] shrink-0 px-2">
-                <div className="text-[10px] font-semibold text-accent-cyan uppercase tracking-wider mb-3">{t('IOE Agent Harness', 'IOE Agent Harness')}</div>
-                <div className="rounded-xl border-2 border-accent-cyan/40 bg-accent-cyan/5 p-3 w-full">
-                  {/* Orchestrator */}
-                  <div className="rounded-lg bg-accent-cyan/15 border border-accent-cyan/30 p-2 text-center mb-2">
-                    <Server className="w-4 h-4 text-accent-cyan mx-auto mb-1" />
-                    <div className="text-[10px] font-semibold text-accent-cyan">{t('Orchestrator', '编排器')}</div>
-                    <div className="text-[8px] text-text-muted">TAOR Loop</div>
+              {/* Arrow column 2→3: MCP connection */}
+              <div className="flex flex-col items-center justify-center px-3 pt-8">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="px-2 py-1 rounded-lg bg-accent-cyan/10 border border-accent-cyan/25 text-center">
+                    <Terminal className="w-3.5 h-3.5 text-accent-cyan mx-auto mb-0.5" />
+                    <div className="text-[8px] font-mono font-semibold text-accent-cyan">MCP</div>
+                  </div>
+                  <div className="relative w-px h-16">
+                    <div className="absolute inset-0 bg-border" />
+                    <div className="absolute top-0 left-0 w-full bg-accent-cyan transition-all duration-1000" style={{ height: flowTick % 2 === 0 ? '100%' : '30%' }} />
+                  </div>
+                  <div className="text-[9px] text-accent-cyan font-bold">⇅</div>
+                  <div className="relative w-px h-16">
+                    <div className="absolute inset-0 bg-border" />
+                    <div className="absolute bottom-0 left-0 w-full bg-accent-cyan transition-all duration-1000" style={{ height: flowTick % 2 === 0 ? '30%' : '100%' }} />
+                  </div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
+                </div>
+              </div>
+
+              {/* Column 3: IOE Agent Harness */}
+              <div className="flex flex-col">
+                <div className="text-[10px] font-semibold text-accent-cyan uppercase tracking-wider mb-3 text-center flex items-center justify-center gap-1.5">
+                  <Server className="w-3.5 h-3.5" />
+                  {t('IOE Agent Harness', 'IOE Agent Harness')}
+                </div>
+                <div className="flex-1 rounded-xl border-2 border-accent-cyan/40 bg-accent-cyan/5 p-4 flex flex-col">
+                  {/* Orchestrator header */}
+                  <div className="rounded-lg bg-accent-cyan/12 border border-accent-cyan/25 p-2.5 text-center mb-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <Server className="w-4 h-4 text-accent-cyan" />
+                      <div>
+                        <div className="text-[11px] font-bold text-accent-cyan">{t('TAOR Orchestrator', 'TAOR 编排器')}</div>
+                        <div className="text-[8px] text-text-muted">Think → Act → Observe → Repeat</div>
+                      </div>
+                    </div>
                   </div>
                   {/* IOE Layer components */}
-                  <div className="space-y-1">
+                  <div className="flex-1 space-y-1.5">
                     {sys.ioeLayer.components.map((c, i) => (
-                      <div key={i} className="text-[8px] px-1.5 py-1 rounded bg-accent-cyan/8 border border-accent-cyan/15 text-accent-cyan font-medium text-center">{c}</div>
+                      <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-accent-cyan/8 border border-accent-cyan/15 text-[10px] text-accent-cyan font-medium transition-all hover:scale-[1.02]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan shrink-0" />
+                        {c}
+                      </div>
                     ))}
                   </div>
-                  {/* State & Memory */}
-                  <div className="mt-2 rounded-lg bg-bg-tertiary/50 border border-border p-1.5 text-center">
-                    <div className="text-[8px] text-text-muted font-medium">{t('State & Memory', '状态与记忆')}</div>
+                  {/* Footer: State & Memory + Safety */}
+                  <div className="mt-3 pt-2 border-t border-accent-cyan/20 grid grid-cols-2 gap-1.5">
+                    <div className="rounded-lg bg-bg-tertiary/50 border border-border p-1.5 text-center">
+                      <Activity className="w-3 h-3 text-text-muted mx-auto mb-0.5" />
+                      <div className="text-[8px] text-text-muted font-medium">{t('State & Memory', '状态与记忆')}</div>
+                    </div>
+                    <div className="rounded-lg bg-bg-tertiary/50 border border-border p-1.5 text-center">
+                      <Shield className="w-3 h-3 text-text-muted mx-auto mb-0.5" />
+                      <div className="text-[8px] text-text-muted font-medium">{t('Safety Guard', '安全护栏')}</div>
+                    </div>
                   </div>
-                </div>
-                {/* MCP protocol indicator */}
-                <div className="mt-2 flex items-center gap-1.5">
-                  <Terminal className="w-3 h-3 text-accent-cyan" />
-                  <span className="text-[9px] font-mono text-accent-cyan bg-accent-cyan/10 px-2 py-0.5 rounded border border-accent-cyan/20">MCP Protocol</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
                 </div>
               </div>
 
-              {/* Column 4: Domain Agents (right) */}
-              <div className="flex flex-col items-center justify-center w-[160px] shrink-0 px-2">
-                <div className="text-[10px] font-semibold text-accent-cyan uppercase tracking-wider mb-3">{t('Domain Agents', '领域Agent')}</div>
-                <div className="space-y-1.5 w-full">
-                  {['Planning', 'Optimization', 'Experience', 'Ops', 'Marketing'].map((ag, i) => {
-                    const agColors = ['#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#10b981'];
-                    const agZh = ['规划', '优化', '体验', '运维', '营销'];
-                    return (
-                      <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-bg-card p-1.5 hover:border-accent-cyan/30 transition-all">
-                        <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: agColors[i] }} />
-                        <span className="text-[9px] font-medium text-text-primary">{t(ag, agZh[i])}</span>
-                        <ChevronRight className="w-2.5 h-2.5 text-text-muted ml-auto" />
-                      </div>
-                    );
-                  })}
-                </div>
-                {/* Output */}
-                <div className="mt-3 w-full rounded-lg bg-status-green/8 border border-status-green/20 p-2 text-center">
-                  <div className="text-[9px] text-status-green font-medium">{t('Telecom Service Optimization', '电信服务优化')}</div>
-                  <div className="text-[8px] text-text-muted mt-0.5">{t('Network Insights · Enhanced Services', '网络洞察 · 增强服务')}</div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Data flow labels row */}
-            <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-[9px]">
-              {sys.dataFlows.map((flow, i) => {
-                const active = (flowTick + i) % sys.dataFlows.length === 0;
-                return (
-                  <div key={i} className={`flex items-center gap-1.5 px-2 py-1 rounded transition-all duration-500 ${active ? 'bg-accent-cyan/10 text-accent-cyan' : 'text-text-muted'}`}>
-                    <span className="font-medium truncate max-w-[100px]">{flow.from}</span>
-                    <span className="font-mono text-[8px]">{flow.direction === 'inbound' ? '→' : flow.direction === 'outbound' ? '←' : '⇄'}</span>
-                    <span className="font-medium truncate max-w-[100px]">{flow.to}</span>
-                    <span className="font-mono text-status-green">{flow.rate}</span>
-                  </div>
-                );
-              })}
             </div>
           </div>
 
@@ -1062,7 +1087,7 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
                 <p className="text-[10px] text-text-muted">{t('MCP Tools', 'MCP工具')}</p>
               </div>
               <div>
-                <p className="text-lg font-semibold text-text-primary">4</p>
+                <p className="text-lg font-semibold text-text-primary">3</p>
                 <p className="text-[10px] text-text-muted">{t('Arch Layers', '架构层')}</p>
               </div>
             </div>
