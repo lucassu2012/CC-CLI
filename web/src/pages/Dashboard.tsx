@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, XCircle,
   Clock, Loader2, Activity, X, ChevronRight, Zap, Radio, Plug, Users, ChevronDown,
-  Terminal, Database, Server, ArrowRightLeft, Shield, Wrench, RefreshCw, Play,
+  Terminal, Server, ArrowRightLeft, Shield, Wrench, RefreshCw, Play,
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { useText } from '../hooks/useText';
@@ -205,7 +205,39 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* ②-0 Connected External Systems */}
+      {/* ② Domain Agent Status (clickable to drill into sub-agents) */}
+      <section>
+        <h2 className="text-sm font-medium text-text-secondary mb-3">{t('Domain Agent Status', '领域智能体状态')}</h2>
+        <div className="grid grid-cols-5 gap-3">
+          {domainAgents.map(agent => (
+            <div key={agent.id}
+              onClick={() => setAgentModal(agent)}
+              className="bg-bg-card rounded-xl border border-border p-4 hover:border-accent-cyan/40 transition-all cursor-pointer group relative overflow-hidden">
+              {/* Animated scan line */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-accent-cyan/40 to-transparent animate-pulse" />
+              </div>
+              <div className="flex items-center justify-between mb-3">
+                <StatusBadge status={agent.status} size="md" />
+                <span className="text-xs text-text-muted">{agent.subAgents.length} {t('sub-agents', '子Agent')}</span>
+              </div>
+              <h3 className="text-sm font-medium text-text-primary truncate">{t(agent.name, agent.nameZh)}</h3>
+              <p className="text-xs text-text-muted mt-1">{t(agent.domain, agent.domainZh)}</p>
+              <div className="flex items-center justify-between mt-3 text-xs">
+                <span className="text-text-secondary tabular-nums">{agent.taskCount + (agentTicks[agent.id] || 0)} {t('tasks', '任务')}</span>
+                <span className={agent.successRate >= 97 ? 'text-status-green' : agent.successRate >= 95 ? 'text-status-yellow' : 'text-status-red'}>
+                  {agent.successRate}%
+                </span>
+              </div>
+              <div className="flex items-center gap-1 mt-2 text-[10px] text-accent-cyan opacity-0 group-hover:opacity-100 transition-opacity">
+                {t('Click to view sub-agents', '点击查看子Agent')} <ChevronRight className="w-3 h-3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ②-b Connected External Systems */}
       <section>
         <h2 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-2">
           <Plug className="w-4 h-4 text-accent-cyan" />
@@ -238,38 +270,6 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-1 mt-2 text-[10px] text-accent-cyan opacity-0 group-hover:opacity-100 transition-opacity">
                 {t('View architecture', '查看架构')} <ChevronRight className="w-3 h-3" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ② Domain Agent Status (clickable to drill into sub-agents) */}
-      <section>
-        <h2 className="text-sm font-medium text-text-secondary mb-3">{t('Domain Agent Status', '领域智能体状态')}</h2>
-        <div className="grid grid-cols-5 gap-3">
-          {domainAgents.map(agent => (
-            <div key={agent.id}
-              onClick={() => setAgentModal(agent)}
-              className="bg-bg-card rounded-xl border border-border p-4 hover:border-accent-cyan/40 transition-all cursor-pointer group relative overflow-hidden">
-              {/* Animated scan line */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-accent-cyan/40 to-transparent animate-pulse" />
-              </div>
-              <div className="flex items-center justify-between mb-3">
-                <StatusBadge status={agent.status} size="md" />
-                <span className="text-xs text-text-muted">{agent.subAgents.length} {t('sub-agents', '子Agent')}</span>
-              </div>
-              <h3 className="text-sm font-medium text-text-primary truncate">{t(agent.name, agent.nameZh)}</h3>
-              <p className="text-xs text-text-muted mt-1">{t(agent.domain, agent.domainZh)}</p>
-              <div className="flex items-center justify-between mt-3 text-xs">
-                <span className="text-text-secondary tabular-nums">{agent.taskCount + (agentTicks[agent.id] || 0)} {t('tasks', '任务')}</span>
-                <span className={agent.successRate >= 97 ? 'text-status-green' : agent.successRate >= 95 ? 'text-status-yellow' : 'text-status-red'}>
-                  {agent.successRate}%
-                </span>
-              </div>
-              <div className="flex items-center gap-1 mt-2 text-[10px] text-accent-cyan opacity-0 group-hover:opacity-100 transition-opacity">
-                {t('Click to view sub-agents', '点击查看子Agent')} <ChevronRight className="w-3 h-3" />
               </div>
             </div>
           ))}
@@ -842,12 +842,10 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
   if (!systemId || !SYSTEM_ARCH[systemId]) return null;
   const sys = SYSTEM_ARCH[systemId];
   const permColor: Record<string, string> = { L1: 'text-status-green', L2: 'text-accent-cyan', L3: 'text-status-yellow', L4: 'text-status-orange', L5: 'text-status-red' };
-  const dirIcon: Record<string, string> = { inbound: '←', outbound: '→', bidirectional: '⇄' };
-  const dirColor: Record<string, string> = { inbound: 'text-status-green', outbound: 'text-accent-cyan', bidirectional: 'text-status-yellow' };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-[960px] max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+      <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-[1060px] max-h-[92vh] overflow-auto" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
@@ -856,123 +854,158 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
             </div>
             <div>
               <h3 className="text-sm font-semibold text-text-primary">{t(sys.nameEn, sys.name)} — {t('Connection Architecture', '连接架构')}</h3>
-              <p className="text-xs text-text-muted">{t('Multi-protocol integration · MCP tool invocation · Real-time & batch', '多协议集成 · MCP工具调用 · 实时与批量')}</p>
+              <p className="text-xs text-text-muted">{t('Multi-protocol integration · MCP tool invocation · Real-time & batch data flows', '多协议集成 · MCP工具调用 · 实时与批量数据流')}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="p-6 space-y-5">
-          {/* ① Architecture Diagram — 3-layer visual */}
-          <div>
-            <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Server className="w-3 h-3" /> {t('Connection Architecture Diagram', '连接架构图')}
-            </h4>
-            <div className="bg-bg-primary rounded-xl border border-border p-4 space-y-3">
-              {/* IOE Layer */}
-              <div className="rounded-lg border border-accent-cyan/40 bg-accent-cyan/5 p-3">
-                <div className="text-[10px] font-semibold text-accent-cyan uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Shield className="w-3 h-3" /> {t(sys.ioeLayer.labelEn, sys.ioeLayer.label)}
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {sys.ioeLayer.components.map((c, i) => (
-                    <span key={i} className="px-2 py-1 rounded bg-accent-cyan/10 border border-accent-cyan/20 text-[10px] text-accent-cyan font-medium">{c}</span>
-                  ))}
-                </div>
-              </div>
-              {/* Connection arrows */}
-              <div className="flex items-center justify-center gap-2 py-1">
-                {sys.protocols.map((p, i) => (
-                  <div key={i} className="flex flex-col items-center gap-0.5">
-                    <div className={`w-px h-4 transition-all duration-700 ${(flowTick + i) % sys.protocols.length === 0 ? 'bg-accent-cyan' : 'bg-border'}`} />
-                    <span className="text-[8px] font-mono text-text-muted px-1 py-0.5 rounded bg-bg-tertiary">{p.name}</span>
-                    <div className={`w-px h-4 transition-all duration-700 ${(flowTick + i) % sys.protocols.length === 0 ? 'bg-accent-cyan' : 'bg-border'}`} />
+          {/* ── Unified Architecture Diagram ── */}
+          {/* Horizontal flow: External System ← Integration/Adapter → IOE Orchestrator → Domain Agents */}
+          <div className="bg-bg-primary rounded-xl border border-border p-5">
+            <div className="flex items-stretch gap-0 min-h-[280px]">
+
+              {/* Column 1: External System (left) */}
+              <div className="flex flex-col items-center justify-center w-[160px] shrink-0">
+                <div className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: sys.color }}>{t('Enterprise System', '企业系统')}</div>
+                <div className="rounded-xl border-2 p-3 w-full" style={{ borderColor: sys.color + '60', backgroundColor: sys.color + '08' }}>
+                  <div className="text-xs font-semibold text-center mb-2" style={{ color: sys.color }}>{t(sys.nameEn, sys.name)}</div>
+                  <div className="space-y-1.5">
+                    {sys.systemLayer.components.map((c, i) => (
+                      <div key={i} className="text-[9px] px-2 py-1 rounded border text-center font-medium" style={{ backgroundColor: sys.color + '10', borderColor: sys.color + '25', color: sys.color }}>{c}</div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              {/* Adapter Layer */}
-              <div className="rounded-lg border border-status-yellow/30 bg-status-yellow/5 p-3">
-                <div className="text-[10px] font-semibold text-status-yellow uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <ArrowRightLeft className="w-3 h-3" /> {t(sys.adapterLayer.labelEn, sys.adapterLayer.label)}
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {sys.adapterLayer.components.map((c, i) => (
-                    <span key={i} className="px-2 py-1 rounded bg-status-yellow/10 border border-status-yellow/20 text-[10px] text-status-yellow font-medium">{c}</span>
+                {/* Data labels below system */}
+                <div className="mt-2 space-y-1 w-full">
+                  {sys.dataFlows.filter(f => f.direction === 'inbound').slice(0, 2).map((f, i) => (
+                    <div key={i} className="text-[8px] text-text-muted text-center truncate">{f.from.replace(sys.nameEn.split(' ')[0], '').replace('SmartCare ', '').trim()}: {f.rate}</div>
                   ))}
                 </div>
               </div>
-              {/* Connection arrows */}
-              <div className="flex items-center justify-center gap-2 py-1">
-                {sys.protocols.map((p, i) => (
-                  <div key={i} className="flex flex-col items-center gap-0.5">
-                    <div className={`w-px h-4 transition-all duration-700 ${(flowTick + i + 2) % sys.protocols.length === 0 ? 'bg-accent-cyan' : 'bg-border'}`} />
-                    <span className="text-[8px] font-mono text-text-muted">{p.latency}</span>
-                    <div className={`w-px h-4 transition-all duration-700 ${(flowTick + i + 2) % sys.protocols.length === 0 ? 'bg-accent-cyan' : 'bg-border'}`} />
+
+              {/* Column 2: Integration/Adapter Layer (center-left) — with protocol arrows */}
+              <div className="flex flex-col items-center justify-center w-[200px] shrink-0 px-2">
+                {/* Animated data flow arrows from system → adapter */}
+                <div className="w-full space-y-0">
+                  {sys.dataFlows.map((flow, i) => {
+                    const active = (flowTick + i) % sys.dataFlows.length === 0;
+                    const isIn = flow.direction === 'inbound';
+                    const isBi = flow.direction === 'bidirectional';
+                    return (
+                      <div key={i} className="flex items-center gap-1 py-[3px]">
+                        {/* Left arrow (inbound) or right arrow (outbound) */}
+                        <div className="flex-1 relative h-[2px]">
+                          <div className="absolute inset-0 bg-border rounded-full" />
+                          <div className={`absolute top-0 h-full rounded-full transition-all duration-1000 ${active ? 'bg-accent-cyan' : 'bg-border'}`}
+                            style={{ width: active ? '100%' : '0%', [isIn ? 'right' : 'left']: 0 }} />
+                        </div>
+                        <div className="shrink-0 flex flex-col items-center">
+                          <span className={`text-[7px] font-mono px-1 py-0.5 rounded ${active ? 'bg-accent-cyan/20 text-accent-cyan' : 'bg-bg-tertiary text-text-muted'}`}>{flow.protocol}</span>
+                          <span className={`text-[7px] ${active ? 'text-accent-cyan' : 'text-text-muted'}`}>{isBi ? '⇄' : isIn ? '←' : '→'}</span>
+                        </div>
+                        <div className="flex-1 relative h-[2px]">
+                          <div className="absolute inset-0 bg-border rounded-full" />
+                          <div className={`absolute top-0 h-full rounded-full transition-all duration-1000 ${active ? 'bg-accent-cyan' : 'bg-border'}`}
+                            style={{ width: active ? '100%' : '0%', [isIn ? 'left' : 'right']: 0 }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Adapter box */}
+                <div className="rounded-lg border border-status-yellow/40 bg-status-yellow/5 p-2.5 w-full mt-2">
+                  <div className="text-[9px] font-semibold text-status-yellow uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <ArrowRightLeft className="w-3 h-3" /> {t('Integration Layer', '集成适配层')}
                   </div>
-                ))}
-              </div>
-              {/* System Layer */}
-              <div className="rounded-lg border p-3" style={{ borderColor: sys.color + '60', backgroundColor: sys.color + '08' }}>
-                <div className="text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: sys.color }}>
-                  <Database className="w-3 h-3" /> {t(sys.systemLayer.labelEn, sys.systemLayer.label)}
+                  <div className="space-y-1">
+                    {sys.adapterLayer.components.map((c, i) => (
+                      <div key={i} className="text-[8px] px-1.5 py-0.5 rounded bg-status-yellow/8 border border-status-yellow/15 text-status-yellow font-medium text-center">{c}</div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {sys.systemLayer.components.map((c, i) => (
-                    <span key={i} className="px-2 py-1 rounded border text-[10px] font-medium" style={{ backgroundColor: sys.color + '10', borderColor: sys.color + '30', color: sys.color }}>{c}</span>
+                {/* Protocol summary */}
+                <div className="mt-2 flex flex-wrap justify-center gap-1">
+                  {sys.protocols.map((p, i) => (
+                    <span key={i} className={`text-[7px] font-mono px-1.5 py-0.5 rounded border transition-all duration-700 ${(flowTick + i) % sys.protocols.length === 0 ? 'bg-accent-cyan/15 border-accent-cyan/30 text-accent-cyan' : 'bg-bg-tertiary border-border text-text-muted'}`}>
+                      {p.name} {p.latency}
+                    </span>
                   ))}
                 </div>
               </div>
+
+              {/* Column 3: IOE Orchestrator (center) */}
+              <div className="flex flex-col items-center justify-center w-[190px] shrink-0 px-2">
+                <div className="text-[10px] font-semibold text-accent-cyan uppercase tracking-wider mb-3">{t('IOE Agent Harness', 'IOE Agent Harness')}</div>
+                <div className="rounded-xl border-2 border-accent-cyan/40 bg-accent-cyan/5 p-3 w-full">
+                  {/* Orchestrator */}
+                  <div className="rounded-lg bg-accent-cyan/15 border border-accent-cyan/30 p-2 text-center mb-2">
+                    <Server className="w-4 h-4 text-accent-cyan mx-auto mb-1" />
+                    <div className="text-[10px] font-semibold text-accent-cyan">{t('Orchestrator', '编排器')}</div>
+                    <div className="text-[8px] text-text-muted">TAOR Loop</div>
+                  </div>
+                  {/* IOE Layer components */}
+                  <div className="space-y-1">
+                    {sys.ioeLayer.components.map((c, i) => (
+                      <div key={i} className="text-[8px] px-1.5 py-1 rounded bg-accent-cyan/8 border border-accent-cyan/15 text-accent-cyan font-medium text-center">{c}</div>
+                    ))}
+                  </div>
+                  {/* State & Memory */}
+                  <div className="mt-2 rounded-lg bg-bg-tertiary/50 border border-border p-1.5 text-center">
+                    <div className="text-[8px] text-text-muted font-medium">{t('State & Memory', '状态与记忆')}</div>
+                  </div>
+                </div>
+                {/* MCP protocol indicator */}
+                <div className="mt-2 flex items-center gap-1.5">
+                  <Terminal className="w-3 h-3 text-accent-cyan" />
+                  <span className="text-[9px] font-mono text-accent-cyan bg-accent-cyan/10 px-2 py-0.5 rounded border border-accent-cyan/20">MCP Protocol</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
+                </div>
+              </div>
+
+              {/* Column 4: Domain Agents (right) */}
+              <div className="flex flex-col items-center justify-center w-[160px] shrink-0 px-2">
+                <div className="text-[10px] font-semibold text-accent-cyan uppercase tracking-wider mb-3">{t('Domain Agents', '领域Agent')}</div>
+                <div className="space-y-1.5 w-full">
+                  {['Planning', 'Optimization', 'Experience', 'Ops', 'Marketing'].map((ag, i) => {
+                    const agColors = ['#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#10b981'];
+                    const agZh = ['规划', '优化', '体验', '运维', '营销'];
+                    return (
+                      <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-bg-card p-1.5 hover:border-accent-cyan/30 transition-all">
+                        <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: agColors[i] }} />
+                        <span className="text-[9px] font-medium text-text-primary">{t(ag, agZh[i])}</span>
+                        <ChevronRight className="w-2.5 h-2.5 text-text-muted ml-auto" />
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Output */}
+                <div className="mt-3 w-full rounded-lg bg-status-green/8 border border-status-green/20 p-2 text-center">
+                  <div className="text-[9px] text-status-green font-medium">{t('Telecom Service Optimization', '电信服务优化')}</div>
+                  <div className="text-[8px] text-text-muted mt-0.5">{t('Network Insights · Enhanced Services', '网络洞察 · 增强服务')}</div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Data flow labels row */}
+            <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-[9px]">
+              {sys.dataFlows.map((flow, i) => {
+                const active = (flowTick + i) % sys.dataFlows.length === 0;
+                return (
+                  <div key={i} className={`flex items-center gap-1.5 px-2 py-1 rounded transition-all duration-500 ${active ? 'bg-accent-cyan/10 text-accent-cyan' : 'text-text-muted'}`}>
+                    <span className="font-medium truncate max-w-[100px]">{flow.from}</span>
+                    <span className="font-mono text-[8px]">{flow.direction === 'inbound' ? '→' : flow.direction === 'outbound' ? '←' : '⇄'}</span>
+                    <span className="font-medium truncate max-w-[100px]">{flow.to}</span>
+                    <span className="font-mono text-status-green">{flow.rate}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* ② Protocol Grid + Data Flow side by side */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Protocols */}
-            <div>
-              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <Activity className="w-3 h-3" /> {t('Protocols', '协议')}
-              </h4>
-              <div className="space-y-1.5">
-                {sys.protocols.map((p, i) => (
-                  <div key={i} className="bg-bg-primary rounded-lg border border-border p-2.5 flex items-center justify-between hover:border-accent-cyan/30 transition-all">
-                    <div>
-                      <div className="text-xs font-mono font-medium text-accent-cyan">{p.name}</div>
-                      <div className="text-[10px] text-text-muted">{p.type} · {p.mode}</div>
-                    </div>
-                    <span className="text-[10px] text-status-green font-mono">{p.latency}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Data Flows */}
-            <div>
-              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <Radio className="w-3 h-3" /> {t('Data Flows', '数据流转')}
-                <span className="ml-1 w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
-              </h4>
-              <div className="space-y-1.5">
-                {sys.dataFlows.map((flow, i) => {
-                  const active = (flowTick + i) % sys.dataFlows.length === 0;
-                  return (
-                    <div key={i} className={`bg-bg-primary rounded-lg border p-2.5 transition-all duration-500 ${active ? 'border-accent-cyan/50 bg-accent-cyan/5' : 'border-border'}`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-medium text-text-primary truncate">{flow.from}</span>
-                        <span className={`text-xs font-bold ${dirColor[flow.direction]}`}>{dirIcon[flow.direction]}</span>
-                        <span className="text-[10px] font-medium text-text-primary truncate">{flow.to}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-bg-tertiary text-accent-cyan">{flow.protocol}</span>
-                        <span className="text-[9px] text-status-green font-mono">{flow.rate}</span>
-                      </div>
-                      {active && <div className="mt-1.5 h-0.5 rounded-full bg-accent-cyan/20 overflow-hidden"><div className="h-full bg-accent-cyan rounded-full animate-pulse" style={{ width: '70%' }} /></div>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* ③ MCP Tool Invocations — key new section */}
+          {/* ── MCP Tool Invocations ── */}
           <div>
             <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Terminal className="w-3 h-3" /> {t('MCP Tool Invocations', 'MCP 工具调用')}
@@ -1009,9 +1042,8 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
             </div>
           </div>
 
-          {/* ④ Integration Summary */}
+          {/* ── Integration Summary ── */}
           <div className="bg-bg-primary rounded-lg border border-border p-4">
-            <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t('Integration Summary', '集成概要')}</h4>
             <div className="grid grid-cols-5 gap-4 text-center">
               <div>
                 <p className="text-lg font-semibold text-text-primary">{sys.protocols.length}</p>
@@ -1030,7 +1062,7 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
                 <p className="text-[10px] text-text-muted">{t('MCP Tools', 'MCP工具')}</p>
               </div>
               <div>
-                <p className="text-lg font-semibold text-text-primary">3</p>
+                <p className="text-lg font-semibold text-text-primary">4</p>
                 <p className="text-[10px] text-text-muted">{t('Arch Layers', '架构层')}</p>
               </div>
             </div>
@@ -1040,3 +1072,4 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
     </div>
   );
 }
+

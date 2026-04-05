@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Eye, Settings, CheckCircle2, XCircle, Clock, Activity, Unlock, X, AlertTriangle, ChevronDown, ChevronRight, Edit3, Save } from 'lucide-react';
+import { Shield, Eye, Settings, CheckCircle2, XCircle, Clock, Activity, Unlock, X, AlertTriangle, ChevronRight, Edit3, Save } from 'lucide-react';
 import { useText } from '../hooks/useText';
 
 type LevelData = {
@@ -129,8 +129,6 @@ export default function Permissions() {
   const [levels, setLevels] = useState(INIT_LEVELS);
   const [editingLevel, setEditingLevel] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<LevelData | null>(null);
-  const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
-
   // Editable matrix
   const [matrix, setMatrix] = useState(INIT_MATRIX);
 
@@ -177,9 +175,8 @@ export default function Permissions() {
         <div className="grid grid-cols-5 gap-3">
           {levels.map((lv, lvIdx) => {
             const Icon = lv.icon;
-            const isExpanded = expandedLevel === lv.level;
             return (
-              <div key={lv.level} className={`bg-bg-card rounded-xl border transition-all ${isExpanded ? 'border-accent-cyan/50 ring-1 ring-accent-cyan/20' : 'border-border hover:border-accent-cyan/30'}`}>
+              <div key={lv.level} className="bg-bg-card rounded-xl border border-border hover:border-accent-cyan/30 transition-all">
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: lv.color + '20' }}>
@@ -220,16 +217,10 @@ export default function Permissions() {
                     <div className="flex justify-between"><span className="text-text-muted">{t('Approval', '审批')}</span><span className="text-text-secondary">{t(lv.approvalEn, lv.approvalZh)}</span></div>
                     <div className="flex justify-between"><span className="text-text-muted">{t('Agents', 'Agent数')}</span><span className="text-text-secondary">{lv.agentCount}</span></div>
                   </div>
-                  <button onClick={() => setExpandedLevel(isExpanded ? null : lv.level)}
-                    className="mt-2 w-full text-[10px] text-accent-cyan flex items-center justify-center gap-1 hover:underline cursor-pointer">
-                    {isExpanded ? t('Collapse rules', '收起规则') : t('View rules', '查看规则')}
-                    <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                  </button>
-                </div>
-                {isExpanded && (
-                  <div className="px-4 pb-4 border-t border-border pt-3">
-                    <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider mb-2">{t('Rules & Constraints', '规则与约束')}</p>
-                    <div className="space-y-1.5">
+                  {/* Rules — always visible */}
+                  <div className="mt-2 pt-2 border-t border-border">
+                    <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1.5">{t('Rules', '规则')}</p>
+                    <div className="space-y-1">
                       {(t('_', '中') === '_' ? lv.rulesEn : lv.rulesZh).map((rule, i) => (
                         <div key={i} className="flex items-start gap-1.5 text-[10px] text-text-secondary">
                           <Shield className="w-2.5 h-2.5 shrink-0 mt-0.5" style={{ color: lv.color }} />
@@ -238,7 +229,7 @@ export default function Permissions() {
                       ))}
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             );
           })}
