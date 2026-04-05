@@ -37,7 +37,7 @@ export default function Navbar() {
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-bg-tertiary hover:bg-bg-hover text-text-secondary hover:text-text-primary text-xs transition-all cursor-pointer"
         >
           <Globe className="w-3.5 h-3.5" />
-          {language === 'en' ? '中文' : 'EN'}
+          {language === 'en' ? 'ZH' : 'EN'}
         </button>
       </div>
     </header>

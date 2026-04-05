@@ -421,19 +421,19 @@ function UserTwin({ t }: { t: (en: string, zh: string) => string }) {
 
   // Churn risk users
   const churnUsers = [
-    { id: 1, name: '张明辉', phone: '138****2891', plan: '冰激凌129', arpu: 98, months: 36, riskScore: 92, reason: '连续3月ARPU下降, 投诉2次未解决', signal: '通话时长下降45%, 流量使用减少60%' },
-    { id: 2, name: '李婷', phone: '139****5567', plan: '畅享199', arpu: 156, months: 24, riskScore: 85, reason: '竞对号码活跃, 套餐溢出频繁', signal: '双卡切换比例上升, 夜间流量转移' },
-    { id: 3, name: '王志强', phone: '136****8834', plan: '冰激凌99', arpu: 72, months: 48, riskScore: 78, reason: '合约即将到期, 未续约意愿低', signal: '合约到期前30天, 咨询携号转网' },
-    { id: 4, name: '赵雅楠', phone: '135****1123', plan: '畅享299', arpu: 245, months: 12, riskScore: 71, reason: 'VoLTE质量差导致不满', signal: '连续投诉网络质量, 满意度评分2/5' },
-    { id: 5, name: '刘建国', phone: '137****4456', plan: '冰激凌59', arpu: 45, months: 60, riskScore: 65, reason: '低ARPU长期用户, 价格敏感', signal: '频繁查询资费, 关注竞对低价套餐' },
+    { id: 1, name: t('Zhang Minghui', '张明辉'), phone: '138****2891', plan: t('Ice Cream 129', '冰激凌129'), arpu: 98, months: 36, riskScore: 92, reason: t('3-month ARPU decline, 2 unresolved complaints', '连续3月ARPU下降, 投诉2次未解决'), signal: t('Call duration down 45%, data usage down 60%', '通话时长下降45%, 流量使用减少60%') },
+    { id: 2, name: t('Li Ting', '李婷'), phone: '139****5567', plan: t('Enjoy 199', '畅享199'), arpu: 156, months: 24, riskScore: 85, reason: t('Competitor number active, plan overflow frequent', '竞对号码活跃, 套餐溢出频繁'), signal: t('Dual-SIM switching up, nighttime data migration', '双卡切换比例上升, 夜间流量转移') },
+    { id: 3, name: t('Wang Zhiqiang', '王志强'), phone: '136****8834', plan: t('Ice Cream 99', '冰激凌99'), arpu: 72, months: 48, riskScore: 78, reason: t('Contract expiring, low renewal intent', '合约即将到期, 未续约意愿低'), signal: t('30 days to expiry, inquired number portability', '合约到期前30天, 咨询携号转网') },
+    { id: 4, name: t('Zhao Yanan', '赵雅楠'), phone: '135****1123', plan: t('Enjoy 299', '畅享299'), arpu: 245, months: 12, riskScore: 71, reason: t('Poor VoLTE quality causing dissatisfaction', 'VoLTE质量差导致不满'), signal: t('Repeated network quality complaints, satisfaction 2/5', '连续投诉网络质量, 满意度评分2/5') },
+    { id: 5, name: t('Liu Jianguo', '刘建国'), phone: '137****4456', plan: t('Ice Cream 59', '冰激凌59'), arpu: 45, months: 60, riskScore: 65, reason: t('Low-ARPU long-term user, price sensitive', '低ARPU长期用户, 价格敏感'), signal: t('Frequent tariff inquiries, watching competitor low-price plans', '频繁查询资费, 关注竞对低价套餐') },
   ];
 
   // Lead identification users
   const leadUsers = [
-    { id: 1, name: '陈思远', phone: '138****7712', current: '冰激凌99', predicted: '畅享199', confidence: 94, trigger: '流量连续3月溢出, 视频消费增长200%', value: '+¥100/月' },
-    { id: 2, name: '黄小明', phone: '136****3345', current: '基础套餐', predicted: '5G尊享399', confidence: 88, trigger: '已购5G手机, 频繁使用高清视频', value: '+¥340/月' },
-    { id: 3, name: '吴丽华', phone: '139****9901', current: '冰激凌129', predicted: '家庭融合版', confidence: 82, trigger: '家庭成员3张卡分散消费, 宽带即将到期', value: '+¥80/月' },
-    { id: 4, name: '周杰', phone: '135****6678', current: '畅享59', predicted: '冰激凌129', confidence: 76, trigger: '数据用量上升趋势, 夜间流量包已满', value: '+¥70/月' },
+    { id: 1, name: t('Chen Siyuan', '陈思远'), phone: '138****7712', current: t('Ice Cream 99', '冰激凌99'), predicted: t('Enjoy 199', '畅享199'), confidence: 94, trigger: t('3-month data overflow, video consumption +200%', '流量连续3月溢出, 视频消费增长200%'), value: '+¥100/月' },
+    { id: 2, name: t('Huang Xiaoming', '黄小明'), phone: '136****3345', current: t('Basic Plan', '基础套餐'), predicted: t('5G Premium 399', '5G尊享399'), confidence: 88, trigger: t('Purchased 5G phone, frequent HD video usage', '已购5G手机, 频繁使用高清视频'), value: '+¥340/月' },
+    { id: 3, name: t('Wu Lihua', '吴丽华'), phone: '139****9901', current: t('Ice Cream 129', '冰激凌129'), predicted: t('Family Bundle', '家庭融合版'), confidence: 82, trigger: t('3 family SIMs scattered, broadband expiring', '家庭成员3张卡分散消费, 宽带即将到期'), value: '+¥80/月' },
+    { id: 4, name: t('Zhou Jie', '周杰'), phone: '135****6678', current: t('Enjoy 59', '畅享59'), predicted: t('Ice Cream 129', '冰激凌129'), confidence: 76, trigger: t('Rising data trend, night data pack maxed', '数据用量上升趋势, 夜间流量包已满'), value: '+¥70/月' },
   ];
 
   // LUM prediction animation

@@ -3,6 +3,7 @@
  */
 
 import React, { type DragEvent } from 'react';
+import { useText } from '../../hooks/useText';
 
 // ---------------------------------------------------------------------------
 // Palette Items
@@ -321,6 +322,7 @@ function PaletteCard({
   item: PaletteItem;
   onDragStart: (e: DragEvent<HTMLDivElement>, item: PaletteItem) => void;
 }) {
+  const { t } = useText();
   const [hovered, setHovered] = React.useState(false);
 
   return (
@@ -351,8 +353,7 @@ function PaletteCard({
         {item.icon}
       </div>
       <div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#1F2937' }}>{item.label}</div>
-        <div style={{ fontSize: 10, color: '#9CA3AF' }}>{item.labelEn}</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: '#1F2937' }}>{t(item.labelEn, item.label)}</div>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ interface WfNode {
   id: string;
   type: 'trigger' | 'agent' | 'condition' | 'action' | 'merge' | 'split' | 'transform' | 'connector';
   name: string;
+  nameEn?: string;
   agentType?: string;
   subAgent?: string;
   connectorType?: string;
@@ -43,6 +44,7 @@ interface WfEdge {
   source: string;
   target: string;
   label?: string;
+  labelEn?: string;
 }
 
 interface WfTemplate {
@@ -60,27 +62,27 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf1', name: '网络故障自动诊断与修复', nameEn: 'Auto Fault Diagnosis & Repair',
     description: '接收告警→分类→严重程度判断→跨域分析/自动修复→验证', descriptionEn: 'Alarm receive → Classify → Severity check → Cross-domain analysis / Auto repair → Verify',
     nodes: [
-      { id: 't1', type: 'trigger', name: '告警接收', x: 50, y: 200 },
-      { id: 'a1', type: 'agent', name: '告警分类', agentType: 'ops', x: 300, y: 200 },
-      { id: 'c1', type: 'condition', name: '严重程度', x: 550, y: 200 },
-      { id: 'a2', type: 'agent', name: '跨域分析', agentType: 'ops', x: 800, y: 80 },
-      { id: 'a3', type: 'agent', name: '数字孪生仿真', agentType: 'optimization', x: 1050, y: 80 },
-      { id: 'c2', type: 'condition', name: '安全检查', x: 1300, y: 80 },
-      { id: 'a4', type: 'action', name: '执行修复', x: 1550, y: 30 },
-      { id: 'a5', type: 'action', name: '验证结果', x: 1800, y: 30 },
-      { id: 'a6', type: 'action', name: '人工审核', x: 1550, y: 160 },
-      { id: 'a7', type: 'agent', name: '自动修复', agentType: 'ops', x: 800, y: 320 },
-      { id: 'a8', type: 'action', name: '关闭工单', x: 1050, y: 320 },
+      { id: 't1', type: 'trigger', name: '告警接收', nameEn: 'Alarm Intake', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '告警分类', nameEn: 'Alarm Classification', agentType: 'ops', x: 300, y: 200 },
+      { id: 'c1', type: 'condition', name: '严重程度', nameEn: 'Severity Check', x: 550, y: 200 },
+      { id: 'a2', type: 'agent', name: '跨域分析', nameEn: 'Cross-domain Analysis', agentType: 'ops', x: 800, y: 80 },
+      { id: 'a3', type: 'agent', name: '数字孪生仿真', nameEn: 'Digital Twin Simulation', agentType: 'optimization', x: 1050, y: 80 },
+      { id: 'c2', type: 'condition', name: '安全检查', nameEn: 'Safety Check', x: 1300, y: 80 },
+      { id: 'a4', type: 'action', name: '执行修复', nameEn: 'Execute Repair', x: 1550, y: 30 },
+      { id: 'a5', type: 'action', name: '验证结果', nameEn: 'Verify Result', x: 1800, y: 30 },
+      { id: 'a6', type: 'action', name: '人工审核', nameEn: 'Manual Review', x: 1550, y: 160 },
+      { id: 'a7', type: 'agent', name: '自动修复', nameEn: 'Auto Repair', agentType: 'ops', x: 800, y: 320 },
+      { id: 'a8', type: 'action', name: '关闭工单', nameEn: 'Close Ticket', x: 1050, y: 320 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 'a1' },
       { id: 'e2', source: 'a1', target: 'c1' },
-      { id: 'e3', source: 'c1', target: 'a2', label: '严重' },
-      { id: 'e4', source: 'c1', target: 'a7', label: '一般' },
+      { id: 'e3', source: 'c1', target: 'a2', label: '严重', labelEn: 'Critical' },
+      { id: 'e4', source: 'c1', target: 'a7', label: '一般', labelEn: 'Normal' },
       { id: 'e5', source: 'a2', target: 'a3' },
       { id: 'e6', source: 'a3', target: 'c2' },
-      { id: 'e7', source: 'c2', target: 'a4', label: '安全' },
-      { id: 'e8', source: 'c2', target: 'a6', label: '不安全' },
+      { id: 'e7', source: 'c2', target: 'a4', label: '安全', labelEn: 'Safe' },
+      { id: 'e8', source: 'c2', target: 'a6', label: '不安全', labelEn: 'Unsafe' },
       { id: 'e9', source: 'a4', target: 'a5' },
       { id: 'e10', source: 'a7', target: 'a8' },
     ],
@@ -89,50 +91,50 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf2', name: '用户投诉闭环处理', nameEn: 'Complaint Closed-loop Handling',
     description: '接收投诉→体验分析→网络检查→优化或套餐推荐→通知用户', descriptionEn: 'Receive complaint → Experience analysis → Network check → Optimize or plan recommend → Notify user',
     nodes: [
-      { id: 't1', type: 'trigger', name: '投诉接收', x: 50, y: 200 },
-      { id: 'a1', type: 'agent', name: '体验分析', agentType: 'experience', x: 300, y: 200 },
-      { id: 'a2', type: 'agent', name: '网络检查', agentType: 'ops', x: 550, y: 200 },
-      { id: 'c1', type: 'condition', name: '网络问题?', x: 800, y: 200 },
-      { id: 'a3', type: 'agent', name: '参数优化', agentType: 'optimization', x: 1050, y: 100 },
-      { id: 'a4', type: 'agent', name: '效果验证', agentType: 'experience', x: 1300, y: 100 },
-      { id: 'a5', type: 'action', name: '通知已修复', x: 1550, y: 100 },
-      { id: 'a6', type: 'agent', name: '套餐检查', agentType: 'marketing', x: 1050, y: 310 },
-      { id: 'c2', type: 'condition', name: '需升级?', x: 1300, y: 310 },
-      { id: 'a7', type: 'action', name: '推荐升级', x: 1550, y: 260 },
-      { id: 'a8', type: 'action', name: '通知已处理', x: 1550, y: 370 },
+      { id: 't1', type: 'trigger', name: '投诉接收', nameEn: 'Complaint Intake', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '体验分析', nameEn: 'Experience Analysis', agentType: 'experience', x: 300, y: 200 },
+      { id: 'a2', type: 'agent', name: '网络检查', nameEn: 'Network Check', agentType: 'ops', x: 550, y: 200 },
+      { id: 'c1', type: 'condition', name: '网络问题?', nameEn: 'Network Issue?', x: 800, y: 200 },
+      { id: 'a3', type: 'agent', name: '参数优化', nameEn: 'Parameter Optimization', agentType: 'optimization', x: 1050, y: 100 },
+      { id: 'a4', type: 'agent', name: '效果验证', nameEn: 'Effect Verification', agentType: 'experience', x: 1300, y: 100 },
+      { id: 'a5', type: 'action', name: '通知已修复', nameEn: 'Notify Repaired', x: 1550, y: 100 },
+      { id: 'a6', type: 'agent', name: '套餐检查', nameEn: 'Plan Check', agentType: 'marketing', x: 1050, y: 310 },
+      { id: 'c2', type: 'condition', name: '需升级?', nameEn: 'Need Upgrade?', x: 1300, y: 310 },
+      { id: 'a7', type: 'action', name: '推荐升级', nameEn: 'Recommend Upgrade', x: 1550, y: 260 },
+      { id: 'a8', type: 'action', name: '通知已处理', nameEn: 'Notify Handled', x: 1550, y: 370 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 'a1' },
       { id: 'e2', source: 'a1', target: 'a2' },
       { id: 'e3', source: 'a2', target: 'c1' },
-      { id: 'e4', source: 'c1', target: 'a3', label: '是' },
-      { id: 'e5', source: 'c1', target: 'a6', label: '否' },
+      { id: 'e4', source: 'c1', target: 'a3', label: '是', labelEn: 'Yes' },
+      { id: 'e5', source: 'c1', target: 'a6', label: '否', labelEn: 'No' },
       { id: 'e6', source: 'a3', target: 'a4' },
       { id: 'e7', source: 'a4', target: 'a5' },
       { id: 'e8', source: 'a6', target: 'c2' },
-      { id: 'e9', source: 'c2', target: 'a7', label: '是' },
-      { id: 'e10', source: 'c2', target: 'a8', label: '否' },
+      { id: 'e9', source: 'c2', target: 'a7', label: '是', labelEn: 'Yes' },
+      { id: 'e10', source: 'c2', target: 'a8', label: '否', labelEn: 'No' },
     ],
   },
   {
     id: 'wf3', name: '新站开通优化', nameEn: 'New Site Activation Optimization',
     description: '新站激活→覆盖验证→工程优化→体验监控→KPI达标检查', descriptionEn: 'Site activation → Coverage verify → Engineering opt → Experience monitor → KPI target check',
     nodes: [
-      { id: 't1', type: 'trigger', name: '新站激活', x: 50, y: 200 },
-      { id: 'a1', type: 'agent', name: '覆盖验证', agentType: 'planning', x: 300, y: 200 },
-      { id: 'a2', type: 'agent', name: '工程优化', agentType: 'optimization', x: 550, y: 200 },
-      { id: 'a3', type: 'agent', name: '体验监控', agentType: 'experience', x: 800, y: 200 },
-      { id: 'c1', type: 'condition', name: 'KPI达标?', x: 1050, y: 200 },
-      { id: 'a4', type: 'action', name: '标记完成', x: 1300, y: 140 },
-      { id: 'a5', type: 'agent', name: '重新优化', agentType: 'optimization', x: 1300, y: 280 },
+      { id: 't1', type: 'trigger', name: '新站激活', nameEn: 'Site Activation', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '覆盖验证', nameEn: 'Coverage Verification', agentType: 'planning', x: 300, y: 200 },
+      { id: 'a2', type: 'agent', name: '工程优化', nameEn: 'Engineering Optimization', agentType: 'optimization', x: 550, y: 200 },
+      { id: 'a3', type: 'agent', name: '体验监控', nameEn: 'Experience Monitor', agentType: 'experience', x: 800, y: 200 },
+      { id: 'c1', type: 'condition', name: 'KPI达标?', nameEn: 'KPI Target?', x: 1050, y: 200 },
+      { id: 'a4', type: 'action', name: '标记完成', nameEn: 'Mark Complete', x: 1300, y: 140 },
+      { id: 'a5', type: 'agent', name: '重新优化', nameEn: 'Re-optimize', agentType: 'optimization', x: 1300, y: 280 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 'a1' },
       { id: 'e2', source: 'a1', target: 'a2' },
       { id: 'e3', source: 'a2', target: 'a3' },
       { id: 'e4', source: 'a3', target: 'c1' },
-      { id: 'e5', source: 'c1', target: 'a4', label: '达标' },
-      { id: 'e6', source: 'c1', target: 'a5', label: '未达标' },
+      { id: 'e5', source: 'c1', target: 'a4', label: '达标', labelEn: 'Met' },
+      { id: 'e6', source: 'c1', target: 'a5', label: '未达标', labelEn: 'Not Met' },
       { id: 'e7', source: 'a5', target: 'a2' },
     ],
   },
@@ -140,15 +142,15 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf4', name: '突发事件保障', nameEn: 'Emergency Event Assurance',
     description: '事件检测→容量扩充→体验监控→稳定性监控→汇总→问题处理', descriptionEn: 'Event detect → Capacity expand → Experience monitor → Stability monitor → Summary → Issue handling',
     nodes: [
-      { id: 't1', type: 'trigger', name: '事件检测', x: 50, y: 200 },
-      { id: 's1', type: 'split', name: '并行保障', x: 300, y: 200 },
-      { id: 'a1', type: 'agent', name: '容量扩充', agentType: 'optimization', x: 550, y: 80 },
-      { id: 'a2', type: 'agent', name: '体验监控', agentType: 'experience', x: 550, y: 200 },
-      { id: 'a3', type: 'agent', name: '稳定性监控', agentType: 'ops', x: 550, y: 320 },
-      { id: 'm1', type: 'merge', name: '汇总报告', x: 800, y: 200 },
-      { id: 'c1', type: 'condition', name: '有问题?', x: 1050, y: 200 },
-      { id: 'a4', type: 'action', name: '升级处理', x: 1300, y: 140 },
-      { id: 'a5', type: 'action', name: '保障结束', x: 1300, y: 280 },
+      { id: 't1', type: 'trigger', name: '事件检测', nameEn: 'Event Detection', x: 50, y: 200 },
+      { id: 's1', type: 'split', name: '并行保障', nameEn: 'Parallel Assurance', x: 300, y: 200 },
+      { id: 'a1', type: 'agent', name: '容量扩充', nameEn: 'Capacity Expansion', agentType: 'optimization', x: 550, y: 80 },
+      { id: 'a2', type: 'agent', name: '体验监控', nameEn: 'Experience Monitor', agentType: 'experience', x: 550, y: 200 },
+      { id: 'a3', type: 'agent', name: '稳定性监控', nameEn: 'Stability Monitor', agentType: 'ops', x: 550, y: 320 },
+      { id: 'm1', type: 'merge', name: '汇总报告', nameEn: 'Summary Report', x: 800, y: 200 },
+      { id: 'c1', type: 'condition', name: '有问题?', nameEn: 'Issues Found?', x: 1050, y: 200 },
+      { id: 'a4', type: 'action', name: '升级处理', nameEn: 'Escalate', x: 1300, y: 140 },
+      { id: 'a5', type: 'action', name: '保障结束', nameEn: 'Assurance End', x: 1300, y: 280 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 's1' },
@@ -159,29 +161,29 @@ const TEMPLATES: WfTemplate[] = [
       { id: 'e6', source: 'a2', target: 'm1' },
       { id: 'e7', source: 'a3', target: 'm1' },
       { id: 'e8', source: 'm1', target: 'c1' },
-      { id: 'e9', source: 'c1', target: 'a4', label: '是' },
-      { id: 'e10', source: 'c1', target: 'a5', label: '否' },
+      { id: 'e9', source: 'c1', target: 'a4', label: '是', labelEn: 'Yes' },
+      { id: 'e10', source: 'c1', target: 'a5', label: '否', labelEn: 'No' },
     ],
   },
   {
     id: 'wf5', name: '精准营销活动', nameEn: 'Precision Marketing Campaign',
     description: '营销创建→潜客识别→容量评估→执行营销→效果监控→报告', descriptionEn: 'Campaign create → Lead identify → Capacity assess → Execute marketing → Monitor → Report',
     nodes: [
-      { id: 't1', type: 'trigger', name: '营销创建', x: 50, y: 200 },
-      { id: 'a1', type: 'agent', name: '潜客识别', agentType: 'marketing', x: 300, y: 200 },
-      { id: 'a2', type: 'agent', name: '容量评估', agentType: 'planning', x: 550, y: 200 },
-      { id: 'c1', type: 'condition', name: '容量充足?', x: 800, y: 200 },
-      { id: 'a3', type: 'agent', name: '执行营销', agentType: 'marketing', x: 1050, y: 130 },
-      { id: 'a4', type: 'agent', name: '效果监控', agentType: 'experience', x: 1300, y: 130 },
-      { id: 'a5', type: 'action', name: '生成报告', x: 1550, y: 130 },
-      { id: 'a6', type: 'action', name: '暂停营销', x: 1050, y: 300 },
+      { id: 't1', type: 'trigger', name: '营销创建', nameEn: 'Campaign Create', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '潜客识别', nameEn: 'Lead Identification', agentType: 'marketing', x: 300, y: 200 },
+      { id: 'a2', type: 'agent', name: '容量评估', nameEn: 'Capacity Assessment', agentType: 'planning', x: 550, y: 200 },
+      { id: 'c1', type: 'condition', name: '容量充足?', nameEn: 'Capacity OK?', x: 800, y: 200 },
+      { id: 'a3', type: 'agent', name: '执行营销', nameEn: 'Execute Campaign', agentType: 'marketing', x: 1050, y: 130 },
+      { id: 'a4', type: 'agent', name: '效果监控', nameEn: 'Effect Monitor', agentType: 'experience', x: 1300, y: 130 },
+      { id: 'a5', type: 'action', name: '生成报告', nameEn: 'Generate Report', x: 1550, y: 130 },
+      { id: 'a6', type: 'action', name: '暂停营销', nameEn: 'Pause Campaign', x: 1050, y: 300 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 'a1' },
       { id: 'e2', source: 'a1', target: 'a2' },
       { id: 'e3', source: 'a2', target: 'c1' },
-      { id: 'e4', source: 'c1', target: 'a3', label: '充足' },
-      { id: 'e5', source: 'c1', target: 'a6', label: '不足' },
+      { id: 'e4', source: 'c1', target: 'a3', label: '充足', labelEn: 'Sufficient' },
+      { id: 'e5', source: 'c1', target: 'a6', label: '不足', labelEn: 'Insufficient' },
       { id: 'e6', source: 'a3', target: 'a4' },
       { id: 'e7', source: 'a4', target: 'a5' },
     ],
@@ -190,15 +192,15 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf6', name: '全网健康巡检', nameEn: 'Network-wide Health Inspection',
     description: '定时触发→分区域巡检→汇总→异常处理→生成报告', descriptionEn: 'Scheduled trigger → Zone inspection → Aggregate → Anomaly handling → Generate report',
     nodes: [
-      { id: 't1', type: 'trigger', name: '定时触发', x: 50, y: 200 },
-      { id: 's1', type: 'split', name: '分区巡检', x: 300, y: 200 },
-      { id: 'a1', type: 'agent', name: '广东巡检', agentType: 'ops', x: 550, y: 80 },
-      { id: 'a2', type: 'agent', name: '浙江巡检', agentType: 'ops', x: 550, y: 200 },
-      { id: 'a3', type: 'agent', name: '北京巡检', agentType: 'ops', x: 550, y: 320 },
-      { id: 'm1', type: 'merge', name: '汇总结果', x: 800, y: 200 },
-      { id: 'c1', type: 'condition', name: '发现异常?', x: 1050, y: 200 },
-      { id: 'a4', type: 'agent', name: '创建工单', agentType: 'ops', x: 1300, y: 130 },
-      { id: 'a5', type: 'action', name: '生成报告', x: 1300, y: 290 },
+      { id: 't1', type: 'trigger', name: '定时触发', nameEn: 'Scheduled Trigger', x: 50, y: 200 },
+      { id: 's1', type: 'split', name: '分区巡检', nameEn: 'Zone Inspection', x: 300, y: 200 },
+      { id: 'a1', type: 'agent', name: '广东巡检', nameEn: 'Guangdong Inspection', agentType: 'ops', x: 550, y: 80 },
+      { id: 'a2', type: 'agent', name: '浙江巡检', nameEn: 'Zhejiang Inspection', agentType: 'ops', x: 550, y: 200 },
+      { id: 'a3', type: 'agent', name: '北京巡检', nameEn: 'Beijing Inspection', agentType: 'ops', x: 550, y: 320 },
+      { id: 'm1', type: 'merge', name: '汇总结果', nameEn: 'Aggregate Results', x: 800, y: 200 },
+      { id: 'c1', type: 'condition', name: '发现异常?', nameEn: 'Anomaly Found?', x: 1050, y: 200 },
+      { id: 'a4', type: 'agent', name: '创建工单', nameEn: 'Create Ticket', agentType: 'ops', x: 1300, y: 130 },
+      { id: 'a5', type: 'action', name: '生成报告', nameEn: 'Generate Report', x: 1300, y: 290 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 's1' },
@@ -209,7 +211,7 @@ const TEMPLATES: WfTemplate[] = [
       { id: 'e6', source: 'a2', target: 'm1' },
       { id: 'e7', source: 'a3', target: 'm1' },
       { id: 'e8', source: 'm1', target: 'c1' },
-      { id: 'e9', source: 'c1', target: 'a4', label: '是' },
+      { id: 'e9', source: 'c1', target: 'a4', label: '是', labelEn: 'Yes' },
       { id: 'e10', source: 'c1', target: 'a5' },
       { id: 'e11', source: 'a4', target: 'a5' },
     ],
@@ -218,16 +220,16 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf7', name: '跨系统故障工单自动化', nameEn: 'Cross-system Fault Ticket Automation',
     description: 'OSS告警→故障分析→SmartCare体验关联→自动创建工单→AUTIN闭环', descriptionEn: 'OSS alarm → Fault analysis → SmartCare correlation → Auto ticket → AUTIN close loop',
     nodes: [
-      { id: 't1', type: 'connector', name: 'OSS告警接入', connectorType: 'oss', x: 50, y: 200 },
-      { id: 'a1', type: 'agent', name: '故障分析', agentType: 'ops', x: 300, y: 200 },
-      { id: 's1', type: 'split', name: '并行关联', x: 550, y: 200 },
-      { id: 'c1', type: 'connector', name: 'SmartCare查询', connectorType: 'smartcare', x: 800, y: 80 },
-      { id: 'a2', type: 'agent', name: '影响分析', agentType: 'experience', x: 800, y: 320 },
-      { id: 'm1', type: 'merge', name: '综合研判', x: 1050, y: 200 },
-      { id: 'cd1', type: 'condition', name: '需现场?', x: 1300, y: 200 },
-      { id: 'c2', type: 'connector', name: '创建工单', connectorType: 'ticket', x: 1550, y: 120 },
-      { id: 'c3', type: 'connector', name: 'AUTIN远程修复', connectorType: 'autin', x: 1550, y: 300 },
-      { id: 'a3', type: 'action', name: '验证&闭环', x: 1800, y: 200 },
+      { id: 't1', type: 'connector', name: 'OSS告警接入', nameEn: 'OSS Alarm Input', connectorType: 'oss', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '故障分析', nameEn: 'Fault Analysis', agentType: 'ops', x: 300, y: 200 },
+      { id: 's1', type: 'split', name: '并行关联', nameEn: 'Parallel Correlation', x: 550, y: 200 },
+      { id: 'c1', type: 'connector', name: 'SmartCare查询', nameEn: 'SmartCare Query', connectorType: 'smartcare', x: 800, y: 80 },
+      { id: 'a2', type: 'agent', name: '影响分析', nameEn: 'Impact Analysis', agentType: 'experience', x: 800, y: 320 },
+      { id: 'm1', type: 'merge', name: '综合研判', nameEn: 'Comprehensive Assessment', x: 1050, y: 200 },
+      { id: 'cd1', type: 'condition', name: '需现场?', nameEn: 'On-site Needed?', x: 1300, y: 200 },
+      { id: 'c2', type: 'connector', name: '创建工单', nameEn: 'Create Ticket', connectorType: 'ticket', x: 1550, y: 120 },
+      { id: 'c3', type: 'connector', name: 'AUTIN远程修复', nameEn: 'AUTIN Remote Repair', connectorType: 'autin', x: 1550, y: 300 },
+      { id: 'a3', type: 'action', name: '验证&闭环', nameEn: 'Verify & Close', x: 1800, y: 200 },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 'a1' },
@@ -237,8 +239,8 @@ const TEMPLATES: WfTemplate[] = [
       { id: 'e5', source: 'c1', target: 'm1' },
       { id: 'e6', source: 'a2', target: 'm1' },
       { id: 'e7', source: 'm1', target: 'cd1' },
-      { id: 'e8', source: 'cd1', target: 'c2', label: '是' },
-      { id: 'e9', source: 'cd1', target: 'c3', label: '否' },
+      { id: 'e8', source: 'cd1', target: 'c2', label: '是', labelEn: 'Yes' },
+      { id: 'e9', source: 'cd1', target: 'c3', label: '否', labelEn: 'No' },
       { id: 'e10', source: 'c2', target: 'a3' },
       { id: 'e11', source: 'c3', target: 'a3' },
     ],
@@ -247,23 +249,23 @@ const TEMPLATES: WfTemplate[] = [
     id: 'wf8', name: '精准营销全流程自动化', nameEn: 'End-to-end Marketing Automation',
     description: 'CRM潜客→BSS套餐匹配→营销执行→SmartCare体验监控→工单跟进', descriptionEn: 'CRM leads → BSS plan matching → Marketing execute → SmartCare monitor → Ticket follow-up',
     nodes: [
-      { id: 'c1', type: 'connector', name: 'CRM潜客数据', connectorType: 'crm', x: 50, y: 200 },
-      { id: 'a1', type: 'agent', name: '潜客筛选', agentType: 'marketing', x: 300, y: 200 },
-      { id: 'c2', type: 'connector', name: 'BSS套餐查询', connectorType: 'bss', x: 550, y: 200 },
-      { id: 'a2', type: 'agent', name: '方案匹配', agentType: 'marketing', x: 800, y: 200 },
-      { id: 'cd1', type: 'condition', name: '匹配成功?', x: 1050, y: 200 },
-      { id: 'c3', type: 'connector', name: 'CRM营销触达', connectorType: 'crm', x: 1300, y: 120 },
-      { id: 'c4', type: 'connector', name: 'SmartCare监控', connectorType: 'smartcare', x: 1550, y: 120 },
-      { id: 'a3', type: 'action', name: '效果报告', x: 1800, y: 120 },
-      { id: 'a4', type: 'action', name: '标记观望', x: 1300, y: 310 },
+      { id: 'c1', type: 'connector', name: 'CRM潜客数据', nameEn: 'CRM Lead Data', connectorType: 'crm', x: 50, y: 200 },
+      { id: 'a1', type: 'agent', name: '潜客筛选', nameEn: 'Lead Filtering', agentType: 'marketing', x: 300, y: 200 },
+      { id: 'c2', type: 'connector', name: 'BSS套餐查询', nameEn: 'BSS Plan Query', connectorType: 'bss', x: 550, y: 200 },
+      { id: 'a2', type: 'agent', name: '方案匹配', nameEn: 'Plan Matching', agentType: 'marketing', x: 800, y: 200 },
+      { id: 'cd1', type: 'condition', name: '匹配成功?', nameEn: 'Match Success?', x: 1050, y: 200 },
+      { id: 'c3', type: 'connector', name: 'CRM营销触达', nameEn: 'CRM Marketing Reach', connectorType: 'crm', x: 1300, y: 120 },
+      { id: 'c4', type: 'connector', name: 'SmartCare监控', nameEn: 'SmartCare Monitor', connectorType: 'smartcare', x: 1550, y: 120 },
+      { id: 'a3', type: 'action', name: '效果报告', nameEn: 'Effect Report', x: 1800, y: 120 },
+      { id: 'a4', type: 'action', name: '标记观望', nameEn: 'Mark Wait-and-see', x: 1300, y: 310 },
     ],
     edges: [
       { id: 'e1', source: 'c1', target: 'a1' },
       { id: 'e2', source: 'a1', target: 'c2' },
       { id: 'e3', source: 'c2', target: 'a2' },
       { id: 'e4', source: 'a2', target: 'cd1' },
-      { id: 'e5', source: 'cd1', target: 'c3', label: '是' },
-      { id: 'e6', source: 'cd1', target: 'a4', label: '否' },
+      { id: 'e5', source: 'cd1', target: 'c3', label: '是', labelEn: 'Yes' },
+      { id: 'e6', source: 'cd1', target: 'a4', label: '否', labelEn: 'No' },
       { id: 'e7', source: 'c3', target: 'c4' },
       { id: 'e8', source: 'c4', target: 'a3' },
     ],
@@ -769,7 +771,7 @@ export default function Workflows() {
                     <text x={(src.x + NODE_W + tgt.x) / 2}
                           y={(src.y + NODE_H/2 + tgt.y + NODE_H/2) / 2 - 8}
                           fill="#94a3b8" fontSize="9" textAnchor="middle">
-                      {edge.label}
+                      {t(edge.labelEn ?? edge.label, edge.label)}
                     </text>
                   )}
                   {isConnectorEdge && !edge.label && (
@@ -827,12 +829,12 @@ export default function Workflows() {
                   <text x={node.x + 52} y={node.y + NODE_H / 2 - 6}
                     fill={isDone ? '#bbf7d0' : '#e2e8f0'} fontSize="12" dominantBaseline="middle"
                     fontWeight={600}>
-                    {node.name}
+                    {t(node.nameEn ?? node.name, node.name)}
                   </text>
                   {/* Subtitle: agent type or node type */}
                   <text x={node.x + 52} y={node.y + NODE_H / 2 + 10}
                     fill="#64748b" fontSize="9" dominantBaseline="middle">
-                    {node.subAgent || (node.connectorType ? CONNECTORS[node.connectorType]?.nameEn : node.agentType ? SUB_AGENTS[node.agentType]?.name : node.type)}
+                    {node.subAgent || (node.connectorType ? t(CONNECTORS[node.connectorType]?.nameEn, CONNECTORS[node.connectorType]?.name) : node.agentType ? t(SUB_AGENTS[node.agentType]?.nameEn, SUB_AGENTS[node.agentType]?.name) : node.type)}
                   </text>
                   {/* n8n-style left port (input) */}
                   <circle cx={node.x} cy={node.y + NODE_H / 2} r={5}
@@ -864,12 +866,12 @@ export default function Workflows() {
                   <div key={key}>
                     <p className="text-xs font-medium text-text-secondary px-2 py-1 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: AGENT_COLORS[key] }} />
-                      {val.name}
+                      {t(val.nameEn, val.name)}
                     </p>
-                    {val.subs.map(sub => (
+                    {val.subs.map((sub, si) => (
                       <button key={sub} onClick={() => handleSelectAgent(agentPicker.nodeId, key, sub)}
                         className="w-full text-left text-xs text-text-secondary hover:bg-bg-primary px-4 py-1 rounded cursor-pointer">
-                        {sub}
+                        {t(val.subsEn[si], sub)}
                       </button>
                     ))}
                   </div>
@@ -919,7 +921,7 @@ export default function Workflows() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-text-muted block mb-1">{t('Name', '名称')}</label>
-                <div className="bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm text-text-primary">{selectedNode.name}</div>
+                <div className="bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm text-text-primary">{t(selectedNode.nameEn ?? selectedNode.name, selectedNode.name)}</div>
               </div>
               <div>
                 <label className="text-xs text-text-muted block mb-1">{t('Type', '类型')}</label>
@@ -1010,8 +1012,8 @@ export default function Workflows() {
                   return (
                     <div key={e.id} className="flex items-center gap-2 text-xs text-text-secondary mb-1">
                       <ArrowRight className="w-3 h-3 text-text-muted" />
-                      <span>{tgt?.name}</span>
-                      {e.label && <span className="text-text-muted">({e.label})</span>}
+                      <span>{tgt ? t(tgt.nameEn ?? tgt.name, tgt.name) : ''}</span>
+                      {e.label && <span className="text-text-muted">({t(e.labelEn ?? e.label, e.label)})</span>}
                     </div>
                   );
                 })}
@@ -1020,7 +1022,7 @@ export default function Workflows() {
                   return (
                     <div key={e.id} className="flex items-center gap-2 text-xs text-text-secondary mb-1">
                       <RefreshCw className="w-3 h-3 text-text-muted" />
-                      <span>← {src?.name}</span>
+                      <span>← {src ? t(src.nameEn ?? src.name, src.name) : ''}</span>
                     </div>
                   );
                 })}

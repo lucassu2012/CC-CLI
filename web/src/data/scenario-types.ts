@@ -66,6 +66,7 @@ export interface ScenarioWfNode {
   id: string;
   type: 'trigger' | 'agent' | 'condition' | 'action' | 'merge' | 'split' | 'transform' | 'connector';
   name: string;
+  nameEn?: string;
   agentType?: string;
   subAgent?: string;
   connectorType?: string;
@@ -78,6 +79,7 @@ export interface ScenarioWfEdge {
   source: string;
   target: string;
   label?: string;
+  labelEn?: string;
 }
 
 export interface ScenarioWorkflowTemplate {
