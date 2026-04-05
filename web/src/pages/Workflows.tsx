@@ -296,14 +296,14 @@ const AGENT_COLORS: Record<string, string> = {
 
 function nodeIcon(type: string) {
   switch (type) {
-    case 'trigger': return '⚡';
-    case 'agent': return '🤖';
+    case 'trigger': return '⏻';
+    case 'agent': return '⊚';
     case 'condition': return '◆';
     case 'action': return '▶';
     case 'merge': return '⤵';
     case 'split': return '⤴';
     case 'transform': return '⇄';
-    case 'connector': return '🔌';
+    case 'connector': return '⇌';
     default: return '●';
   }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, ChevronRight, Wrench, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft, Activity, Share2, AlertTriangle, Crown, Radio, ArrowRightLeft } from 'lucide-react';
+import { Bot, ChevronRight, Wrench, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft, Activity, Share2, AlertTriangle, Crown, Radio, ArrowRightLeft, Compass, Zap, Users, BarChart3, MessageSquare, Send, Database, Link2, Search, Target, TrendingUp, Bell, DollarSign, MapPin, Signal, Gauge } from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { domainAgents as defaultAgents, defaultSupervisor, type DomainAgent, type SubAgent } from '../data/agents';
 import { defaultCollaborationEvents, defaultSharedContext, defaultConflictResolutions } from '../data/a2a-protocol';
@@ -496,93 +496,101 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
   );
 }
 
-/* ─── Agent domain colors ─── */
+/* ─── Agent domain colors & Lucide icons ─── */
 const AGENT_COLORS: Record<string, string> = {
   planning: '#f59e0b', optimization: '#3b82f6', experience: '#8b5cf6', ops: '#ef4444', marketing: '#10b981',
 };
-const AGENT_ICONS: Record<string, string> = {
-  planning: '📐', optimization: '⚡', experience: '👤', ops: '🔧', marketing: '📊',
+const AGENT_LUCIDE: Record<string, typeof Compass> = {
+  planning: Compass, optimization: Zap, experience: Users, ops: Wrench, marketing: BarChart3,
+};
+const AGENT_DOMAIN_LABEL: Record<string, { en: string; zh: string }> = {
+  planning: { en: 'Planning Agent', zh: '规划 Agent' },
+  optimization: { en: 'Optimization Agent', zh: '优化 Agent' },
+  experience: { en: 'Experience Agent', zh: '体验 Agent' },
+  ops: { en: 'O&M Agent', zh: '运维 Agent' },
+  marketing: { en: 'Marketing Agent', zh: '运营 Agent' },
 };
 
 /* ─── Agent Topology — Dual Mode (Connected Systems style) ─── */
 type TopoMode = 'direct' | 'hierarchical';
 
-/* Agent tool descriptions */
-const AGENT_TOOL_LIST: Record<string, { icon: string; name: string; nameZh: string }[]> = {
+/* Sub-agent icon map — Lucide, minimal */
+const SUB_AGENT_ICONS: Record<string, { icon: typeof Compass; color: string }[]> = {
   planning: [
-    { icon: '📡', name: 'Coverage Analysis', nameZh: '覆盖分析' },
-    { icon: '📊', name: 'Capacity Planning', nameZh: '容量规划' },
-    { icon: '🗺️', name: 'Site Selection', nameZh: '站点选址' },
+    { icon: Search, color: '#f59e0b' },
+    { icon: Signal, color: '#f59e0b' },
+    { icon: TrendingUp, color: '#f59e0b' },
+    { icon: DollarSign, color: '#f59e0b' },
   ],
   optimization: [
-    { icon: '⚡', name: 'Parameter Tuning', nameZh: '参数调优' },
-    { icon: '📈', name: 'KPI Prediction', nameZh: 'KPI预测' },
-    { icon: '🔧', name: 'Auto-Optimization', nameZh: '自动优化' },
+    { icon: Gauge, color: '#3b82f6' },
+    { icon: Wrench, color: '#3b82f6' },
+    { icon: Target, color: '#3b82f6' },
   ],
   experience: [
-    { icon: '👤', name: 'User Profiling', nameZh: '用户画像' },
-    { icon: '📱', name: 'QoE Analysis', nameZh: 'QoE分析' },
-    { icon: '💡', name: 'Recommendation', nameZh: '智能推荐' },
+    { icon: Bell, color: '#8b5cf6' },
+    { icon: Users, color: '#8b5cf6' },
+    { icon: Target, color: '#8b5cf6' },
   ],
   ops: [
-    { icon: '🔧', name: 'Fault Diagnosis', nameZh: '故障诊断' },
-    { icon: '🚨', name: 'Alarm Correlation', nameZh: '告警关联' },
-    { icon: '📋', name: 'Change Mgmt', nameZh: '变更管理' },
+    { icon: Activity, color: '#ef4444' },
+    { icon: Search, color: '#ef4444' },
+    { icon: MapPin, color: '#ef4444' },
   ],
   marketing: [
-    { icon: '📊', name: 'Campaign Analysis', nameZh: '营销分析' },
-    { icon: '🎯', name: 'Churn Prediction', nameZh: '流失预测' },
-    { icon: '💰', name: 'Revenue Forecast', nameZh: '收益预测' },
+    { icon: Target, color: '#10b981' },
+    { icon: TrendingUp, color: '#10b981' },
+    { icon: DollarSign, color: '#10b981' },
   ],
 };
 
-/* Animated connection line component (matches Connected Systems style) */
-function FlowLine({ vertical, color = '#06b6d4', active = true, length }: {
-  vertical?: boolean; color?: string; active?: boolean; length?: string;
-}) {
-  const cls = vertical ? 'w-[2px]' : 'h-[2px]';
-  const size = length || (vertical ? 'h-full' : 'w-full');
+/* Animated connection line */
+function FlowLine({ color = '#06b6d4', length = 'w-full' }: { color?: string; length?: string }) {
   return (
-    <div className={`relative ${cls} ${size}`}>
-      <div className={`absolute inset-0 bg-border rounded-full`} />
-      {active && (
-        <div className="absolute inset-0 rounded-full" style={{
-          background: `linear-gradient(${vertical ? '180deg' : '90deg'}, transparent, ${color}, transparent)`,
-          boxShadow: `0 0 6px ${color}40`,
-          animation: 'flowPulse 2s ease-in-out infinite',
-        }} />
-      )}
+    <div className={`relative h-[2px] ${length}`}>
+      <div className="absolute inset-0 bg-border rounded-full" />
+      <div className="absolute inset-0 rounded-full" style={{
+        background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
+        boxShadow: `0 0 6px ${color}40`,
+        animation: 'flowPulse 2s ease-in-out infinite',
+      }} />
     </div>
   );
 }
 
 /* ─── Mode 1: Direct Routing (Classifier-Based) ─── */
-function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onClickMemory, t }: {
-  agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void;
+function DirectRoutingTopology({ agents, supervisor, onSelectAgent, onClickConvHistory, onClickMemory, t }: {
+  agents: DomainAgent[]; supervisor: { tasksCoordinated: number; contextSyncs: number; conflictsResolved: number };
+  onSelectAgent: (agent: DomainAgent) => void;
   onClickConvHistory: () => void; onClickMemory: () => void;
   t: (en: string, zh: string) => string;
 }) {
-  const flowColor = '#8b5cf6';
   return (
-    <div className="px-4 pb-4 pt-2">
-      {/* Main horizontal flow */}
-      <div className="flex items-stretch gap-0">
+    <div className="p-4 flex flex-col h-full">
+      {/* Stats row */}
+      <div className="flex items-center justify-end gap-6 text-center text-xs mb-4 shrink-0">
+        <div><p className="text-base font-semibold text-text-primary tabular-nums">{supervisor.tasksCoordinated.toLocaleString()}</p><p className="text-text-muted">{t('Tasks Coord.', '协调任务')}</p></div>
+        <div><p className="text-base font-semibold text-accent-cyan tabular-nums">{supervisor.contextSyncs.toLocaleString()}</p><p className="text-text-muted">{t('Context Syncs', '上下文同步')}</p></div>
+        <div><p className="text-base font-semibold text-status-yellow tabular-nums">{supervisor.conflictsResolved}</p><p className="text-text-muted">{t('Conflicts', '冲突解决')}</p></div>
+      </div>
+
+      {/* Main horizontal flow — centered vertically */}
+      <div className="flex-1 flex items-center gap-0">
         {/* User Input */}
-        <div className="flex flex-col items-center gap-1 shrink-0" style={{ width: 80 }}>
-          <div className="w-10 h-10 rounded-lg bg-bg-tertiary/50 border border-border flex items-center justify-center">
-            <span className="text-lg">💬</span>
+        <div className="flex flex-col items-center gap-1.5 shrink-0 w-20">
+          <div className="w-11 h-11 rounded-xl bg-bg-tertiary/50 border border-border flex items-center justify-center">
+            <MessageSquare className="w-5 h-5 text-text-muted" />
           </div>
           <span className="text-[9px] text-text-muted">{t('User Input', '用户输入')}</span>
         </div>
 
-        {/* Arrow */}
-        <div className="flex items-center px-1 -mt-3"><FlowLine color={flowColor} length="w-8" /></div>
+        <div className="flex items-center shrink-0 px-1"><FlowLine color="#8b5cf6" length="w-10" /></div>
 
         {/* Classifier */}
-        <div className="flex-1 rounded-xl border-2 p-3 flex flex-col" style={{ borderColor: '#10b981' + '50', backgroundColor: '#10b981' + '06', maxWidth: 160 }}>
-          <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: '#10b981' + '20' }}>
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b981' + '18' }}>
-              <span className="text-sm">🔀</span>
+        <div className="flex-1 rounded-xl border-2 p-3 min-w-0" style={{ borderColor: '#10b98150', backgroundColor: '#10b98106', maxWidth: 170 }}>
+          <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: '#10b98120' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98118' }}>
+              <Search className="w-3.5 h-3.5" style={{ color: '#10b981' }} />
             </div>
             <span className="text-[11px] font-bold" style={{ color: '#10b981' }}>{t('CLASSIFIER', '分类器')}</span>
           </div>
@@ -592,38 +600,40 @@ function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onCl
           </div>
         </div>
 
-        {/* Arrow */}
-        <div className="flex items-center px-1 -mt-3"><FlowLine color={flowColor} length="w-6" /></div>
+        <div className="flex items-center shrink-0 px-1"><FlowLine color="#8b5cf6" length="w-8" /></div>
 
-        {/* Agent Selection — contains clickable agent list */}
-        <div className="flex-[2] rounded-xl border-2 p-3" style={{ borderColor: flowColor + '50', backgroundColor: flowColor + '06' }}>
-          <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: flowColor + '20' }}>
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: flowColor + '18' }}>
-              <span className="text-sm">🤖</span>
+        {/* Domain Agents */}
+        <div className="flex-[2] rounded-xl border-2 p-3 min-w-0" style={{ borderColor: '#8b5cf650', backgroundColor: '#8b5cf606' }}>
+          <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: '#8b5cf620' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf618' }}>
+              <Bot className="w-3.5 h-3.5 text-accent-purple" />
             </div>
-            <span className="text-[11px] font-bold" style={{ color: flowColor }}>{t('DOMAIN AGENTS', '领域AGENT')}</span>
+            <span className="text-[11px] font-bold text-accent-purple">{t('DOMAIN AGENTS', '领域 AGENT')}</span>
             <span className="text-[9px] text-text-muted ml-auto">{agents.length} {t('agents', '个')}</span>
           </div>
-          <div className="grid grid-cols-2 gap-1">
-            {agents.map(a => (
-              <div key={a.id} onClick={() => onSelectAgent(a)}
-                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium cursor-pointer transition-all hover:scale-[1.02]"
-                style={{ backgroundColor: (AGENT_COLORS[a.id] || flowColor) + '08', borderColor: (AGENT_COLORS[a.id] || flowColor) + '20', color: AGENT_COLORS[a.id] || flowColor }}>
-                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: AGENT_COLORS[a.id] || flowColor }} />
-                {t(a.domain, a.domainZh)}
-              </div>
-            ))}
+          <div className="grid grid-cols-2 gap-1.5">
+            {agents.map(a => {
+              const color = AGENT_COLORS[a.id] || '#8b5cf6';
+              const label = AGENT_DOMAIN_LABEL[a.id];
+              return (
+                <div key={a.id} onClick={() => onSelectAgent(a)}
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium cursor-pointer transition-all hover:scale-[1.02]"
+                  style={{ backgroundColor: color + '08', borderColor: color + '20', color }}>
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                  {label ? t(label.en, label.zh) : t(a.domain, a.domainZh)}
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Arrow */}
-        <div className="flex items-center px-1 -mt-3"><FlowLine color="#06b6d4" length="w-6" /></div>
+        <div className="flex items-center shrink-0 px-1"><FlowLine color="#06b6d4" length="w-8" /></div>
 
-        {/* Agent Processing */}
-        <div className="flex-1 rounded-xl border-2 p-3 flex flex-col" style={{ borderColor: '#06b6d4' + '50', backgroundColor: '#06b6d4' + '06', maxWidth: 160 }}>
-          <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: '#06b6d4' + '20' }}>
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#06b6d4' + '18' }}>
-              <span className="text-sm">⚙️</span>
+        {/* Processing */}
+        <div className="flex-1 rounded-xl border-2 p-3 min-w-0" style={{ borderColor: '#06b6d450', backgroundColor: '#06b6d406', maxWidth: 170 }}>
+          <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: '#06b6d420' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#06b6d418' }}>
+              <Cpu className="w-3.5 h-3.5 text-accent-cyan" />
             </div>
             <span className="text-[11px] font-bold text-accent-cyan">{t('PROCESSING', '处理引擎')}</span>
           </div>
@@ -633,23 +643,24 @@ function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onCl
           </div>
         </div>
 
-        {/* Arrow */}
-        <div className="flex items-center px-1 -mt-3"><FlowLine color="#06b6d4" length="w-8" /></div>
+        <div className="flex items-center shrink-0 px-1"><FlowLine color="#06b6d4" length="w-10" /></div>
 
-        {/* Output */}
-        <div className="flex flex-col items-center gap-1 shrink-0" style={{ width: 80 }}>
-          <div className="w-10 h-10 rounded-lg bg-bg-tertiary/50 border border-border flex items-center justify-center">
-            <span className="text-lg">📤</span>
+        {/* Response */}
+        <div className="flex flex-col items-center gap-1.5 shrink-0 w-20">
+          <div className="w-11 h-11 rounded-xl bg-bg-tertiary/50 border border-border flex items-center justify-center">
+            <Send className="w-5 h-5 text-text-muted" />
           </div>
           <span className="text-[9px] text-text-muted">{t('Response', '响应')}</span>
         </div>
       </div>
 
-      {/* Bottom row: Conversation History + Memory */}
-      <div className="flex gap-3 mt-3">
+      {/* Bottom row */}
+      <div className="flex gap-3 mt-4 shrink-0">
         <div onClick={onClickConvHistory}
-          className="flex-1 rounded-lg border border-border px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
-          <span className="text-sm">💬</span>
+          className="flex-1 rounded-lg border border-border px-3 py-2.5 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
+          <div className="w-7 h-7 rounded-lg bg-bg-tertiary/50 flex items-center justify-center shrink-0">
+            <MessageSquare className="w-3.5 h-3.5 text-text-muted" />
+          </div>
           <div>
             <p className="text-[10px] font-medium text-text-secondary">{t('Conversation History', '会话历史')}</p>
             <p className="text-[9px] text-text-muted">{t('View shared context pool', '查看共享上下文池')}</p>
@@ -657,11 +668,13 @@ function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onCl
           <ChevronRight className="w-3 h-3 text-text-muted ml-auto" />
         </div>
         <div onClick={onClickMemory}
-          className="flex-1 rounded-lg border border-border px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
-          <span className="text-sm">🧠</span>
+          className="flex-1 rounded-lg border border-border px-3 py-2.5 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
+          <div className="w-7 h-7 rounded-lg bg-bg-tertiary/50 flex items-center justify-center shrink-0">
+            <Database className="w-3.5 h-3.5 text-text-muted" />
+          </div>
           <div>
             <p className="text-[10px] font-medium text-text-secondary">{t('Memory & Knowledge', '记忆与知识')}</p>
-            <p className="text-[9px] text-text-muted">{t('Short-term & long-term memory', '短期和长期记忆')}</p>
+            <p className="text-[9px] text-text-muted">{t('Short-term · Long-term · Knowledge', '短期 · 长期 · 知识库')}</p>
           </div>
           <ChevronRight className="w-3 h-3 text-text-muted ml-auto" />
         </div>
@@ -671,16 +684,18 @@ function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onCl
 }
 
 /* ─── Mode 2: Hierarchical Teams (Supervisor) ─── */
-function HierarchicalTopology({ agents, onSelectAgent, onClickMemory, t }: {
+function HierarchicalTopology({ agents, onSelectAgent, onSelectSubAgent, onClickMemory, onClickContext, t }: {
   agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void;
-  onClickMemory: () => void; t: (en: string, zh: string) => string;
+  onSelectSubAgent: (agent: DomainAgent, subIdx: number) => void;
+  onClickMemory: () => void; onClickContext: () => void;
+  t: (en: string, zh: string) => string;
 }) {
   const supColor = '#06b6d4';
   return (
-    <div className="px-4 pb-4 pt-2">
-      <div className="flex gap-3 items-stretch">
+    <div className="p-4 flex flex-col h-full">
+      <div className="flex-1 flex gap-0 items-stretch min-h-0">
         {/* Left: Supervisor container */}
-        <div className="rounded-xl border-2 p-4 flex flex-col shrink-0" style={{ borderColor: supColor + '50', backgroundColor: supColor + '06', width: 200 }}>
+        <div className="rounded-xl border-2 p-3 flex flex-col shrink-0" style={{ borderColor: supColor + '50', backgroundColor: supColor + '06', width: 200 }}>
           <div className="flex items-center gap-2 mb-3 pb-2 border-b" style={{ borderColor: supColor + '20' }}>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: supColor + '18' }}>
               <Crown className="w-4 h-4 text-accent-cyan" />
@@ -691,71 +706,69 @@ function HierarchicalTopology({ agents, onSelectAgent, onClickMemory, t }: {
             </div>
           </div>
           <div className="flex-1 space-y-1.5">
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
-              style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
-              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent-cyan" />
-              {t('Task Delegation', '任务分配')}
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
-              style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
-              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent-cyan" />
-              {t('Context Routing', '上下文路由')}
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
-              style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
-              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent-cyan" />
-              {t('Conflict Resolution', '冲突仲裁')}
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
-              style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
-              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent-cyan" />
-              {t('Result Aggregation', '结果聚合')}
-            </div>
-          </div>
-          {/* Footer metrics */}
-          <div className="mt-3 pt-2 border-t flex items-center justify-around text-[9px]" style={{ borderColor: supColor + '20' }}>
-            <div className="text-center"><span className="text-text-primary font-semibold">A2A-T</span><br /><span className="text-text-muted">{t('Protocol', '协议')}</span></div>
-            <div className="text-center"><span className="text-status-green font-semibold">{t('Active', '活跃')}</span><br /><span className="text-text-muted">{t('Status', '状态')}</span></div>
+            {[
+              { en: 'Task Delegation', zh: '任务分配' },
+              { en: 'Context Routing', zh: '上下文路由' },
+              { en: 'Conflict Resolution', zh: '冲突仲裁' },
+              { en: 'Result Aggregation', zh: '结果聚合' },
+            ].map(item => (
+              <div key={item.en} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
+                style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
+                <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent-cyan" />
+                {t(item.en, item.zh)}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Center: animated connection lines */}
-        <div className="flex flex-col justify-center gap-3 shrink-0 py-6" style={{ width: 40 }}>
+        {/* Center: A2A-T connection lines — aligned with each agent row */}
+        <div className="flex flex-col justify-between shrink-0 py-2" style={{ width: 60 }}>
           {agents.map(a => (
-            <div key={a.id} className="flex items-center justify-center" style={{ height: 28 }}>
-              <FlowLine color={AGENT_COLORS[a.id] || supColor} length="w-10" />
+            <div key={a.id} className="flex-1 flex items-center justify-center relative">
+              <FlowLine color={supColor} length="w-full" />
+              <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[7px] font-mono text-accent-cyan/60 whitespace-nowrap">A2A-T</span>
             </div>
           ))}
         </div>
 
-        {/* Right: Domain Agent cards grid */}
-        <div className="flex-1 min-w-0 flex flex-col gap-2">
+        {/* Right: Domain Agent rows with sub-agent icons */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           {agents.map(a => {
             const color = AGENT_COLORS[a.id] || '#8b5cf6';
-            const tools = AGENT_TOOL_LIST[a.id] || [];
+            const Icon = AGENT_LUCIDE[a.id] || Bot;
+            const label = AGENT_DOMAIN_LABEL[a.id];
+            const subIcons = SUB_AGENT_ICONS[a.id] || [];
             return (
-              <div key={a.id} onClick={() => onSelectAgent(a)}
-                className="rounded-lg border p-2.5 flex items-center gap-3 cursor-pointer transition-all hover:scale-[1.01]"
-                style={{ borderColor: color + '30', backgroundColor: color + '06' }}>
-                {/* Agent icon */}
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: color + '18' }}>
-                  <span className="text-sm">{AGENT_ICONS[a.id] || '🤖'}</span>
-                </div>
-                {/* Agent info */}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold" style={{ color }}>{t(a.domain, a.domainZh)}</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-status-green shrink-0" />
+              <div key={a.id} className="flex items-center gap-2 flex-1 min-h-0">
+                {/* Agent card */}
+                <div onClick={() => onSelectAgent(a)}
+                  className="flex items-center gap-2 rounded-lg border px-2.5 py-2 cursor-pointer transition-all hover:scale-[1.01] min-w-0 flex-1"
+                  style={{ borderColor: color + '30', backgroundColor: color + '06' }}>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: color + '18' }}>
+                    <Icon className="w-3.5 h-3.5" style={{ color }} />
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {tools.map((tool, ti) => (
-                      <span key={ti} className="text-[8px] text-text-muted flex items-center gap-0.5">
-                        <span>{tool.icon}</span> {t(tool.name, tool.nameZh)}
-                      </span>
-                    ))}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold" style={{ color }}>{label ? t(label.en, label.zh) : t(a.domain, a.domainZh)}</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-status-green shrink-0" />
+                    </div>
                   </div>
+                  <ChevronRight className="w-3 h-3 text-text-muted shrink-0" />
                 </div>
-                <ChevronRight className="w-3 h-3 text-text-muted shrink-0" />
+                {/* Sub-agent icons */}
+                <div className="flex items-center gap-1 shrink-0">
+                  {subIcons.map((si, idx) => {
+                    const SIcon = si.icon;
+                    return (
+                      <div key={idx} onClick={() => onSelectSubAgent(a, idx)}
+                        className="w-6 h-6 rounded-md border flex items-center justify-center cursor-pointer transition-all hover:scale-110"
+                        style={{ borderColor: color + '30', backgroundColor: color + '08' }}
+                        title={a.subAgents[idx]?.name || ''}>
+                        <SIcon className="w-3 h-3" style={{ color: color + 'aa' }} />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
@@ -763,11 +776,11 @@ function HierarchicalTopology({ agents, onSelectAgent, onClickMemory, t }: {
       </div>
 
       {/* Bottom: Memory & Context */}
-      <div className="flex gap-3 mt-3">
+      <div className="flex gap-3 mt-3 shrink-0">
         <div onClick={onClickMemory}
-          className="flex-1 rounded-lg border border-border px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b18' }}>
-            <span className="text-sm">🧠</span>
+          className="flex-1 rounded-lg border border-border px-3 py-2.5 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
+          <div className="w-7 h-7 rounded-lg bg-bg-tertiary/50 flex items-center justify-center shrink-0">
+            <Database className="w-3.5 h-3.5 text-text-muted" />
           </div>
           <div>
             <p className="text-[10px] font-medium text-text-secondary">{t('State & Memory', '状态与记忆')}</p>
@@ -775,10 +788,10 @@ function HierarchicalTopology({ agents, onSelectAgent, onClickMemory, t }: {
           </div>
           <ChevronRight className="w-3 h-3 text-text-muted ml-auto" />
         </div>
-        <div onClick={onClickMemory}
-          className="flex-1 rounded-lg border border-border px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf618' }}>
-            <span className="text-sm">🔗</span>
+        <div onClick={onClickContext}
+          className="flex-1 rounded-lg border border-border px-3 py-2.5 flex items-center gap-2 cursor-pointer hover:border-accent-cyan/40 transition-all">
+          <div className="w-7 h-7 rounded-lg bg-bg-tertiary/50 flex items-center justify-center shrink-0">
+            <Link2 className="w-3.5 h-3.5 text-text-muted" />
           </div>
           <div>
             <p className="text-[10px] font-medium text-text-secondary">{t('Shared Context', '共享上下文')}</p>
@@ -818,7 +831,8 @@ function AgentBadge({ agentId, agents, t }: { agentId: string; agents: DomainAge
   if (agentId === 'ioe-supervisor') return <span className="text-[9px] bg-accent-cyan/20 text-accent-cyan px-1.5 py-0.5 rounded">Supervisor</span>;
   const a = agents.find(x => x.id === agentId);
   const color = AGENT_COLORS[agentId] || '#06b6d4';
-  return <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ backgroundColor: `${color}20`, color }}>{a ? t(a.domain, a.domainZh) : agentId}</span>;
+  const label = AGENT_DOMAIN_LABEL[agentId];
+  return <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ backgroundColor: `${color}20`, color }}>{label ? t(label.en, label.zh) : a ? t(a.domain, a.domainZh) : agentId}</span>;
 }
 
 /* ─── Main export ─── */
@@ -860,33 +874,10 @@ export default function Agents() {
           <h1 className="text-lg font-semibold text-text-primary">{t('Multi-Agent Team', '多智能体团队')}</h1>
           <p className="text-xs text-text-muted mt-0.5">1 Supervisor · {domainAgents.length} {t('domain agents', '领域Agent')} · {totalSubAgents} {t('sub-agents', '子Agent')}</p>
         </div>
-        <div className="flex items-center gap-3 text-xs">
-          <span className="text-text-muted">{t('Protocol', '协议')}: <span className="text-accent-cyan font-mono">A2A-T v2.1</span></span>
-          <span className="text-text-muted">{t('Uptime', '在线率')}: <span className="text-status-green">{supervisor.uptime}</span></span>
-        </div>
-      </div>
-
-      {/* ─── Supervisor Strip ─── */}
-      <div className="bg-bg-card rounded-xl border border-accent-cyan/20 p-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-accent-cyan/10 border border-accent-cyan/30 flex items-center justify-center shrink-0">
-            <Crown className="w-6 h-6 text-accent-cyan" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-text-primary">{supervisor.name}</h2>
-              <StatusBadge status={supervisor.status === 'emergency' ? 'error' : 'active'} />
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${supervisor.mode === 'emergency' ? 'bg-status-red/20 text-status-red' : 'bg-status-green/20 text-status-green'}`}>
-                {supervisor.mode === 'emergency' ? t('EMERGENCY MODE', '紧急模式') : t('ROUTINE MODE', '日常模式')}
-              </span>
-            </div>
-            <p className="text-xs text-text-muted mt-0.5 truncate">{t(supervisor.activePlan, supervisor.activePlanZh)}</p>
-          </div>
-          <div className="flex items-center gap-6 text-center text-xs shrink-0">
-            <div><p className="text-base font-semibold text-text-primary tabular-nums">{supervisor.tasksCoordinated.toLocaleString()}</p><p className="text-text-muted">{t('Tasks Coord.', '协调任务')}</p></div>
-            <div><p className="text-base font-semibold text-accent-cyan tabular-nums">{supervisor.contextSyncs.toLocaleString()}</p><p className="text-text-muted">{t('Context Syncs', '上下文同步')}</p></div>
-            <div><p className="text-base font-semibold text-status-yellow tabular-nums">{supervisor.conflictsResolved}</p><p className="text-text-muted">{t('Conflicts', '冲突解决')}</p></div>
-          </div>
+        <div className="flex items-center gap-6 text-center text-xs">
+          <div><p className="text-base font-semibold text-text-primary tabular-nums">{supervisor.tasksCoordinated.toLocaleString()}</p><p className="text-text-muted">{t('Tasks Coord.', '协调任务')}</p></div>
+          <div><p className="text-base font-semibold text-accent-cyan tabular-nums">{supervisor.contextSyncs.toLocaleString()}</p><p className="text-text-muted">{t('Context Syncs', '上下文同步')}</p></div>
+          <div><p className="text-base font-semibold text-status-yellow tabular-nums">{supervisor.conflictsResolved}</p><p className="text-text-muted">{t('Conflicts', '冲突解决')}</p></div>
         </div>
       </div>
 
@@ -912,8 +903,8 @@ export default function Agents() {
           {/* Topology content */}
           <div className="flex-1 overflow-auto">
             {topoMode === 'direct'
-              ? <DirectRoutingTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onClickConvHistory={() => setTeamTab('context')} onClickMemory={() => navigate('/knowledge')} t={t} />
-              : <HierarchicalTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onClickMemory={() => navigate('/knowledge')} t={t} />
+              ? <DirectRoutingTopology agents={domainAgents} supervisor={supervisor} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onClickConvHistory={() => setTeamTab('context')} onClickMemory={() => navigate('/knowledge')} t={t} />
+              : <HierarchicalTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onSelectSubAgent={(a, idx) => { setEditingAgent(a); setEditingSubAgent(a.subAgents[idx]); }} onClickMemory={() => navigate('/knowledge')} onClickContext={() => setTeamTab('context')} t={t} />
             }
           </div>
         </div>
@@ -1026,9 +1017,11 @@ export default function Agents() {
               <div key={agent.id} onClick={() => { setEditingAgent(agent); setEditingSubAgent(undefined); }}
                 className="bg-bg-card rounded-xl border border-border p-4 hover:border-accent-cyan/40 transition-all cursor-pointer group">
                 <div className="flex items-center gap-2 mb-2">
+                  {(() => { const AIcon = AGENT_LUCIDE[agent.id] || Bot; return (
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}15`, border: `1px solid ${color}40` }}>
-                    <span className="text-sm">{AGENT_ICONS[agent.id]}</span>
+                    <AIcon className="w-4 h-4" style={{ color }} />
                   </div>
+                  ); })()}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <h3 className="text-xs font-semibold text-text-primary truncate">{t(agent.name, agent.nameZh)}</h3>
