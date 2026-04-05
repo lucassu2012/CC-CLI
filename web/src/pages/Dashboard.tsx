@@ -6,8 +6,9 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { useText } from '../hooks/useText';
-import { kpiMetrics as kpiBase, activeAlerts, recentTasks, extraTasks, extraAlerts, type TaskItem, type AlertItem } from '../data/dashboard';
-import { domainAgents, type SubAgent } from '../data/agents';
+import { useScenario } from '../context/ScenarioContext';
+import { kpiMetrics as defaultKpiBase, activeAlerts as defaultAlerts, recentTasks as defaultTasks, extraTasks as defaultExtraTasks, extraAlerts as defaultExtraAlerts, type TaskItem, type AlertItem } from '../data/dashboard';
+import { domainAgents as defaultAgents, type SubAgent } from '../data/agents';
 import StatusBadge from '../components/StatusBadge';
 
 /* ─── helpers ─── */
@@ -49,9 +50,21 @@ function Modal({ open, onClose, title, children }: { open: boolean; onClose: () 
 /* ─── Main ─── */
 export default function Dashboard() {
   const { t } = useText();
+  const { scenario } = useScenario();
 
+  // Scenario-aware data sources
+  const kpiBase = scenario?.dashboard.kpis ?? defaultKpiBase;
+  const activeAlerts = scenario?.dashboard.alerts ?? defaultAlerts;
+  const recentTasks = scenario?.dashboard.tasks ?? defaultTasks;
+  const extraTasksData = scenario?.dashboard.extraTasks ?? defaultExtraTasks;
+  const extraAlertsData = scenario?.dashboard.extraAlerts ?? defaultExtraAlerts;
+  const agents = scenario?.agents ?? defaultAgents;
+
+  /* Reset state when scenario changes */
+  const scenarioKey = scenario?.meta.id ?? 'default';
   /* Live KPI animation: fluctuate values every 2 seconds */
   const [liveKpis, setLiveKpis] = useState(kpiBase);
+  useEffect(() => { setLiveKpis(kpiBase); }, [scenarioKey]);
   const [tick, setTick] = useState(0);
   useEffect(() => {
     const iv = setInterval(() => {
@@ -75,7 +88,7 @@ export default function Dashboard() {
   const [agentTicks, setAgentTicks] = useState<Record<string, number>>({});
   useEffect(() => {
     const iv = setInterval(() => {
-      const id = domainAgents[Math.floor(Math.random() * domainAgents.length)].id;
+      const id = agents[Math.floor(Math.random() * agents.length)].id;
       setAgentTicks(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
     }, 3000);
     return () => clearInterval(iv);
@@ -83,12 +96,13 @@ export default function Dashboard() {
 
   /* Dynamic task rotation */
   const [liveTasks, setLiveTasks] = useState<TaskItem[]>(recentTasks.slice(0, 6));
+  useEffect(() => { setLiveTasks(recentTasks.slice(0, 6)); }, [scenarioKey]);
   const extraTaskIdx = useRef(0);
   const taskScrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const iv = setInterval(() => {
       setLiveTasks(prev => {
-        const pool = extraTasks;
+        const pool = extraTasksData;
         const newTask = { ...pool[extraTaskIdx.current % pool.length], id: `TSK-D${Date.now()}`, timestamp: '刚刚' };
         extraTaskIdx.current++;
         // Remove oldest completed, add new at top
@@ -108,11 +122,12 @@ export default function Dashboard() {
 
   /* Dynamic alert rotation */
   const [liveAlerts, setLiveAlerts] = useState<AlertItem[]>(activeAlerts.slice(0, 6));
+  useEffect(() => { setLiveAlerts(activeAlerts.slice(0, 6)); }, [scenarioKey]);
   const extraAlertIdx = useRef(0);
   useEffect(() => {
     const iv = setInterval(() => {
       setLiveAlerts(prev => {
-        const pool = extraAlerts;
+        const pool = extraAlertsData;
         const newAlert = { ...pool[extraAlertIdx.current % pool.length], id: `ALM-D${Date.now()}`, timestamp: '刚刚' };
         extraAlertIdx.current++;
         // Acknowledge an existing one randomly
@@ -132,7 +147,7 @@ export default function Dashboard() {
   /* Modals */
   const [taskModal, setTaskModal] = useState<TaskItem | null>(null);
   const [alertModal, setAlertModal] = useState<AlertItem | null>(null);
-  const [agentModal, setAgentModal] = useState<typeof domainAgents[0] | null>(null);
+  const [agentModal, setAgentModal] = useState<typeof agents[0] | null>(null);
   const [subAgentModal, setSubAgentModal] = useState<SubAgent | null>(null);
   const [subTaskDetail, setSubTaskDetail] = useState<{ title: string; status: string; start: string; elapsed: string } | null>(null);
   const [subAlarmDetail, setSubAlarmDetail] = useState<{ severity: string; title: string; time: string; status: string } | null>(null);
@@ -209,7 +224,7 @@ export default function Dashboard() {
       <section>
         <h2 className="text-sm font-medium text-text-secondary mb-3">{t('Domain Agent Status', '领域智能体状态')}</h2>
         <div className="grid grid-cols-5 gap-3">
-          {domainAgents.map(agent => (
+          {agents.map(agent => (
             <div key={agent.id}
               onClick={() => setAgentModal(agent)}
               className="bg-bg-card rounded-xl border border-border p-4 hover:border-accent-cyan/40 transition-all cursor-pointer group relative overflow-hidden">

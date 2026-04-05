@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { ScenarioProvider } from './context/ScenarioContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -11,22 +12,24 @@ import Permissions from './pages/Permissions';
 
 export default function App() {
   return (
-    <div className="h-screen flex flex-col bg-bg-primary">
-      <Navbar />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-hidden">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/agents" element={<Agents />} />
-            <Route path="/workflows" element={<Workflows />} />
-            <Route path="/knowledge" element={<Knowledge />} />
-            <Route path="/topology" element={<Topology />} />
-            <Route path="/permissions" element={<Permissions />} />
-          </Routes>
-        </main>
+    <ScenarioProvider>
+      <div className="h-screen flex flex-col bg-bg-primary">
+        <Navbar />
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar />
+          <main className="flex-1 overflow-hidden">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/agents" element={<Agents />} />
+              <Route path="/workflows" element={<Workflows />} />
+              <Route path="/knowledge" element={<Knowledge />} />
+              <Route path="/topology" element={<Topology />} />
+              <Route path="/permissions" element={<Permissions />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-    </div>
+    </ScenarioProvider>
   );
 }

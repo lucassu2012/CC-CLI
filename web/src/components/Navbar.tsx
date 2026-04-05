@@ -1,6 +1,7 @@
 import { Activity, Bell, Globe, Wifi } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useText } from '../hooks/useText';
+import ScenarioSwitcher from './ScenarioSwitcher';
 
 export default function Navbar() {
   const toggleLanguage = useStore((s) => s.toggleLanguage);
@@ -19,6 +20,8 @@ export default function Navbar() {
       </div>
 
       <div className="flex items-center gap-4">
+        <ScenarioSwitcher />
+
         <div className="flex items-center gap-2 text-xs">
           <Wifi className="w-3.5 h-3.5 text-status-green" />
           <span className="text-status-green">{t('System Online', '系统在线')}</span>
