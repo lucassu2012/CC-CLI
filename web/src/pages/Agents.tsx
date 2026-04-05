@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, ChevronRight, Wrench, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft, Activity, Share2, AlertTriangle, Crown, Radio, ArrowRightLeft, Compass, Zap, Users, BarChart3, MessageSquare, Send, Database, Link2, Search, Target, TrendingUp, Bell, DollarSign, MapPin, Signal, Gauge } from 'lucide-react';
+import { Bot, ChevronRight, Wrench, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft, Activity, Share2, AlertTriangle, Crown, Radio, ArrowRightLeft, Compass, Zap, Users, BarChart3, MessageSquare, Send, Database, Link2, Search, Target, TrendingUp, Bell, DollarSign, MapPin, Signal, Gauge, CheckCircle2, RefreshCw, CircleAlert, CircleCheck, Megaphone} from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { domainAgents as defaultAgents, defaultSupervisor, type DomainAgent, type SubAgent } from '../data/agents';
 import { defaultCollaborationEvents, defaultSharedContext, defaultConflictResolutions } from '../data/a2a-protocol';
@@ -559,21 +559,13 @@ function FlowLine({ color = '#06b6d4', length = 'w-full' }: { color?: string; le
 }
 
 /* ─── Mode 1: Direct Routing (Classifier-Based) ─── */
-function DirectRoutingTopology({ agents, supervisor, onSelectAgent, onClickConvHistory, onClickMemory, t }: {
-  agents: DomainAgent[]; supervisor: { tasksCoordinated: number; contextSyncs: number; conflictsResolved: number };
-  onSelectAgent: (agent: DomainAgent) => void;
+function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onClickMemory, t }: {
+  agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void;
   onClickConvHistory: () => void; onClickMemory: () => void;
   t: (en: string, zh: string) => string;
 }) {
   return (
     <div className="p-4 flex flex-col h-full">
-      {/* Stats row */}
-      <div className="flex items-center justify-end gap-6 text-center text-xs mb-4 shrink-0">
-        <div><p className="text-base font-semibold text-text-primary tabular-nums">{supervisor.tasksCoordinated.toLocaleString()}</p><p className="text-text-muted">{t('Tasks Coord.', '协调任务')}</p></div>
-        <div><p className="text-base font-semibold text-accent-cyan tabular-nums">{supervisor.contextSyncs.toLocaleString()}</p><p className="text-text-muted">{t('Context Syncs', '上下文同步')}</p></div>
-        <div><p className="text-base font-semibold text-status-yellow tabular-nums">{supervisor.conflictsResolved}</p><p className="text-text-muted">{t('Conflicts', '冲突解决')}</p></div>
-      </div>
-
       {/* Main horizontal flow — centered vertically */}
       <div className="flex-1 flex items-center gap-0">
         {/* User Input */}
@@ -615,11 +607,12 @@ function DirectRoutingTopology({ agents, supervisor, onSelectAgent, onClickConvH
             {agents.map(a => {
               const color = AGENT_COLORS[a.id] || '#8b5cf6';
               const label = AGENT_DOMAIN_LABEL[a.id];
+              const AIcon = AGENT_LUCIDE[a.id] || Bot;
               return (
                 <div key={a.id} onClick={() => onSelectAgent(a)}
                   className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium cursor-pointer transition-all hover:scale-[1.02]"
                   style={{ backgroundColor: color + '08', borderColor: color + '20', color }}>
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                  <AIcon className="w-3 h-3 shrink-0" style={{ color }} />
                   {label ? t(label.en, label.zh) : t(a.domain, a.domainZh)}
                 </div>
               );
@@ -684,87 +677,88 @@ function DirectRoutingTopology({ agents, supervisor, onSelectAgent, onClickConvH
 }
 
 /* ─── Mode 2: Hierarchical Teams (Supervisor) ─── */
-function HierarchicalTopology({ agents, onSelectAgent, onSelectSubAgent, onClickMemory, onClickContext, t }: {
+function HierarchicalTopology({ agents, onSelectAgent, onSelectSubAgent, onClickMemory, onClickContext, onClickSupervisor, t }: {
   agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void;
   onSelectSubAgent: (agent: DomainAgent, subIdx: number) => void;
-  onClickMemory: () => void; onClickContext: () => void;
+  onClickMemory: () => void; onClickContext: () => void; onClickSupervisor: () => void;
   t: (en: string, zh: string) => string;
 }) {
   const supColor = '#06b6d4';
+  const SUP_ITEMS = [
+    { en: 'Task Delegation', zh: '任务分配', icon: Send },
+    { en: 'Context Routing', zh: '上下文路由', icon: Share2 },
+    { en: 'Conflict Resolution', zh: '冲突仲裁', icon: AlertTriangle },
+    { en: 'Result Aggregation', zh: '结果聚合', icon: Layers },
+  ];
   return (
     <div className="p-4 flex flex-col h-full">
       <div className="flex-1 flex gap-0 items-stretch min-h-0">
         {/* Left: Supervisor container */}
-        <div className="rounded-xl border-2 p-3 flex flex-col shrink-0" style={{ borderColor: supColor + '50', backgroundColor: supColor + '06', width: 200 }}>
-          <div className="flex items-center gap-2 mb-3 pb-2 border-b" style={{ borderColor: supColor + '20' }}>
+        <div className="rounded-xl border-2 p-3 flex flex-col shrink-0" style={{ borderColor: supColor + '50', backgroundColor: supColor + '06', width: 210 }}>
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b cursor-pointer" style={{ borderColor: supColor + '20' }} onClick={onClickSupervisor}>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: supColor + '18' }}>
               <Crown className="w-4 h-4 text-accent-cyan" />
             </div>
             <div>
-              <div className="text-[11px] font-bold text-accent-cyan">IOE-SUPERVISOR</div>
+              <div className="text-[11px] font-bold text-accent-cyan">SUPERVISOR AGENT</div>
               <div className="text-[8px] text-text-muted">{t('Think → Act → Observe', '思考 → 行动 → 观察')}</div>
             </div>
           </div>
-          <div className="flex-1 space-y-1.5">
-            {[
-              { en: 'Task Delegation', zh: '任务分配' },
-              { en: 'Context Routing', zh: '上下文路由' },
-              { en: 'Conflict Resolution', zh: '冲突仲裁' },
-              { en: 'Result Aggregation', zh: '结果聚合' },
-            ].map(item => (
-              <div key={item.en} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
-                style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
-                <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent-cyan" />
-                {t(item.en, item.zh)}
-              </div>
-            ))}
+          <div className="flex-1 flex flex-col gap-1.5">
+            {SUP_ITEMS.map(item => {
+              const SIcon = item.icon;
+              return (
+                <div key={item.en} className="flex-1 flex items-center gap-2 px-2.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
+                  style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
+                  <SIcon className="w-3 h-3 shrink-0" style={{ color: supColor }} />
+                  {t(item.en, item.zh)}
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Center: A2A-T connection lines — aligned with each agent row */}
-        <div className="flex flex-col justify-between shrink-0 py-2" style={{ width: 60 }}>
+        {/* Center: A2A-T connection lines — color-matched, single label */}
+        <div className="flex flex-col justify-between shrink-0 py-1 relative" style={{ width: 56 }}>
+          <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 text-[7px] font-mono px-1.5 py-0.5 rounded bg-bg-primary border border-border text-accent-cyan/80 whitespace-nowrap z-10">A2A-T</span>
           {agents.map(a => (
-            <div key={a.id} className="flex-1 flex items-center justify-center relative">
-              <FlowLine color={supColor} length="w-full" />
-              <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[7px] font-mono text-accent-cyan/60 whitespace-nowrap">A2A-T</span>
+            <div key={a.id} className="flex-1 flex items-center justify-center">
+              <FlowLine color={AGENT_COLORS[a.id] || supColor} length="w-full" />
             </div>
           ))}
         </div>
 
-        {/* Right: Domain Agent rows with sub-agent icons */}
+        {/* Right: Domain Agent rows — sub-agent icons inside the card */}
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           {agents.map(a => {
             const color = AGENT_COLORS[a.id] || '#8b5cf6';
             const Icon = AGENT_LUCIDE[a.id] || Bot;
             const label = AGENT_DOMAIN_LABEL[a.id];
-            const subIcons = SUB_AGENT_ICONS[a.id] || [];
+            const subIcons = (SUB_AGENT_ICONS[a.id] || []).slice(0, 3);
             return (
-              <div key={a.id} className="flex items-center gap-2 flex-1 min-h-0">
-                {/* Agent card */}
-                <div onClick={() => onSelectAgent(a)}
-                  className="flex items-center gap-2 rounded-lg border px-2.5 py-2 cursor-pointer transition-all hover:scale-[1.01] min-w-0 flex-1"
-                  style={{ borderColor: color + '30', backgroundColor: color + '06' }}>
+              <div key={a.id}
+                className="flex items-center gap-2 rounded-lg border px-2.5 flex-1 min-h-0 transition-all hover:scale-[1.005]"
+                style={{ borderColor: color + '30', backgroundColor: color + '06' }}>
+                {/* Agent icon + name */}
+                <div className="flex items-center gap-2 cursor-pointer min-w-0 flex-1" onClick={() => onSelectAgent(a)}>
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: color + '18' }}>
                     <Icon className="w-3.5 h-3.5" style={{ color }} />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-bold" style={{ color }}>{label ? t(label.en, label.zh) : t(a.domain, a.domainZh)}</span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-status-green shrink-0" />
-                    </div>
-                  </div>
-                  <ChevronRight className="w-3 h-3 text-text-muted shrink-0" />
+                  <span className="text-[10px] font-bold" style={{ color }}>{label ? t(label.en, label.zh) : t(a.domain, a.domainZh)}</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-status-green shrink-0" />
                 </div>
-                {/* Sub-agent icons */}
-                <div className="flex items-center gap-1 shrink-0">
+                {/* Chevron */}
+                <ChevronRight className="w-3 h-3 text-text-muted shrink-0 cursor-pointer" onClick={() => onSelectAgent(a)} />
+                {/* Sub-agent icons inside the row */}
+                <div className="flex items-center gap-1 shrink-0 ml-1 border-l pl-2" style={{ borderColor: color + '15' }}>
                   {subIcons.map((si, idx) => {
                     const SIcon = si.icon;
                     return (
                       <div key={idx} onClick={() => onSelectSubAgent(a, idx)}
                         className="w-6 h-6 rounded-md border flex items-center justify-center cursor-pointer transition-all hover:scale-110"
-                        style={{ borderColor: color + '30', backgroundColor: color + '08' }}
+                        style={{ borderColor: color + '25', backgroundColor: color + '0a' }}
                         title={a.subAgents[idx]?.name || ''}>
-                        <SIcon className="w-3 h-3" style={{ color: color + 'aa' }} />
+                        <SIcon className="w-3 h-3" style={{ color: color + 'bb' }} />
                       </div>
                     );
                   })}
@@ -812,8 +806,13 @@ const TEAM_TABS = [
 ] as const;
 type TeamTab = typeof TEAM_TABS[number]['key'];
 
-const EVENT_ICONS: Record<string, string> = {
-  delegation: '📋', 'context-sync': '🔄', conflict: '⚠️', resolution: '✅', completion: '🎯', escalation: '🚨',
+const EVENT_ICONS: Record<string, React.ReactNode> = {
+  delegation: <Send className="w-4 h-4 text-accent-cyan" />,
+  'context-sync': <RefreshCw className="w-4 h-4 text-accent-purple" />,
+  conflict: <CircleAlert className="w-4 h-4 text-status-yellow" />,
+  resolution: <CircleCheck className="w-4 h-4 text-status-green" />,
+  completion: <CheckCircle2 className="w-4 h-4 text-status-green" />,
+  escalation: <Megaphone className="w-4 h-4 text-status-red" />,
 };
 const EVENT_COLORS: Record<string, string> = {
   delegation: 'border-accent-cyan/40', 'context-sync': 'border-purple-500/40', conflict: 'border-status-yellow/40',
@@ -903,8 +902,8 @@ export default function Agents() {
           {/* Topology content */}
           <div className="flex-1 overflow-auto">
             {topoMode === 'direct'
-              ? <DirectRoutingTopology agents={domainAgents} supervisor={supervisor} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onClickConvHistory={() => setTeamTab('context')} onClickMemory={() => navigate('/knowledge')} t={t} />
-              : <HierarchicalTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onSelectSubAgent={(a, idx) => { setEditingAgent(a); setEditingSubAgent(a.subAgents[idx]); }} onClickMemory={() => navigate('/knowledge')} onClickContext={() => setTeamTab('context')} t={t} />
+              ? <DirectRoutingTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onClickConvHistory={() => setTeamTab('context')} onClickMemory={() => navigate('/knowledge')} t={t} />
+              : <HierarchicalTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onSelectSubAgent={(a, idx) => { setEditingAgent(a); setEditingSubAgent(a.subAgents[idx]); }} onClickMemory={() => navigate('/knowledge')} onClickContext={() => setTeamTab('context')} onClickSupervisor={() => setTeamTab('conflicts')} t={t} />
             }
           </div>
         </div>
@@ -931,7 +930,7 @@ export default function Agents() {
                 {visibleEvents.map(evt => (
                   <div key={evt.id} className={`bg-bg-primary rounded-lg border-l-2 ${EVENT_COLORS[evt.type] || 'border-border'} p-2.5`}>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm">{EVENT_ICONS[evt.type]}</span>
+                      {EVENT_ICONS[evt.type]}
                       <span className="text-[10px] text-text-muted font-mono">{evt.timestamp}</span>
                       <div className="flex items-center gap-1 ml-auto">
                         {evt.agents.slice(0, 3).map(aid => <AgentBadge key={aid} agentId={aid} agents={domainAgents} t={t} />)}
