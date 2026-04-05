@@ -146,22 +146,25 @@ export const storyAlarmStorm: ScenarioData = {
         {
           id: 'msg-1', role: 'system',
           content: '⚠️ 告警风暴检测：3分钟内收到847条告警，来自广东天河区和白云区。已自动启动告警关联分析。',
+          contentEn: '⚠️ Alarm storm detected: 847 alarms received within 3 minutes from Guangdong Tianhe and Baiyun districts. Automatic alarm correlation analysis initiated.',
           timestamp: '14:23:00',
         },
         {
           id: 'msg-2', role: 'user',
           content: '广东区域大量告警涌入，什么情况？请立即分析根因。',
+          contentEn: 'Massive alarm influx from the Guangdong region — what is happening? Perform root cause analysis immediately.',
           timestamp: '14:23:15',
         },
         {
           id: 'msg-3', role: 'assistant',
           content: '已完成告警风暴根因分析。\n\n**847条告警** 在3分钟内涌入，主要来自天河区和白云区。经过拓扑感知关联引擎分析：\n\n**根因定位：**\n- 骨干链路 **GD-TRUNK-07** 在 **KM12.3** 处光缆中断\n- OTDR测试确认光纤完全断裂，疑似施工活动损坏\n- 影响：23个基站丢失S1连接，约 **45,200** 用户受影响\n- 847条告警已压缩为 **1个根因组**（置信度99.8%）\n\n**已自动执行的措施：**\n1. ✅ 通过备用环路GD-TRUNK-08流量迂回（78%用户已恢复）\n2. ✅ 156位钻石卡VIP用户QoS保护已激活\n3. ✅ 外线修复团队已派遣（GPS定位，预计25分钟到达）\n4. ✅ 23家企业客户已发送事件通知\n\n**当前状态：**\n- 备用环路利用率：89%（需关注）\n- 预计完全恢复：45分钟（待光缆修复）',
+          contentEn: 'Alarm storm root cause analysis completed.\n\n**847 alarms** flooded in within 3 minutes, primarily from Tianhe and Baiyun districts. Topology-aware correlation engine analysis results:\n\n**Root Cause Identification:**\n- Backbone link **GD-TRUNK-07** fiber cut at **KM12.3**\n- OTDR test confirms complete fiber break, suspected construction activity damage\n- Impact: 23 base stations lost S1 connectivity, approximately **45,200** users affected\n- 847 alarms compressed into **1 root cause group** (confidence 99.8%)\n\n**Automated Actions Executed:**\n1. ✅ Traffic rerouted via backup ring GD-TRUNK-08 (78% of users restored)\n2. ✅ QoS protection activated for 156 Diamond-tier VIP users\n3. ✅ Field repair team dispatched (GPS-located, ETA 25 minutes)\n4. ✅ Incident notifications sent to 23 enterprise customers\n\n**Current Status:**\n- Backup ring utilization: 89% (requires monitoring)\n- Estimated full recovery: 45 minutes (pending fiber repair)',
           timestamp: '14:23:45',
           toolCalls: [
-            { id: 'tc-1', name: 'AlarmCorrelationTool', status: 'completed', input: '告警关联：区域=广东, 时间窗=3分钟', output: '847条告警 → 1个根因组, 置信度99.8%', duration: '2.3s' },
-            { id: 'tc-2', name: 'OTDRDiagnosticTool', status: 'completed', input: 'OTDR测试: GD-TRUNK-07', output: '光纤完全断裂, KM12.3处', duration: '8.1s' },
-            { id: 'tc-3', name: 'TopologyQueryTool', status: 'completed', input: '查询GD-TRUNK-07备用路径', output: '备用环GD-TRUNK-08可用, 容量2Gbps', duration: '1.5s' },
-            { id: 'tc-4', name: 'TrafficRerouteTool', status: 'completed', input: '流量迂回: GD-TRUNK-07→GD-TRUNK-08', output: '迂回成功, 78%用户恢复', duration: '12.5s' },
+            { id: 'tc-1', name: 'AlarmCorrelationTool', status: 'completed', input: '告警关联：区域=广东, 时间窗=3分钟', inputEn: 'Alarm correlation: region=Guangdong, time window=3 minutes', output: '847条告警 → 1个根因组, 置信度99.8%', outputEn: '847 alarms → 1 root cause group, confidence 99.8%', duration: '2.3s' },
+            { id: 'tc-2', name: 'OTDRDiagnosticTool', status: 'completed', input: 'OTDR测试: GD-TRUNK-07', inputEn: 'OTDR test: GD-TRUNK-07', output: '光纤完全断裂, KM12.3处', outputEn: 'Complete fiber break at KM12.3', duration: '8.1s' },
+            { id: 'tc-3', name: 'TopologyQueryTool', status: 'completed', input: '查询GD-TRUNK-07备用路径', inputEn: 'Query backup paths for GD-TRUNK-07', output: '备用环GD-TRUNK-08可用, 容量2Gbps', outputEn: 'Backup ring GD-TRUNK-08 available, capacity 2Gbps', duration: '1.5s' },
+            { id: 'tc-4', name: 'TrafficRerouteTool', status: 'completed', input: '流量迂回: GD-TRUNK-07→GD-TRUNK-08', inputEn: 'Traffic reroute: GD-TRUNK-07→GD-TRUNK-08', output: '迂回成功, 78%用户恢复', outputEn: 'Reroute successful, 78% of users restored', duration: '12.5s' },
           ],
           thinkingSteps: [
             { phase: 'Think', phaseZh: '思考', content: 'Detecting alarm pattern: 847 alarms in 3min, geographically clustered in Tianhe+Baiyun. Suggests common upstream failure — likely transport/backbone.', contentZh: '检测告警模式：3分钟内847条告警，地理集中在天河+白云区。此模式表明上游公共故障，可能是传输/骨干层。', timestamp: '14:23:16' },
@@ -179,10 +182,11 @@ export const storyAlarmStorm: ScenarioData = {
             's1': {
               id: 'msg-r-s1', role: 'assistant',
               content: '**恢复方案确认执行中**\n\n**执行进度：**\n- ✅ 流量迂回已完成（35,256用户已恢复，占78%）\n- ✅ VIP QoS承载已激活（156位钻石卡用户QoE恢复至4.2）\n- ✅ 企业客户通知已发送（23家，含恢复时间预估）\n- 🔄 外线团队在途中（预计15分钟到达断点）\n- 🔄 邻区MLB负载均衡运行中（已分流2,400用户）\n\n**容量监控：**\n- 备用环GD-TRUNK-08利用率：89% → 85%（MLB生效后）\n- 应急微波链路已预备（如需启动）\n\n**自动更新：**\n- 知识库已新增条目 KB-090：GD-TRUNK-07光缆中断应急处置\n- 事件报告自动生成中\n- 修复后KPI验证流程已排期',
+              contentEn: '**Recovery Plan Confirmed — Execution in Progress**\n\n**Execution Progress:**\n- ✅ Traffic rerouting completed (35,256 users restored, 78%)\n- ✅ VIP QoS bearers activated (156 Diamond-tier users QoE restored to 4.2)\n- ✅ Enterprise customer notifications sent (23 accounts, including estimated recovery time)\n- 🔄 Field team en route (ETA 15 minutes to break point)\n- 🔄 Neighbor cell MLB load balancing running (2,400 users offloaded)\n\n**Capacity Monitoring:**\n- Backup ring GD-TRUNK-08 utilization: 89% → 85% (after MLB activation)\n- Emergency microwave link on standby (ready to activate if needed)\n\n**Automatic Updates:**\n- Knowledge base entry KB-090 added: GD-TRUNK-07 fiber cut emergency response\n- Incident report auto-generation in progress\n- Post-repair KPI validation workflow scheduled',
               timestamp: '14:24:30',
               toolCalls: [
-                { id: 'tc-5', name: 'MLBActivationTool', status: 'completed', input: '激活12个邻区MLB均衡', output: '2400用户已分流，环路利用率85%', duration: '8.2s' },
-                { id: 'tc-6', name: 'KnowledgeBaseTool', status: 'completed', input: '新增KB-090：GD-TRUNK-07应急', output: '知识条目创建成功', duration: '0.8s' },
+                { id: 'tc-5', name: 'MLBActivationTool', status: 'completed', input: '激活12个邻区MLB均衡', inputEn: 'Activate MLB load balancing on 12 neighbor cells', output: '2400用户已分流，环路利用率85%', outputEn: '2,400 users offloaded, ring utilization 85%', duration: '8.2s' },
+                { id: 'tc-6', name: 'KnowledgeBaseTool', status: 'completed', input: '新增KB-090：GD-TRUNK-07应急', inputEn: 'Add KB-090: GD-TRUNK-07 emergency response', output: '知识条目创建成功', outputEn: 'Knowledge base entry created successfully', duration: '0.8s' },
               ],
               thinkingSteps: [
                 { phase: 'Think', phaseZh: '思考', content: 'Recovery plan approved. Need to continue monitoring backup ring capacity and activate MLB to reduce load.', contentZh: '恢复方案已批准。需持续监控备用环容量并激活MLB减轻负载。', timestamp: '14:24:02' },
@@ -198,10 +202,11 @@ export const storyAlarmStorm: ScenarioData = {
             's2': {
               id: 'msg-r-s2', role: 'assistant',
               content: '**受影响用户与SLA影响分析**\n\n**用户分布（共45,200人）：**\n| 用户等级 | 人数 | 占比 | 当前状态 |\n|----------|------|------|----------|\n| 钻石/金卡 | 312 | 0.7% | QoS保护已激活 |\n| 银卡 | 1,856 | 4.1% | 流量已迂回 |\n| 企业专线 | 890 | 2.0% | 已通知客户经理 |\n| 普通用户 | 42,142 | 93.2% | 78%已恢复 |\n\n**SLA违规风险：**\n- 触发SLA告警企业客户：**23家**\n- 预计最大赔付金额：**¥18,600**\n- SLA计时器剩余：45分钟（需在此前恢复）\n\n**热力图分析：**\n- 天河区CBD：密集受影响区，12个基站\n- 白云区北部：8个基站，部分已通过微波恢复\n- 越秀区边缘：3个基站，影响较轻\n\n**投诉趋势：**\n- 已收投诉：89起（10086热线62起，APP 27起）\n- 预测未来1小时新增：30-50起',
+              contentEn: '**Affected User & SLA Impact Analysis**\n\n**User Distribution (45,200 total):**\n| User Tier | Count | Share | Current Status |\n|-----------|-------|-------|----------------|\n| Diamond/Gold | 312 | 0.7% | QoS protection activated |\n| Silver | 1,856 | 4.1% | Traffic rerouted |\n| Enterprise Dedicated | 890 | 2.0% | Account managers notified |\n| Regular Users | 42,142 | 93.2% | 78% restored |\n\n**SLA Breach Risk:**\n- Enterprise customers with SLA alerts triggered: **23**\n- Estimated maximum compensation: **¥18,600**\n- SLA timer remaining: 45 minutes (must restore before expiry)\n\n**Heatmap Analysis:**\n- Tianhe CBD: Dense impact zone, 12 base stations\n- Northern Baiyun: 8 base stations, partially restored via microwave\n- Yuexiu periphery: 3 base stations, minor impact\n\n**Complaint Trends:**\n- Complaints received: 89 (10086 hotline: 62, App: 27)\n- Forecast for next hour: 30–50 additional complaints',
               timestamp: '14:24:15',
               toolCalls: [
-                { id: 'tc-s2-1', name: 'UserSegmentTool', status: 'completed', input: '按等级分类受影响45200用户', output: '钻金312, 银1856, 企业890, 普通42142', duration: '3.1s' },
-                { id: 'tc-s2-2', name: 'SLAAnalysisTool', status: 'completed', input: '计算SLA违规及赔付风险', output: '23企业客户, 最大赔付¥18,600', duration: '4.2s' },
+                { id: 'tc-s2-1', name: 'UserSegmentTool', status: 'completed', input: '按等级分类受影响45200用户', inputEn: 'Segment 45,200 affected users by tier', output: '钻金312, 银1856, 企业890, 普通42142', outputEn: 'Diamond/Gold 312, Silver 1,856, Enterprise 890, Regular 42,142', duration: '3.1s' },
+                { id: 'tc-s2-2', name: 'SLAAnalysisTool', status: 'completed', input: '计算SLA违规及赔付风险', inputEn: 'Calculate SLA breach and compensation risk', output: '23企业客户, 最大赔付¥18,600', outputEn: '23 enterprise customers, max compensation ¥18,600', duration: '4.2s' },
               ],
               thinkingSteps: [
                 { phase: 'Think', phaseZh: '思考', content: 'User wants detailed impact analysis. Need user segmentation, SLA assessment, geographic heatmap, and complaint trends.', contentZh: '用户需要详细影响分析。需用户分群、SLA评估、地理热力图和投诉趋势。', timestamp: '14:23:48' },
@@ -213,9 +218,10 @@ export const storyAlarmStorm: ScenarioData = {
             's3': {
               id: 'msg-r-s3', role: 'assistant',
               content: '**备用环路GD-TRUNK-08容量预测**\n\n**当前状态：**\n- 利用率：89%（容量2Gbps，当前负载1.78Gbps）\n- 剩余可用：220Mbps\n\n**容量预测（基于流量模型）：**\n| 时间点 | 预测利用率 | 风险等级 |\n|--------|-----------|----------|\n| 当前 | 89% | ⚠️ 警告 |\n| +15分钟 | 92% | ⚠️ 高 |\n| +30分钟 | 95% | 🔴 严重 |\n| +60分钟 | 87% | ⚠️ 警告 |\n\n**缓解措施评估：**\n1. MLB邻区分流 → 预计降低4-6%利用率 ✅ 已激活\n2. 非关键QoS降级 → 预计降低3-5%利用率 ✅ 已执行\n3. 应急微波链路 → 额外200Mbps×2 ⏳ 可随时启动\n\n**建议：** 如30分钟后利用率超93%，自动激活应急微波链路。是否批准自动触发策略？',
+              contentEn: '**Backup Ring GD-TRUNK-08 Capacity Forecast**\n\n**Current Status:**\n- Utilization: 89% (capacity 2Gbps, current load 1.78Gbps)\n- Remaining available: 220Mbps\n\n**Capacity Forecast (traffic model based):**\n| Timeframe | Predicted Utilization | Risk Level |\n|-----------|-----------------------|------------|\n| Current | 89% | ⚠️ Warning |\n| +15 min | 92% | ⚠️ High |\n| +30 min | 95% | 🔴 Critical |\n| +60 min | 87% | ⚠️ Warning |\n\n**Mitigation Assessment:**\n1. MLB neighbor cell offloading → estimated 4–6% utilization reduction ✅ Activated\n2. Non-critical QoS degradation → estimated 3–5% utilization reduction ✅ Executed\n3. Emergency microwave link → additional 200Mbps x2 ⏳ Ready to activate\n\n**Recommendation:** If utilization exceeds 93% in 30 minutes, automatically activate emergency microwave link. Approve auto-trigger policy?',
               timestamp: '14:24:20',
               toolCalls: [
-                { id: 'tc-s3-1', name: 'CapacityForecastTool', status: 'completed', input: '预测GD-TRUNK-08未来1小时利用率', output: '峰值95%在+30分钟', duration: '5.5s' },
+                { id: 'tc-s3-1', name: 'CapacityForecastTool', status: 'completed', input: '预测GD-TRUNK-08未来1小时利用率', inputEn: 'Forecast GD-TRUNK-08 utilization for next 1 hour', output: '峰值95%在+30分钟', outputEn: 'Peak 95% at +30 minutes', duration: '5.5s' },
               ],
               thinkingSteps: [
                 { phase: 'Think', phaseZh: '思考', content: 'Backup ring at 89% is concerning. Need traffic forecast model to predict peak and evaluate mitigation options.', contentZh: '备用环89%令人担忧。需流量预测模型预测峰值并评估缓解选项。', timestamp: '14:23:48' },
@@ -231,16 +237,17 @@ export const storyAlarmStorm: ScenarioData = {
     {
       id: 'conv-vip-protection', title: 'VIP User Protection', titleZh: 'VIP用户体验保护', domain: 'experience',
       messages: [
-        { id: 'msg-v1', role: 'system', content: '💎 VIP保护警报：156位钻石卡用户QoE评分降至2.8/5.0，低于保障阈值3.5。', timestamp: '14:23:30' },
-        { id: 'msg-v2', role: 'user', content: '天河区VIP用户体验严重劣化，请立即启动确定性体验保护。', timestamp: '14:23:35' },
+        { id: 'msg-v1', role: 'system', content: '💎 VIP保护警报：156位钻石卡用户QoE评分降至2.8/5.0，低于保障阈值3.5。', contentEn: '💎 VIP protection alert: 156 Diamond-tier users QoE score dropped to 2.8/5.0, below guaranteed threshold of 3.5.', timestamp: '14:23:30' },
+        { id: 'msg-v2', role: 'user', content: '天河区VIP用户体验严重劣化，请立即启动确定性体验保护。', contentEn: 'Tianhe district VIP user experience severely degraded — initiate deterministic experience protection immediately.', timestamp: '14:23:35' },
         {
           id: 'msg-v3', role: 'assistant',
           content: '**VIP确定性体验保护已启动**\n\n**受影响VIP用户：**\n- 钻石卡：156人（QoE 2.8 → 目标4.0+）\n- 金卡：156人（QoE 3.2 → 目标3.8+）\n\n**保护措施：**\n1. ✅ 专用QoS承载激活（保障下行100Mbps）\n2. ✅ 备用路径优先路由（VIP流量优先通过GD-TRUNK-08）\n3. ✅ 5QI优先级提升（从QCI=9提升至QCI=5）\n4. ✅ 载波聚合增强（4CC CA已启用）\n\n**恢复效果（12秒内）：**\n- 钻石卡QoE：2.8 → **4.2** ✅\n- 金卡QoE：3.2 → **3.9** ✅\n- 下行速率：50Mbps → **120Mbps**\n\n**持续监控中...**',
+          contentEn: '**VIP Deterministic Experience Protection Activated**\n\n**Affected VIP Users:**\n- Diamond-tier: 156 users (QoE 2.8 → target 4.0+)\n- Gold-tier: 156 users (QoE 3.2 → target 3.8+)\n\n**Protection Measures:**\n1. ✅ Dedicated QoS bearers activated (guaranteed 100Mbps downlink)\n2. ✅ Priority routing via backup path (VIP traffic prioritized through GD-TRUNK-08)\n3. ✅ 5QI priority elevated (from QCI=9 to QCI=5)\n4. ✅ Carrier aggregation enhanced (4CC CA enabled)\n\n**Recovery Results (within 12 seconds):**\n- Diamond QoE: 2.8 → **4.2** ✅\n- Gold QoE: 3.2 → **3.9** ✅\n- Downlink throughput: 50Mbps → **120Mbps**\n\n**Continuous monitoring in progress...**',
           timestamp: '14:24:00',
           toolCalls: [
-            { id: 'tc-v1', name: 'CEMQueryTool', status: 'completed', input: '查询受影响区域VIP用户QoE', output: '钻石156人QoE=2.8, 金卡156人QoE=3.2', duration: '1.8s' },
-            { id: 'tc-v2', name: 'QoSBearerTool', status: 'completed', input: '激活VIP专用QoS承载', output: '312用户承载激活成功', duration: '3.5s' },
-            { id: 'tc-v3', name: 'PriorityRoutingTool', status: 'completed', input: 'VIP流量优先路由', output: '优先路由生效', duration: '2.1s' },
+            { id: 'tc-v1', name: 'CEMQueryTool', status: 'completed', input: '查询受影响区域VIP用户QoE', inputEn: 'Query VIP user QoE in affected area', output: '钻石156人QoE=2.8, 金卡156人QoE=3.2', outputEn: 'Diamond 156 users QoE=2.8, Gold 156 users QoE=3.2', duration: '1.8s' },
+            { id: 'tc-v2', name: 'QoSBearerTool', status: 'completed', input: '激活VIP专用QoS承载', inputEn: 'Activate dedicated QoS bearers for VIP users', output: '312用户承载激活成功', outputEn: 'Bearers activated successfully for 312 users', duration: '3.5s' },
+            { id: 'tc-v3', name: 'PriorityRoutingTool', status: 'completed', input: 'VIP流量优先路由', inputEn: 'Priority routing for VIP traffic', output: '优先路由生效', outputEn: 'Priority routing in effect', duration: '2.1s' },
           ],
           thinkingSteps: [
             { phase: 'Think', phaseZh: '思考', content: 'VIP QoE critically low at 2.8. Need immediate dedicated QoS bearers, priority routing, and 5QI elevation.', contentZh: 'VIP QoE严重低至2.8。需立即激活专用QoS承载、优先路由和5QI提升。', timestamp: '14:23:36' },

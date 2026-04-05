@@ -144,21 +144,24 @@ export const storyEventAssurance: ScenarioData = {
         {
           id: 'msg-p1', role: 'system',
           content: '📋 活动保障：8万人体育馆演唱会48小时后举行。已启动赛前容量规划。',
+          contentEn: '📋 Event Assurance: 80K-attendee stadium concert in 48 hours. Pre-event capacity planning initiated.',
           timestamp: '10:00:00',
         },
         {
           id: 'msg-p2', role: 'user',
           content: '8万人演唱会的容量方案准备好了吗？现有基础设施能撑住吗？',
+          contentEn: 'Is the capacity plan for the 80K concert ready? Can the existing infrastructure handle it?',
           timestamp: '10:00:30',
         },
         {
           id: 'msg-p3', role: 'assistant',
           content: '**赛前容量评估完成**\n\n**现有场馆基础设施：**\n- 宏站：4扇区覆盖体育馆周边\n- 现有容量：约2万并发用户\n- 缺口：需4倍容量应对8万观众\n\n**推荐部署方案：**\n| 组件 | 数量 | 容量 | 位置 |\n|------|------|------|------|\n| 临时5G站 | 8个(TC-01~08) | 各1.25Gbps | 场馆各扇区 |\n| 微波回传 | 4条 | 各2Gbps | 屋顶→核心 |\n| 边缘CDN | 1个 | 500GB缓存 | 场馆地下 |\n| 应急发电机 | 4台 | 各50kW | 停车场 |\n\n**蒙特卡洛仿真结果（10,000次）：**\n- **99.5%置信度**：8个临时站满足8万人需求\n- 并发峰值预估：72,000-76,000用户\n- 最坏情况人均吞吐：650Mbps（目标500Mbps以上）\n- 零重大事故概率：**97.8%**\n\n**部署时间表：**\n- T-48h：设备预备\n- T-24h：部署+测试\n- T-4h：全量集成测试\n- T-0：上线监控',
+          contentEn: '**Pre-Event Capacity Assessment Complete**\n\n**Existing Venue Infrastructure:**\n- Macro sites: 4 sectors covering stadium perimeter\n- Current capacity: ~20K concurrent users\n- Gap: 4x capacity needed for 80K attendees\n\n**Recommended Deployment Plan:**\n| Component | Quantity | Capacity | Location |\n|-----------|----------|----------|----------|\n| Temporary 5G cells | 8 (TC-01~08) | 1.25Gbps each | Venue sectors |\n| Microwave backhaul | 4 links | 2Gbps each | Rooftop→Core |\n| Edge CDN | 1 node | 500GB cache | Venue basement |\n| Emergency generators | 4 units | 50kW each | Parking lot |\n\n**Monte Carlo Simulation Results (10,000 runs):**\n- **99.5% confidence**: 8 temporary cells sufficient for 80K\n- Peak concurrent estimate: 72,000-76,000 users\n- Worst-case per-user throughput: 650Mbps (target 500Mbps+)\n- Zero critical incident probability: **97.8%**\n\n**Deployment Timeline:**\n- T-48h: Equipment preparation\n- T-24h: Deployment + testing\n- T-4h: Full integration test\n- T-0: Go-live monitoring',
           timestamp: '10:01:30',
           toolCalls: [
-            { id: 'tc-p1', name: 'VenueCapacityTool', status: 'completed', input: '查询场馆现有容量(全扇区)', output: '当前2万用户, 4宏站扇区', duration: '1.5s' },
-            { id: 'tc-p2', name: 'MonteCarloSimTool', status: 'completed', input: '仿真: 8万人, 8临时站, 10000次', output: '99.5%置信度充足, 峰值72-76K', duration: '15.2s' },
-            { id: 'tc-p3', name: 'EquipmentCheckTool', status: 'completed', input: '临时5G站×8可用性查询', output: '区域仓库8台可用', duration: '2.1s' },
+            { id: 'tc-p1', name: 'VenueCapacityTool', status: 'completed', input: '查询场馆现有容量(全扇区)', inputEn: 'Query venue existing capacity (all sectors)', output: '当前2万用户, 4宏站扇区', outputEn: 'Current 20K users, 4 macro sectors', duration: '1.5s' },
+            { id: 'tc-p2', name: 'MonteCarloSimTool', status: 'completed', input: '仿真: 8万人, 8临时站, 10000次', inputEn: 'Simulate: 80K users, 8 temp cells, 10,000 runs', output: '99.5%置信度充足, 峰值72-76K', outputEn: '99.5% confidence sufficient, peak 72-76K', duration: '15.2s' },
+            { id: 'tc-p3', name: 'EquipmentCheckTool', status: 'completed', input: '临时5G站×8可用性查询', inputEn: 'Check availability of 8 temporary 5G cells', output: '区域仓库8台可用', outputEn: '8 units available in regional warehouse', duration: '2.1s' },
           ],
           thinkingSteps: [
             { phase: 'Think', phaseZh: '思考', content: '80K concert needs ~4x current venue capacity. Standard approach: temporary cells + microwave backhaul. Need Monte Carlo simulation to validate.', contentZh: '8万人演唱会需约4倍当前容量。标准方案：临时站+微波回传。需蒙特卡洛仿真验证。', timestamp: '10:00:32' },
@@ -176,11 +179,12 @@ export const storyEventAssurance: ScenarioData = {
             'se1': {
               id: 'msg-r-se1', role: 'assistant',
               content: '**部署方案已确认，执行中**\n\n**设备调度进度：**\n1. ✅ 8台临时5G站从区域仓库调出（GPS追踪运输中）\n2. ✅ 4台微波回传设备已就绪\n3. ✅ 边缘CDN节点预配置完成\n4. ✅ 4台50kW应急发电机已预留\n5. 🔄 安装团队已派遣（明日08:00到场）\n\n**自动化工作流已触发：**\n- T-24h工作流：部署+集成测试\n- T-4h工作流：全量压力测试\n- T-0工作流：上线监控+应急预案激活\n\n**赞助商SLA保障：**\n- 3个赞助商展位已分配专用QoS承载\n- 支付终端连接保障（双路4G/5G备份）\n- SLA实时监控大屏已配置\n\n**知识库已更新：** KB-E07 "8万人演唱会部署标准操作流程"',
+              contentEn: '**Deployment Plan Confirmed — Execution in Progress**\n\n**Equipment Dispatch Status:**\n1. ✅ 8 temporary 5G cells dispatched from regional warehouse (GPS-tracked in transit)\n2. ✅ 4 microwave backhaul units ready\n3. ✅ Edge CDN node pre-configured\n4. ✅ 4 x 50kW emergency generators reserved\n5. 🔄 Installation team dispatched (arriving tomorrow 08:00)\n\n**Automated Workflows Triggered:**\n- T-24h workflow: Deployment + integration test\n- T-4h workflow: Full stress test\n- T-0 workflow: Go-live monitoring + emergency plan activation\n\n**Sponsor SLA Assurance:**\n- 3 sponsor booths assigned dedicated QoS bearers\n- Payment terminal connectivity guaranteed (dual 4G/5G backup)\n- SLA real-time monitoring dashboard configured\n\n**Knowledge Base Updated:** KB-E07 "80K Concert Deployment Standard Operating Procedure"',
               timestamp: '10:02:30',
               toolCalls: [
-                { id: 'tc-se1-1', name: 'EquipmentDispatchTool', status: 'completed', input: '调度8台临时5G站+4微波设备', output: '设备已调出, GPS追踪中', duration: '3.5s' },
-                { id: 'tc-se1-2', name: 'WorkflowTriggerTool', status: 'completed', input: '触发T-24h/T-4h/T-0工作流', output: '3个工作流已排期', duration: '1.2s' },
-                { id: 'tc-se1-3', name: 'KnowledgeBaseTool', status: 'completed', input: '新增KB-E07部署SOP', output: '知识条目创建成功', duration: '0.8s' },
+                { id: 'tc-se1-1', name: 'EquipmentDispatchTool', status: 'completed', input: '调度8台临时5G站+4微波设备', inputEn: 'Dispatch 8 temporary 5G cells + 4 microwave units', output: '设备已调出, GPS追踪中', outputEn: 'Equipment dispatched, GPS tracking active', duration: '3.5s' },
+                { id: 'tc-se1-2', name: 'WorkflowTriggerTool', status: 'completed', input: '触发T-24h/T-4h/T-0工作流', inputEn: 'Trigger T-24h/T-4h/T-0 workflows', output: '3个工作流已排期', outputEn: '3 workflows scheduled', duration: '1.2s' },
+                { id: 'tc-se1-3', name: 'KnowledgeBaseTool', status: 'completed', input: '新增KB-E07部署SOP', inputEn: 'Create KB-E07 deployment SOP', output: '知识条目创建成功', outputEn: 'Knowledge entry created successfully', duration: '0.8s' },
               ],
               thinkingSteps: [
                 { phase: 'Think', phaseZh: '思考', content: 'Deployment approved. Need to initiate equipment dispatch, trigger automated workflows, and set up sponsor SLA guarantees.', contentZh: '部署已批准。需启动设备调度、触发自动化工作流、设置赞助商SLA保障。', timestamp: '10:01:35' },
@@ -196,10 +200,11 @@ export const storyEventAssurance: ScenarioData = {
             'se2': {
               id: 'msg-r-se2', role: 'assistant',
               content: '**风险评估详情**\n\n**风险矩阵：**\n| 风险项 | 概率 | 影响 | 缓解措施 | 状态 |\n|--------|------|------|----------|------|\n| 临时站供电故障 | 5% | 严重 | 应急发电机×4 + UPS | ✅ 已备 |\n| 微波回传中断 | 3% | 严重 | 光纤备份+4G回传 | ✅ 已备 |\n| 突发暴雨 | 15% | 中等 | 防水帐篷+室内备用 | ✅ 已备 |\n| 人群密度超预期 | 8% | 中等 | 第9/10临时站备用 | ⏳ 可调 |\n| 散场切换风暴 | 12% | 中等 | 预部署切换参数 | ✅ 已配 |\n| 赞助商SLA违规 | 2% | 高 | 双路连接备份 | ✅ 已备 |\n\n**蒙特卡洛置信区间：**\n- 50%情景：无任何事故\n- 90%情景：最多1次轻微告警\n- 99%情景：最多2次告警，自动恢复\n- 99.5%情景（设计目标）：可能需人工干预1次\n\n**历史参照：**\n- 上次6万人活动：零事故\n- 上次8万人活动（3月）：1次MLB触发，15秒自动恢复',
+              contentEn: '**Risk Assessment Details**\n\n**Risk Matrix:**\n| Risk Item | Probability | Impact | Mitigation | Status |\n|-----------|-------------|--------|------------|--------|\n| Temp cell power failure | 5% | Critical | Emergency generators x4 + UPS | ✅ Ready |\n| Microwave backhaul outage | 3% | Critical | Fiber backup + 4G backhaul | ✅ Ready |\n| Sudden rainstorm | 15% | Medium | Waterproof tents + indoor backup | ✅ Ready |\n| Crowd density exceeds forecast | 8% | Medium | Standby cells #9/#10 | ⏳ Available |\n| Dispersal handover storm | 12% | Medium | Pre-staged handover params | ✅ Configured |\n| Sponsor SLA breach | 2% | High | Dual-path connectivity backup | ✅ Ready |\n\n**Monte Carlo Confidence Intervals:**\n- 50th percentile: Zero incidents\n- 90th percentile: At most 1 minor alarm\n- 99th percentile: At most 2 alarms, auto-recovered\n- 99.5th percentile (design target): May require 1 manual intervention\n\n**Historical Reference:**\n- Previous 60K event: Zero incidents\n- Previous 80K event (March): 1 MLB trigger, 15s auto-recovery',
               timestamp: '10:02:00',
               toolCalls: [
-                { id: 'tc-se2-1', name: 'RiskAssessmentTool', status: 'completed', input: '8万人活动风险评估(6维度)', output: '综合风险可控, 最高风险暴雨15%', duration: '4.5s' },
-                { id: 'tc-se2-2', name: 'HistoricalEventTool', status: 'completed', input: '查询历史大型活动保障记录', output: '6万人零事故, 8万人1次MLB', duration: '1.8s' },
+                { id: 'tc-se2-1', name: 'RiskAssessmentTool', status: 'completed', input: '8万人活动风险评估(6维度)', inputEn: '80K event risk assessment (6 dimensions)', output: '综合风险可控, 最高风险暴雨15%', outputEn: 'Overall risk manageable, highest risk rainstorm 15%', duration: '4.5s' },
+                { id: 'tc-se2-2', name: 'HistoricalEventTool', status: 'completed', input: '查询历史大型活动保障记录', inputEn: 'Query historical major event assurance records', output: '6万人零事故, 8万人1次MLB', outputEn: '60K event zero incidents, 80K event 1 MLB trigger', duration: '1.8s' },
               ],
               thinkingSteps: [
                 { phase: 'Think', phaseZh: '思考', content: 'User wants risk details. Need comprehensive risk matrix with probabilities, impacts, and mitigation status.', contentZh: '用户需要风险详情。需包含概率、影响和缓解状态的综合风险矩阵。', timestamp: '10:00:35' },
@@ -211,10 +216,11 @@ export const storyEventAssurance: ScenarioData = {
             'se3': {
               id: 'msg-r-se3', role: 'assistant',
               content: '**备用站点申请已提交**\n\n**调整方案：**\n- 原方案：8个临时5G站\n- 调整后：**8+2=10个**（新增TC-09、TC-10作为热备）\n\n**新增站点配置：**\n| 站点 | 位置 | 角色 | 启用条件 |\n|------|------|------|----------|\n| TC-09 | B区入口 | 热备 | 任意站利用率>90% |\n| TC-10 | VIP区 | 热备 | VIP区QoE<3.5 |\n\n**仿真更新（10+2方案）：**\n- 置信度：99.5% → **99.9%**\n- 零事故概率：97.8% → **99.2%**\n- 额外成本：+¥12,000/天\n\n**审批状态：** 设备仓库确认2台备用可调度。运维团队确认安装人力充足。',
+              contentEn: '**Backup Cell Request Submitted**\n\n**Plan Adjustment:**\n- Original plan: 8 temporary 5G cells\n- Updated: **8+2=10** (TC-09, TC-10 added as hot standby)\n\n**Additional Cell Configuration:**\n| Cell | Location | Role | Activation Condition |\n|------|----------|------|---------------------|\n| TC-09 | Section B entrance | Hot standby | Any cell utilization >90% |\n| TC-10 | VIP area | Hot standby | VIP area QoE <3.5 |\n\n**Simulation Update (10+2 plan):**\n- Confidence: 99.5% → **99.9%**\n- Zero-incident probability: 97.8% → **99.2%**\n- Additional cost: +¥12,000/day\n\n**Approval Status:** Warehouse confirms 2 standby units available for dispatch. O&M team confirms sufficient installation personnel.',
               timestamp: '10:02:15',
               toolCalls: [
-                { id: 'tc-se3-1', name: 'MonteCarloSimTool', status: 'completed', input: '仿真: 8万人, 10站(8+2备), 10000次', output: '99.9%置信度, 零事故99.2%', duration: '12.0s' },
-                { id: 'tc-se3-2', name: 'EquipmentCheckTool', status: 'completed', input: '额外2台临时站可用性', output: '仓库有2台备用, 可调度', duration: '1.5s' },
+                { id: 'tc-se3-1', name: 'MonteCarloSimTool', status: 'completed', input: '仿真: 8万人, 10站(8+2备), 10000次', inputEn: 'Simulate: 80K users, 10 cells (8+2 standby), 10,000 runs', output: '99.9%置信度, 零事故99.2%', outputEn: '99.9% confidence, zero-incident 99.2%', duration: '12.0s' },
+                { id: 'tc-se3-2', name: 'EquipmentCheckTool', status: 'completed', input: '额外2台临时站可用性', inputEn: 'Check availability of 2 additional temp cells', output: '仓库有2台备用, 可调度', outputEn: 'Warehouse has 2 standby units, available for dispatch', duration: '1.5s' },
               ],
               thinkingSteps: [
                 { phase: 'Think', phaseZh: '思考', content: 'User wants additional backup cells. Good safety margin improvement. Need to re-run simulation and check availability.', contentZh: '用户希望增加备用站点。可显著提升安全裕度。需重新仿真并检查可用性。', timestamp: '10:00:35' },
@@ -230,16 +236,17 @@ export const storyEventAssurance: ScenarioData = {
     {
       id: 'conv-event-live', title: 'Live Concert Load Management', titleZh: '演唱会现场负载管理', domain: 'optimization',
       messages: [
-        { id: 'msg-l1', role: 'system', content: '📡 活动进行中：演唱会已开始，72,500并发用户，8个临时站全部运行正常。', timestamp: '20:00:00' },
-        { id: 'msg-l2', role: 'user', content: 'C区出现上行拥塞，大量观众在直播。怎么处理？', timestamp: '20:05:00' },
+        { id: 'msg-l1', role: 'system', content: '📡 活动进行中：演唱会已开始，72,500并发用户，8个临时站全部运行正常。', contentEn: '📡 Event in Progress: Concert started, 72,500 concurrent users, all 8 temporary cells operational.', timestamp: '20:00:00' },
+        { id: 'msg-l2', role: 'user', content: 'C区出现上行拥塞，大量观众在直播。怎么处理？', contentEn: 'Section C is experiencing uplink congestion — many attendees are live-streaming. How should we handle it?', timestamp: '20:05:00' },
         {
           id: 'msg-l3', role: 'assistant',
           content: '**C区上行拥塞 — 已解决**\n\n**根因：**\n- C区 **8,000名用户** 同时上传视频直播\n- TC-03上行利用率飙升至 **94%**\n\n**已执行措施（15秒内）：**\n1. ✅ MLB：2,400用户从TC-03迁移至TC-05（空闲45%）\n2. ✅ 上行调度优化：视频上传QoS优先级提升\n3. ✅ 天线倾角调整：TC-03/TC-05各调2°优化重叠覆盖\n4. ✅ 载波聚合：TC-05启用4CC上行CA\n\n**恢复效果：**\n- C区上行利用率：**94% → 72%** ✅\n- 上传速率：**6Mbps → 12.5Mbps** ✅\n- 直播成功率：**96.8%**（目标95%以上）\n\n**前瞻性告警：**\n⚠️ 演唱会约40分钟后结束 — 正在准备 **15,000用户散场切换** 参数',
+          contentEn: '**Section C Uplink Congestion — Resolved**\n\n**Root Cause:**\n- Section C **8,000 users** simultaneously uploading live video streams\n- TC-03 uplink utilization surged to **94%**\n\n**Actions Taken (within 15 seconds):**\n1. ✅ MLB: 2,400 users redirected from TC-03 to TC-05 (45% idle)\n2. ✅ Uplink scheduling optimization: Video upload QoS priority elevated\n3. ✅ Antenna tilt adjustment: TC-03/TC-05 each adjusted 2° to optimize overlap coverage\n4. ✅ Carrier aggregation: TC-05 enabled 4CC uplink CA\n\n**Recovery Results:**\n- Section C uplink utilization: **94% → 72%** ✅\n- Upload speed: **6Mbps → 12.5Mbps** ✅\n- Live-streaming success rate: **96.8%** (target 95%+)\n\n**Proactive Alert:**\n⚠️ Concert ending in ~40 minutes — pre-staging **15,000-user dispersal handover** parameters',
           timestamp: '20:05:45',
           toolCalls: [
-            { id: 'tc-l1', name: 'CellKPIQueryTool', status: 'completed', input: '查询TC-03/04/05上行利用率', output: 'TC-03: 94%, TC-05: 45%', duration: '1.2s' },
-            { id: 'tc-l2', name: 'MLBActivationTool', status: 'completed', input: 'MLB: TC-03→TC-05, 2400用户', output: '2400用户15秒内迁移完成', duration: '15.3s' },
-            { id: 'tc-l3', name: 'AntennaTiltTool', status: 'completed', input: '调整TC-03/TC-05天线倾角各2°', output: '调整完成, 覆盖优化', duration: '3.0s' },
+            { id: 'tc-l1', name: 'CellKPIQueryTool', status: 'completed', input: '查询TC-03/04/05上行利用率', inputEn: 'Query TC-03/04/05 uplink utilization', output: 'TC-03: 94%, TC-05: 45%', outputEn: 'TC-03: 94%, TC-05: 45%', duration: '1.2s' },
+            { id: 'tc-l2', name: 'MLBActivationTool', status: 'completed', input: 'MLB: TC-03→TC-05, 2400用户', inputEn: 'MLB: TC-03→TC-05, 2,400 users', output: '2400用户15秒内迁移完成', outputEn: '2,400 users migrated within 15 seconds', duration: '15.3s' },
+            { id: 'tc-l3', name: 'AntennaTiltTool', status: 'completed', input: '调整TC-03/TC-05天线倾角各2°', inputEn: 'Adjust TC-03/TC-05 antenna tilt by 2° each', output: '调整完成, 覆盖优化', outputEn: 'Adjustment complete, coverage optimized', duration: '3.0s' },
           ],
           thinkingSteps: [
             { phase: 'Think', phaseZh: '思考', content: 'Section C uplink congestion from mass live-streaming. TC-05 has 45% spare capacity. Can redistribute via MLB and optimize uplink scheduling.', contentZh: 'C区直播突发上行拥塞。TC-05有45%空闲容量。可通过MLB重分配并优化上行调度。', timestamp: '20:05:02' },
@@ -256,10 +263,11 @@ export const storyEventAssurance: ScenarioData = {
             'sl1': {
               id: 'msg-r-sl1', role: 'assistant',
               content: '**散场切换参数已预部署**\n\n**散场策略：**\n1. ✅ 周边12个宏站切换阈值预调整（A3偏移+6dB）\n2. ✅ 临时站功率渐降策略配置（每5分钟降3dB）\n3. ✅ 异频切换参数启用（B1事件阈值-100dBm）\n4. ✅ 地铁站周边基站容量预留（预计40%散场走地铁）\n\n**预测散场时间线：**\n| 时间 | 预计人数 | 临时站功率 | 宏站负载 |\n|------|----------|-----------|----------|\n| 结束时 | 72,500 | 100% | 正常 |\n| +10分钟 | 55,000 | 80% | +15% |\n| +20分钟 | 30,000 | 50% | +25% |\n| +40分钟 | 5,000 | 20% | +8% |\n| +60分钟 | <500 | 关闭 | 正常 |\n\n**切换成功率保障目标：** >99.5%\n**监控大屏：** 已配置实时散场流量热力图',
+              contentEn: '**Dispersal Handover Parameters Pre-Staged**\n\n**Dispersal Strategy:**\n1. ✅ 12 surrounding macro cell handover thresholds pre-adjusted (A3 offset +6dB)\n2. ✅ Temp cell gradual power-down configured (3dB reduction every 5 minutes)\n3. ✅ Inter-frequency handover enabled (B1 event threshold -100dBm)\n4. ✅ Metro station cell capacity reserved (40% of dispersal expected via subway)\n\n**Predicted Dispersal Timeline:**\n| Time | Est. Users | Temp Cell Power | Macro Load |\n|------|-----------|-----------------|------------|\n| End | 72,500 | 100% | Normal |\n| +10 min | 55,000 | 80% | +15% |\n| +20 min | 30,000 | 50% | +25% |\n| +40 min | 5,000 | 20% | +8% |\n| +60 min | <500 | Off | Normal |\n\n**Handover Success Rate Target:** >99.5%\n**Dashboard:** Real-time dispersal traffic heatmap configured',
               timestamp: '20:06:30',
               toolCalls: [
-                { id: 'tc-sl1-1', name: 'HandoverConfigTool', status: 'completed', input: '预配置12宏站散场切换参数', output: '12站参数已下发', duration: '5.5s' },
-                { id: 'tc-sl1-2', name: 'DispersalPredictionTool', status: 'completed', input: '预测72500人散场时间线', output: '40分钟主体散场, 60分钟清场', duration: '3.2s' },
+                { id: 'tc-sl1-1', name: 'HandoverConfigTool', status: 'completed', input: '预配置12宏站散场切换参数', inputEn: 'Pre-configure 12 macro cell dispersal handover params', output: '12站参数已下发', outputEn: '12 cell parameters deployed', duration: '5.5s' },
+                { id: 'tc-sl1-2', name: 'DispersalPredictionTool', status: 'completed', input: '预测72500人散场时间线', inputEn: 'Predict 72,500-user dispersal timeline', output: '40分钟主体散场, 60分钟清场', outputEn: '40min main dispersal, 60min full clearance', duration: '3.2s' },
               ],
               thinkingSteps: [
                 { phase: 'Think', phaseZh: '思考', content: 'Dispersal is critical phase. Need gradual power reduction on temp cells and pre-configured handover on macro cells to prevent storm.', contentZh: '散场是关键阶段。需临时站渐降功率+宏站预配切换参数防止切换风暴。', timestamp: '20:05:48' },
@@ -271,10 +279,11 @@ export const storyEventAssurance: ScenarioData = {
             'sl2': {
               id: 'msg-r-sl2', role: 'assistant',
               content: '**实时热力图分析**\n\n**各区域负载状态：**\n| 区域 | 用户数 | 利用率 | 状态 |\n|------|--------|--------|------|\n| A区(主舞台前) | 18,500 | 82% | 🟡 正常偏高 |\n| B区(两侧) | 22,000 | 75% | 🟢 正常 |\n| C区(后方) | 16,000 | 72% | 🟢 已恢复 |\n| VIP区 | 3,200 | 55% | 🟢 优秀 |\n| 外围/通道 | 12,800 | 48% | 🟢 优秀 |\n\n**实时直播流量：**\n- 活跃直播用户：**12,400人**（17.1%）\n- 总上行流量：**28.5Gbps**\n- 直播平台分布：抖音58%、微信视频号25%、快手12%、其他5%\n\n**QoE评分：**\n- 全场平均：**4.1/5.0** ✅\n- VIP区：**4.6/5.0** ✅\n- 最低区域(A区)：**3.8/5.0** ⚠️ 轻微偏低\n\n**建议：** A区主舞台前利用率82%，接近告警阈值。安可曲期间可能进一步升高。',
+              contentEn: '**Real-Time Heatmap Analysis**\n\n**Per-Zone Load Status:**\n| Zone | Users | Utilization | Status |\n|------|--------|--------|------|\n| A (Front of stage) | 18,500 | 82% | 🟡 Slightly high |\n| B (Sides) | 22,000 | 75% | 🟢 Normal |\n| C (Rear) | 16,000 | 72% | 🟢 Recovered |\n| VIP | 3,200 | 55% | 🟢 Excellent |\n| Perimeter/Corridors | 12,800 | 48% | 🟢 Excellent |\n\n**Live Streaming Traffic:**\n- Active streamers: **12,400** (17.1%)\n- Total uplink: **28.5Gbps**\n- Platform distribution: Douyin 58%, WeChat Channels 25%, Kuaishou 12%, Others 5%\n\n**QoE Scores:**\n- Venue average: **4.1/5.0** ✅\n- VIP area: **4.6/5.0** ✅\n- Lowest zone (A): **3.8/5.0** ⚠️ Slightly below target\n\n**Recommendation:** Zone A (front of stage) at 82% utilization, approaching alert threshold. May increase further during encore.',
               timestamp: '20:06:00',
               toolCalls: [
-                { id: 'tc-sl2-1', name: 'HeatmapQueryTool', status: 'completed', input: '实时查询5区域负载热力图', output: 'A区82%最高, VIP 55%最低', duration: '1.8s' },
-                { id: 'tc-sl2-2', name: 'StreamingAnalysisTool', status: 'completed', input: '直播流量实时分析', output: '12400人直播, 28.5Gbps上行', duration: '2.5s' },
+                { id: 'tc-sl2-1', name: 'HeatmapQueryTool', status: 'completed', input: '实时查询5区域负载热力图', inputEn: 'Real-time query 5-zone load heatmap', output: 'A区82%最高, VIP 55%最低', outputEn: 'Zone A 82% highest, VIP 55% lowest', duration: '1.8s' },
+                { id: 'tc-sl2-2', name: 'StreamingAnalysisTool', status: 'completed', input: '直播流量实时分析', inputEn: 'Live streaming traffic real-time analysis', output: '12400人直播, 28.5Gbps上行', outputEn: '12,400 streamers, 28.5Gbps uplink', duration: '2.5s' },
               ],
               thinkingSteps: [
                 { phase: 'Think', phaseZh: '思考', content: 'User wants real-time visibility. Need per-zone utilization, streaming analytics, and QoE scores.', contentZh: '用户需要实时可视化。需各区域利用率、直播分析和QoE评分。', timestamp: '20:05:02' },

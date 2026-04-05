@@ -618,7 +618,7 @@ export default function Workflows() {
               </div>
             )}
           </div>
-          <span className="text-xs text-text-muted">{isCustom ? t('Custom', '自定义') : 'v1.0'}</span>
+          <span className="text-xs text-text-muted">{isCustom ? t('Custom', '自定义') : t('v1.0', 'v1.0')}</span>
           <span className={`text-xs px-2 py-0.5 rounded-full ${
             running ? 'bg-status-green/20 text-status-green' : connectingFrom ? 'bg-accent-cyan/20 text-accent-cyan' : 'bg-bg-primary text-text-muted'
           }`}>
@@ -664,7 +664,7 @@ export default function Workflows() {
                 <div className="w-7 h-7 rounded-md flex items-center justify-center text-xs" style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}>
                   {nodeIcon(type)}
                 </div>
-                <span className="text-xs text-text-secondary capitalize">{type === 'trigger' ? t('Trigger', '触发器') : type === 'agent' ? 'Agent' : type === 'connector' ? t('Connector', '连接器') : type === 'condition' ? t('Condition', '条件') : type === 'action' ? t('Action', '动作') : type === 'merge' ? t('Merge', '合并') : type === 'split' ? t('Split', '拆分') : t('Transform', '转换')}</span>
+                <span className="text-xs text-text-secondary capitalize">{type === 'trigger' ? t('Trigger', '触发器') : type === 'agent' ? t('Agent', '智能体') : type === 'connector' ? t('Connector', '连接器') : type === 'condition' ? t('Condition', '条件') : type === 'action' ? t('Action', '动作') : type === 'merge' ? t('Merge', '合并') : type === 'split' ? t('Split', '拆分') : t('Transform', '转换')}</span>
               </div>
             );
           })}

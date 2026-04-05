@@ -169,7 +169,7 @@ export default function Dashboard() {
         <span className="text-xs text-text-muted">|</span>
         <Radio className="w-3 h-3 text-accent-cyan animate-pulse" />
         <span className="text-xs text-text-muted">{t('Real-time monitoring active', '实时监控运行中')}</span>
-        <span className="text-xs text-text-muted ml-auto">TAOR Loop #{1247 + tick}</span>
+        <span className="text-xs text-text-muted ml-auto">{t('TAOR Loop', 'TAOR循环')} #{1247 + tick}</span>
       </div>
 
       {/* ① KPI Metrics (moved above agents per requirement) */}

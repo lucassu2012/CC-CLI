@@ -192,7 +192,7 @@ export default function Chat() {
                   <span className="text-[10px] text-text-muted">{msg.timestamp}</span>
                 </div>
                 <div className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed chat-content"
-                  dangerouslySetInnerHTML={{ __html: formatChatContent(msg.content) }} />
+                  dangerouslySetInnerHTML={{ __html: formatChatContent(t(msg.contentEn ?? msg.content, msg.content)) }} />
 
                 {msg.toolCalls && msg.toolCalls.length > 0 && (
                   <div className="mt-3 space-y-1.5 border-t border-border pt-3">
@@ -201,7 +201,7 @@ export default function Chat() {
                       <div key={tc.id} className="flex items-center gap-2 text-xs bg-bg-primary rounded-lg px-2.5 py-1.5">
                         <CheckCircle2 className="w-3 h-3 text-status-green shrink-0" />
                         <span className="text-accent-cyan font-mono">{tc.name}</span>
-                        <span className="text-text-muted truncate flex-1">{tc.output}</span>
+                        <span className="text-text-muted truncate flex-1">{t(tc.outputEn ?? tc.output ?? '', tc.output ?? '')}</span>
                         <span className="text-text-muted shrink-0">{tc.duration}</span>
                       </div>
                     ))}
