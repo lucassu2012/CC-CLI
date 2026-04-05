@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Search, Book, AlertCircle, Lightbulb, FileText, Tag, X, Zap, CheckCircle2, Loader2, ChevronRight, Shield, ChevronDown, Globe, Clock, Server, Edit3, Save } from 'lucide-react';
 import { useText } from '../hooks/useText';
-import { knowledgeEntries, generatedSkills, type KnowledgeEntry, type Skill } from '../data/knowledge';
+import { knowledgeEntries as defaultKnowledgeEntries, generatedSkills as defaultGeneratedSkills, type KnowledgeEntry, type Skill } from '../data/knowledge';
+import { useScenario } from '../context/ScenarioContext';
 
 const categoryConfig: Record<string, { icon: typeof Book; color: string; label: string; labelZh: string }> = {
   incident: { icon: AlertCircle, color: 'text-status-red bg-status-red/10 border-status-red/30', label: 'Incident', labelZh: '事件' },
@@ -53,6 +54,8 @@ function SkillCard({ skill, selected, onClick }: { skill: Skill; selected: boole
 /* ─── Skill Detail ─── */
 function SkillDetail({ skill, onClose }: { skill: Skill; onClose: () => void }) {
   const { t, isZh } = useText();
+  const { scenario: detailScenario } = useScenario();
+  const knowledgeEntries = detailScenario?.knowledgeEntries ?? defaultKnowledgeEntries;
   const sources = knowledgeEntries.filter(e => skill.sourceKnowledgeIds.includes(e.id));
   return (
     <div className="bg-bg-card rounded-xl border border-accent-cyan/30 p-5">
@@ -401,6 +404,10 @@ function NetworkMdSection() {
 /* ─── Main Component ─── */
 export default function Knowledge() {
   const { t } = useText();
+  const { scenario } = useScenario();
+  const knowledgeEntries = scenario?.knowledgeEntries ?? defaultKnowledgeEntries;
+  const generatedSkills = scenario?.skills ?? defaultGeneratedSkills;
+  const scenarioKey = scenario?.meta.id ?? 'default';
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [selected, setSelected] = useState<KnowledgeEntry | null>(null);
@@ -408,6 +415,15 @@ export default function Knowledge() {
   const [generating, setGenerating] = useState(false);
   const [skills, setSkills] = useState<Skill[]>(generatedSkills);
   const [skillDomain, setSkillDomain] = useState<string>('all');
+
+  // Reset skills when scenario changes
+  useEffect(() => {
+    setSkills(generatedSkills);
+    setSelected(null);
+    setSelectedSkill(null);
+    setSearch('');
+    setFilterCategory('all');
+  }, [scenarioKey]);
 
   const filteredSkills = skillDomain === 'all' ? skills : skills.filter(s => s.domain === skillDomain);
 

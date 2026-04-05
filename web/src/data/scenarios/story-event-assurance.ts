@@ -1,4 +1,5 @@
 import type { ScenarioData } from '../scenario-types';
+import type { KnowledgeEntry, Skill } from '../knowledge';
 
 export const storyEventAssurance: ScenarioData = {
   meta: {
@@ -135,5 +136,134 @@ export const storyEventAssurance: ScenarioData = {
     { id: 'wf-e2', workflowName: 'Temporary Cell Deployment & Commissioning', workflowNameZh: '临时站部署与开通', status: 'completed' as const, startTime: 'Yesterday', duration: '4h', nodesExecuted: 10, totalNodes: 10, trigger: 'Manual — event T-24h', triggerZh: '手动 — 活动T-24小时', result: 'All 8 cells deployed, tested, integrated', resultZh: '全部8个站已部署、测试、集成', agentsInvolved: ['Ops Agent', 'O&M Monitor Agent', 'Optimization Agent'] },
     { id: 'wf-e3', workflowName: 'Real-Time Event Load Balancing', workflowNameZh: '实时活动负载均衡', status: 'running' as const, startTime: '18:00', duration: '2h+', nodesExecuted: 12, totalNodes: 15, trigger: 'Auto — event start', triggerZh: '自动 — 活动开始', result: 'Max sector utilization 88%, 0 critical incidents', resultZh: '最高扇区利用率88%，0重大事故', agentsInvolved: ['Optimization Agent', 'Real-time Opt Agent', 'Experience Opt Agent'] },
     { id: 'wf-e4', workflowName: 'Post-Event Crowd Dispersal & Teardown', workflowNameZh: '散场疏散与拆除', status: 'cancelled' as const, startTime: '—', duration: '—', nodesExecuted: 0, totalNodes: 8, trigger: 'Auto — event end', triggerZh: '自动 — 活动结束', result: 'Scheduled for concert end (~40 min)', resultZh: '预定演唱会结束时执行（约40分钟后）', agentsInvolved: ['Planning Agent', 'Ops Agent', 'Optimization Agent'] },
+  ],
+  chatConversations: [
+    {
+      id: 'conv-event-prep', title: 'Concert Pre-Event Network Planning', titleZh: '演唱会赛前网络规划', domain: 'planning',
+      messages: [
+        { id: 'msg-p1', role: 'system', content: '📋 EVENT PLANNING: 80K stadium concert scheduled in 48 hours. Pre-event capacity planning initiated.', timestamp: '10:00:00' },
+        { id: 'msg-p2', role: 'user', content: 'What is the capacity plan for the upcoming 80K concert? Will current infrastructure handle the load?', timestamp: '10:00:30' },
+        { id: 'msg-p3', role: 'assistant', content: '## Pre-Event Capacity Assessment\n\n### Current Venue Infrastructure:\n- **Macro cells**: 4 sectors covering stadium perimeter\n- **Existing capacity**: ~20,000 concurrent users\n- **Gap**: Need 4x capacity for 80,000 attendees\n\n### Recommended Deployment Plan:\n| Component | Quantity | Capacity | Location |\n|-----------|----------|----------|----------|\n| Temporary 5G Cells | 8 (TC-01~TC-08) | 1.25Gbps each | Stadium sectors |\n| Microwave Backhaul | 4 links | 2Gbps each | Rooftop→core |\n| Edge CDN Node | 1 | 500GB cache | Venue basement |\n| Emergency Generators | 4 | 50kW each | Parking lot |\n\n### Monte Carlo Simulation Results:\n- **99.5% confidence**: 8 temp cells sufficient for 80K\n- **Peak concurrent estimate**: 72,000-76,000 users\n- **Worst-case throughput**: 650Mbps avg per user achievable\n- **Zero critical incident probability**: 97.8%\n\n### Timeline:\n- T-48h: Equipment staging\n- T-24h: Deployment + testing\n- T-4h: Full integration test\n- T-0: Go-live with monitoring',
+          timestamp: '10:01:30',
+          toolCalls: [
+            { id: 'tc-p1', name: 'ran_get_venue_capacity', status: 'completed', input: '{ "venue": "stadium-main", "sectors": "all" }', output: 'Current: 20K users, 4 macro sectors', duration: '1.5s' },
+            { id: 'tc-p2', name: 'planning_monte_carlo', status: 'completed', input: '{ "attendees": 80000, "temp_cells": 8, "simulations": 10000 }', output: '99.5% confidence sufficient, peak 72-76K concurrent', duration: '15.2s' },
+            { id: 'tc-p3', name: 'logistics_check_equipment', status: 'completed', input: '{ "type": "temp_5g_cell", "quantity": 8 }', output: '8 units available in regional warehouse', duration: '2.1s' },
+          ],
+          thinkingSteps: [
+            { phase: 'Think', phaseZh: '思考', content: '80K concert needs ~4x current venue capacity. Standard approach: temporary cells + microwave backhaul. Need Monte Carlo simulation to validate.', contentZh: '8万人演唱会需要约4倍当前场馆容量。标准方案：临时站+微波回传。需蒙特卡洛仿真验证。', timestamp: '10:00:32' },
+            { phase: 'Act', phaseZh: '行动', content: 'Running Monte Carlo simulation with 10,000 scenarios for 8 temporary cells. Checking equipment availability in regional warehouse.', contentZh: '运行10000场景蒙特卡洛仿真验证8个临时站。检查区域仓库设备可用性。', timestamp: '10:00:45' },
+            { phase: 'Observe', phaseZh: '观察', content: 'Simulation confirms 8 temp cells provide 99.5% confidence. Equipment available. Peak concurrent estimate: 72-76K. Worst-case avg throughput: 650Mbps — well above 500Mbps target.', contentZh: '仿真确认8个临时站提供99.5%置信度。设备可用。并发峰值估计：72-76K。最坏情况平均吞吐：650Mbps — 远超500Mbps目标。', timestamp: '10:01:20' },
+            { phase: 'Reflect', phaseZh: '反思', content: 'Plan is solid. Key risks: power supply for temp cells, microwave link weather sensitivity, crowd dispersal handover. Recommend emergency generators + pre-staged handover parameters.', contentZh: '方案可靠。关键风险：临时站供电、微波链路天气敏感性、散场切换。建议配备应急发电机+预部署切换参数。', timestamp: '10:01:28' },
+          ],
+          suggestions: [
+            { id: 'sug-p1', text: 'Approve deployment plan', textZh: '批准部署方案', type: 'approve' },
+            { id: 'sug-p2', text: 'Request additional backup cells', textZh: '申请额外备用站点', type: 'explore' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'conv-event-live', title: 'Live Concert Load Management', titleZh: '演唱会现场负载管理', domain: 'optimization',
+      messages: [
+        { id: 'msg-l1', role: 'system', content: '📡 EVENT LIVE: Concert started. 72,500 concurrent users. All 8 temporary cells operational.', timestamp: '20:00:00' },
+        { id: 'msg-l2', role: 'user', content: 'Section C is showing uplink congestion — fans are live-streaming. What can we do?', timestamp: '20:05:00' },
+        { id: 'msg-l3', role: 'assistant', content: '## Section C Uplink Congestion — Resolved\n\n### Root Cause:\n- **8,000 users** in Section C simultaneously uploading video\n- Uplink utilization spiked to **94%** on cells covering Section C\n\n### Actions Taken (15 seconds):\n1. ✅ **MLB**: Redirected 2,400 users from TC-03 to TC-05 (had 45% spare)\n2. ✅ **Uplink Scheduling**: Prioritized video upload QoS class\n3. ✅ **Antenna Tilt**: Adjusted TC-03/TC-05 by 2° for better overlap\n4. ✅ **Carrier Aggregation**: Enabled 4CC uplink CA on TC-05\n\n### Result:\n- Section C UL utilization: **94% → 72%** ✅\n- Upload speed: **6Mbps → 12.5Mbps** ✅\n- Video streaming success: **96.8%** (above 95% target)\n\n### Predictive Alert:\n⚠️ Concert ends in ~40min — preparing **15K user dispersal** handover parameters.',
+          timestamp: '20:05:45',
+          toolCalls: [
+            { id: 'tc-l1', name: 'ran_get_cell_kpis', status: 'completed', input: '{ "cells": ["TC-03","TC-04","TC-05"], "metrics": ["ul_util","throughput"] }', output: 'TC-03: 94%, TC-05: 45%', duration: '1.2s' },
+            { id: 'tc-l2', name: 'ran_activate_mlb', status: 'completed', input: '{ "source": "TC-03", "target": "TC-05", "users": 2400 }', output: '2400 users redirected in 15s', duration: '15.3s' },
+          ],
+          thinkingSteps: [
+            { phase: 'Think', phaseZh: '思考', content: 'Section C uplink congestion from mass live-streaming. TC-05 has spare capacity at 45%. Can redistribute via MLB and optimize uplink scheduling.', contentZh: 'C区直播突发上行拥塞。TC-05有45%空闲容量。可通过MLB重分配并优化上行调度。', timestamp: '20:05:02' },
+            { phase: 'Act', phaseZh: '行动', content: 'Activating MLB TC-03→TC-05 for 2,400 users. Adjusting antenna tilt. Enabling 4CC uplink CA.', contentZh: '激活MLB TC-03→TC-05迁移2400用户。调整天线下倾角。启用4CC上行载波聚合。', timestamp: '20:05:10' },
+            { phase: 'Observe', phaseZh: '观察', content: 'Congestion resolved in 15s. UL util 94%→72%. Upload speed 6→12.5Mbps. No VIP impact. Proactively preparing dispersal handover.', contentZh: '拥塞15秒解决。上行利用率94%→72%。上传速度6→12.5Mbps。VIP无影响。主动准备散场切换。', timestamp: '20:05:40' },
+          ],
+          suggestions: [
+            { id: 'sug-l1', text: 'Pre-stage dispersal parameters', textZh: '预部署散场参数', type: 'approve' },
+            { id: 'sug-l2', text: 'Enable extra carrier for encore', textZh: '为安可曲启用额外载波', type: 'explore' },
+          ],
+        },
+      ],
+    },
+  ],
+  knowledgeEntries: [
+    { id: 'KB-E01', title: 'Event Surge Capacity Planning', titleZh: '活动容量规划方法论', category: 'procedure', domain: 'planning', severity: 'critical', rootCause: 'Mass events cause 3-5x normal capacity demand requiring pre-deployment', rootCauseZh: '大型活动导致3-5倍正常容量需求需预部署', resolution: '1. Monte Carlo capacity simulation\n2. Determine temp cell count and placement\n3. Plan microwave backhaul\n4. Test integration pre-event\n5. Prepare emergency backup plans', resolutionZh: '1. 蒙特卡洛容量仿真\n2. 确定临时站数量和位置\n3. 规划微波回传\n4. 事前集成测试\n5. 准备应急备用方案', confidence: 0.95, occurrences: 22, lastSeen: '2026-04-05', tags: ['event', 'capacity', 'planning', 'simulation'], relatedIds: ['KB-E02'] },
+    { id: 'KB-E02', title: 'Temporary Cell Deployment Best Practices', titleZh: '临时站部署最佳实践', category: 'procedure', domain: 'ops', severity: 'critical', rootCause: 'Temporary cells require careful placement, power, and backhaul planning for reliable operation', rootCauseZh: '临时站需要精心规划位置、供电和回传才能可靠运行', resolution: '1. Optimize cell placement per venue layout\n2. Ensure generator + battery backup\n3. Configure microwave backhaul\n4. Set handover parameters with macro cells\n5. Full load test before event', resolutionZh: '1. 按场馆布局优化站点位置\n2. 确保发电机+电池备份\n3. 配置微波回传\n4. 与宏站配置切换参数\n5. 事前全负载测试', confidence: 0.96, occurrences: 18, lastSeen: '2026-04-05', tags: ['temporary', 'cell', 'deployment', 'venue'], relatedIds: ['KB-E01'] },
+    { id: 'KB-E03', title: 'Real-Time MLB for Event Load Balancing', titleZh: '活动负载均衡实时MLB', category: 'lesson', domain: 'optimization', severity: 'major', rootCause: 'Uneven user distribution during events causes localized cell congestion', rootCauseZh: '活动期间用户分布不均导致局部小区拥塞', resolution: '1. Monitor per-cell utilization in real-time\n2. Set dynamic MLB thresholds\n3. Auto-redirect users to underloaded cells\n4. Adjust antenna tilt for coverage optimization\n5. Enable carrier aggregation for burst capacity', resolutionZh: '1. 实时监控每小区利用率\n2. 设置动态MLB阈值\n3. 自动重定向用户至低负载小区\n4. 调整天线下倾角优化覆盖\n5. 启用载波聚合应对突发容量', confidence: 0.93, occurrences: 28, lastSeen: '2026-04-05', tags: ['mlb', 'load-balancing', 'event', 'real-time'], relatedIds: ['KB-E04'] },
+    { id: 'KB-E04', title: 'Uplink Optimization for Mass Video Upload', titleZh: '大规模视频上传上行优化', category: 'lesson', domain: 'optimization', severity: 'major', rootCause: 'Simultaneous video uploads during concerts/sports overwhelm uplink capacity', rootCauseZh: '演唱会/��育赛事中同步视频上传压垮上行容量', resolution: '1. Prioritize video QoS class scheduling\n2. Enable uplink carrier aggregation\n3. Implement fair scheduling across users\n4. Pre-position CDN edge for local caching\n5. Coordinate with social media CDN providers', resolutionZh: '1. 优先视频QoS等级调度\n2. 启用上行载波聚合\n3. 实施跨用户公平调度\n4. 预置CDN边缘节点本地缓存\n5. 与社交媒体CDN提供商协调', confidence: 0.90, occurrences: 15, lastSeen: '2026-04-05', tags: ['uplink', 'video', 'upload', 'congestion'], relatedIds: ['KB-E03'] },
+    { id: 'KB-E05', title: 'Post-Event Crowd Dispersal Network Management', titleZh: '散场人群网络管理', category: 'procedure', domain: 'planning', severity: 'major', rootCause: 'Rapid transition of 10K+ users from temp cells to macro cells can cause handover storms', rootCauseZh: '万人级用户从临时站快速切换至宏站可能引发切换风暴', resolution: '1. Predict dispersal timing and routes\n2. Pre-configure macro cell handover thresholds\n3. Gradually reduce temp cell power\n4. Enable inter-frequency handover\n5. Monitor handover success rate in real-time', resolutionZh: '1. 预测散场时间和路线\n2. 预配置宏站切换阈值\n3. 逐步降低临时站功率\n4. 启用异频切换\n5. 实时监控切换成功率', confidence: 0.88, occurrences: 10, lastSeen: '2026-04-05', tags: ['dispersal', 'handover', 'crowd', 'transition'], relatedIds: ['KB-E01'] },
+    { id: 'KB-E06', title: 'Sponsor SLA Guarantee During Events', titleZh: '活动赞助商SLA保障', category: 'procedure', domain: 'marketing', severity: 'major', rootCause: 'Event sponsors require guaranteed connectivity for payment terminals and digital activations', rootCauseZh: '活动赞助商要求支付终端和数字互动的连接保障', resolution: '1. Identify sponsor connectivity requirements\n2. Allocate dedicated QoS bearers\n3. Deploy backup connectivity (4G/WiFi)\n4. Real-time SLA monitoring dashboard\n5. Immediate escalation on SLA breach', resolutionZh: '1. 识别赞助商连接需求\n2. 分配专用QoS承载\n3. 部署备份连接(4G/WiFi)\n4. 实时SLA监控大屏\n5. SLA违规立即升级', confidence: 0.91, occurrences: 8, lastSeen: '2026-04-05', tags: ['sponsor', 'sla', 'event', 'payment'], relatedIds: ['KB-E02'] },
+  ] as KnowledgeEntry[],
+  skills: [
+    { id: 'SK-E01', name: 'Event Capacity Monte Carlo Planning', nameZh: '活动容量蒙特卡洛规划', domain: 'planning', description: 'Runs Monte Carlo simulations to determine optimal temporary cell deployment for mass events with high confidence.', descriptionZh: '运行蒙特卡洛仿真确定大型活动的最优临时站部署方案。', sourceKnowledgeIds: ['KB-E01'], triggerConditions: ['Event calendar trigger (T-48h)', 'Manual planning request'], triggerConditionsZh: ['事件日历触发(T-48小时)', '手动规划请求'], actions: ['Analyze venue capacity gap', 'Run Monte Carlo simulation', 'Optimize cell placement', 'Generate deployment plan'], actionsZh: ['分析场馆容量缺口', '运行蒙特卡洛仿真', '优化站点布局', '生成部署方案'], applicableAgents: ['PlanningAgent', 'CapacityPlanningAgent'], confidence: 0.95, usageCount: 22, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-E02', name: 'Real-Time Event Load Balancing', nameZh: '活动实时负载均衡', domain: 'optimization', description: 'Monitors per-cell utilization during events and automatically redistributes load via MLB, antenna tilt, and CA.', descriptionZh: '活动期间监控每小区利用率并通过MLB、天线倾角和CA自动重分配负载。', sourceKnowledgeIds: ['KB-E03', 'KB-E04'], triggerConditions: ['Cell utilization >85%', 'Uplink congestion detected'], triggerConditionsZh: ['小区利用率>85%', '检测到上行拥塞'], actions: ['Identify underloaded target cell', 'Activate MLB redirection', 'Adjust antenna parameters', 'Enable carrier aggregation'], actionsZh: ['识别低负载目标小区', '激活MLB重定向', '调整天线参数', '启用载波聚合'], applicableAgents: ['OptimizationAgent', 'RealtimeOptAgent'], confidence: 0.93, usageCount: 28, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-E03', name: 'Temporary Cell Health Monitoring', nameZh: '临时站健康监控', domain: 'ops', description: 'Continuously monitors power supply, backhaul, and performance KPIs of temporary cells during events.', descriptionZh: '活动期间持续监控临时站的供电、回传和性能KPI。', sourceKnowledgeIds: ['KB-E02'], triggerConditions: ['Temp cell deployed', 'Battery level <70%'], triggerConditionsZh: ['临时站已部署', '电池电量<70%'], actions: ['Monitor power supply status', 'Check microwave backhaul quality', 'Track cell KPIs', 'Alert on anomaly'], actionsZh: ['监控供电状态', '检查微波回传质量', '跟踪小区KPI', '异常告警'], applicableAgents: ['OpsAgent', 'OMMonitorAgent'], confidence: 0.96, usageCount: 18, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-E04', name: 'Crowd Dispersal Handover Management', nameZh: '散场切换管理', domain: 'planning', description: 'Predicts crowd dispersal patterns and pre-configures macro cell handover parameters to prevent handover storms.', descriptionZh: '预测散场模式并预配置宏站切换参数防止切换风暴。', sourceKnowledgeIds: ['KB-E05'], triggerConditions: ['Event end T-30min', 'Crowd density declining'], triggerConditionsZh: ['活动结束前30分钟', '人群密度下降'], actions: ['Predict dispersal routes', 'Pre-configure handover thresholds', 'Gradually reduce temp cell power', 'Monitor handover success rate'], actionsZh: ['预测疏散路线', '预配置切换阈值', '逐步降低临时站功率', '监控切换成功率'], applicableAgents: ['PlanningAgent', 'CapacityPlanningAgent'], confidence: 0.88, usageCount: 10, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-E05', name: 'Sponsor SLA Real-Time Monitoring', nameZh: '赞助商SLA实时监控', domain: 'marketing', description: 'Monitors dedicated SLA metrics for event sponsors including payment terminal connectivity and digital activation uptime.', descriptionZh: '监控活动赞助商的专属SLA指标包括支付终端连接和数字互动在线时间。', sourceKnowledgeIds: ['KB-E06'], triggerConditions: ['Event active with sponsors', 'Payment terminal connectivity drop'], triggerConditionsZh: ['赞助商活动进行中', '支付终端连接下降'], actions: ['Monitor payment terminal uptime', 'Track digital activation metrics', 'Alert on SLA breach risk', 'Activate backup connectivity'], actionsZh: ['监控支付终端在线率', '跟踪数字互动指标', 'SLA违规风险告警', '激活备份连接'], applicableAgents: ['MarketingAgent', 'ProactiveCareAgent'], confidence: 0.91, usageCount: 8, lastUsed: '2026-04-05', status: 'active' },
+  ] as Skill[],
+  workflowTemplates: [
+    {
+      id: 'wft-event-planning', name: '活动网络保障规划', nameEn: 'Event Network Assurance Planning',
+      description: '需求分析→容量仿真→部署方案→设备调度→集成测试→上线', descriptionEn: 'Requirement analysis → Capacity sim → Deploy plan → Equipment schedule → Integration test → Go-live',
+      nodes: [
+        { id: 't1', type: 'trigger', name: '活动申请', x: 50, y: 200 },
+        { id: 'a1', type: 'agent', name: '需求分析', agentType: 'planning', x: 300, y: 200 },
+        { id: 'a2', type: 'agent', name: '容量仿真', agentType: 'planning', x: 550, y: 200 },
+        { id: 'c1', type: 'condition', name: '方案OK?', x: 800, y: 200 },
+        { id: 'a3', type: 'agent', name: '设备调度', agentType: 'ops', x: 1050, y: 130 },
+        { id: 'a4', type: 'action', name: '集成测试', x: 1300, y: 130 },
+        { id: 'a5', type: 'action', name: '上线监控', x: 1550, y: 130 },
+        { id: 'a6', type: 'action', name: '方案调整', x: 1050, y: 300 },
+      ],
+      edges: [
+        { id: 'e1', source: 't1', target: 'a1' },
+        { id: 'e2', source: 'a1', target: 'a2' },
+        { id: 'e3', source: 'a2', target: 'c1' },
+        { id: 'e4', source: 'c1', target: 'a3', label: '通过' },
+        { id: 'e5', source: 'c1', target: 'a6', label: '调整' },
+        { id: 'e6', source: 'a6', target: 'a2' },
+        { id: 'e7', source: 'a3', target: 'a4' },
+        { id: 'e8', source: 'a4', target: 'a5' },
+      ],
+    },
+    {
+      id: 'wft-event-live', name: '活动实时保障与散场', nameEn: 'Event Live Assurance & Dispersal',
+      description: '活动开始→并行监控→异常处理→散场预测→切换预配→设备回收', descriptionEn: 'Event start → Parallel monitoring → Anomaly handling → Dispersal predict → Handover pre-config → Equipment teardown',
+      nodes: [
+        { id: 't1', type: 'trigger', name: '活动开始', x: 50, y: 200 },
+        { id: 's1', type: 'split', name: '并行监控', x: 250, y: 200 },
+        { id: 'a1', type: 'agent', name: '容量监控', agentType: 'optimization', x: 500, y: 80 },
+        { id: 'a2', type: 'agent', name: '体验监控', agentType: 'experience', x: 500, y: 200 },
+        { id: 'a3', type: 'agent', name: '设备监控', agentType: 'ops', x: 500, y: 320 },
+        { id: 'm1', type: 'merge', name: '状态汇总', x: 750, y: 200 },
+        { id: 'c1', type: 'condition', name: '异常?', x: 1000, y: 200 },
+        { id: 'a4', type: 'agent', name: '自动处理', agentType: 'optimization', x: 1250, y: 120 },
+        { id: 'a5', type: 'agent', name: '散场规划', agentType: 'planning', x: 1250, y: 300 },
+        { id: 'a6', type: 'action', name: '设备回收', x: 1500, y: 300 },
+      ],
+      edges: [
+        { id: 'e1', source: 't1', target: 's1' },
+        { id: 'e2', source: 's1', target: 'a1' },
+        { id: 'e3', source: 's1', target: 'a2' },
+        { id: 'e4', source: 's1', target: 'a3' },
+        { id: 'e5', source: 'a1', target: 'm1' },
+        { id: 'e6', source: 'a2', target: 'm1' },
+        { id: 'e7', source: 'a3', target: 'm1' },
+        { id: 'e8', source: 'm1', target: 'c1' },
+        { id: 'e9', source: 'c1', target: 'a4', label: '是' },
+        { id: 'e10', source: 'c1', target: 'a5', label: '正常' },
+        { id: 'e11', source: 'a5', target: 'a6' },
+      ],
+    },
+  ],
+  auditLog: [
+    { id: 'AUD-E01', time: '17:00:00', level: 3, agentEn: 'Capacity Planning Agent', agentZh: '容量规划Agent', actEn: 'Pre-event capacity plan approved', actZh: '赛前容量方案已审批', status: 'approved', highRisk: false, detailEn: 'Monte Carlo simulation: 8 temp cells, 10Gbps total, 99.5% confidence for 80K attendees. Deployment plan approved by NOC Director.', detailZh: '蒙特卡洛仿真：8个临时站，总容量10Gbps，8万观众99.5%置信度。部署方案由NOC主管审批。', impactEn: '8 temp cells approved for deployment', impactZh: '8个临时站获批部署' },
+    { id: 'AUD-E02', time: '18:00:00', level: 3, agentEn: 'O&M Monitor Agent', agentZh: '运维监控Agent', actEn: 'All 8 temporary cells commissioned (approved)', actZh: '全部8个临时站已开通（已审批）', status: 'approved', highRisk: false, detailEn: 'TC-01 through TC-08 deployed, tested, and integrated with macro network. Full load test passed. Microwave backhaul verified at 2Gbps per link.', detailZh: 'TC-01至TC-08已部署、测试并集成宏网。全负载测试通过。微波回传验证2Gbps/链路。', impactEn: '8 cells online, 10Gbps capacity added', impactZh: '8个站上线，新增10Gbps容量' },
+    { id: 'AUD-E03', time: '19:00:00', level: 3, agentEn: 'Deterministic Exp Agent', agentZh: '确定性体验Agent', actEn: 'VIP/VVIP QoS bearers activated (approved)', actZh: 'VIP/VVIP QoS承载已激活（已审批）', status: 'approved', highRisk: false, detailEn: 'Dedicated QoS bearers activated: VVIP box (500 users, guaranteed 50Mbps DL), VIP standing (8,000 users, guaranteed 20Mbps DL). Approved by Event Manager.', detailZh: '专属QoS承载已激活：VVIP包厢(500用户，保障50Mbps DL)，VIP站区(8000用户，保障20Mbps DL)。活动经理已审批。', impactEn: '8,500 VIP/VVIP users with guaranteed QoS', impactZh: '8500 VIP/VVIP用户已保障QoS' },
+    { id: 'AUD-E04', time: '20:05:15', level: 4, agentEn: 'Real-time Opt Agent', agentZh: '实时优化Agent', actEn: 'MLB activation for Section C congestion (auto)', actZh: 'C区拥塞MLB激活（自动执行）', status: 'executed', highRisk: true, detailEn: 'Detected uplink congestion in Section C (94% UL utilization). Auto-activated MLB: redirected 2,400 users from TC-03 to TC-05. Adjusted antenna tilt by 2°. Congestion resolved in 15 seconds.', detailZh: '检测到C区上行拥塞(94%上行利用率)。自动激活MLB：从TC-03重定向2400用户至TC-05。调整天线下倾角2°。拥塞15秒内解决。', impactEn: '⚠️ 2,400 users redirected, 2 cells modified', impactZh: '⚠️ 2400用户重定向，2个小区参数修改' },
+    { id: 'AUD-E05', time: '20:10:00', level: 2, agentEn: 'Proactive Care Agent', agentZh: '主动关怀Agent', actEn: 'Sponsor SLA status — all 5 at target', actZh: '赞助商SLA状态 — 全部5个达标', status: 'completed', highRisk: false, detailEn: '120 payment terminals: 100% uptime, avg transaction 1.2s. Digital activations: 98.5% success rate. All 5 sponsor SLAs met.', detailZh: '120个支付终端：100%在线率，平均交易1.2秒。数字互动：98.5%成功率。全部5个赞助商SLA达标。', impactEn: 'Monitoring only — all SLAs met', impactZh: '仅监控 — 全部SLA达标' },
+    { id: 'AUD-E06', time: '20:20:00', level: 2, agentEn: 'Capacity Planning Agent', agentZh: '容量规划Agent', actEn: 'Pre-staging dispersal handover parameters', actZh: '预部署散场切换参数', status: 'completed', highRisk: false, detailEn: 'Concert ending in ~40 minutes. Pre-configured macro cell handover thresholds for 15,000 user transition. Gradual temp cell power reduction scheduled.', detailZh: '演唱会约40分钟后结束。已预配置宏站切换阈值用于15000用户过渡。临时站功率逐步降低已排期。', impactEn: 'Handover parameters staged for dispersal', impactZh: '散场切换参数已预部署' },
+    { id: 'AUD-E07', time: '20:25:00', level: 1, agentEn: 'Event Assurance Agent', agentZh: '事件保障Agent', actEn: 'Event status summary — zero critical incidents', actZh: '活动状态汇总 — 零重大事故', status: 'info', highRisk: false, detailEn: 'Concert 2h 25min: 72,500 peak users, 99.2% availability, 4.5 QoE, 96.8% video success, 0 critical incidents. All 8 temp cells operational. Backup generators active on TC-03.', detailZh: '演唱会2小时25分钟：72500峰值用户，99.2%可用性，4.5 QoE，96.8%视频成功率，0重大事故。全部8个临时站运行正常。TC-03备用发电机运行中。', impactEn: 'Event summary — all targets exceeded', impactZh: '活动汇总 — 全部目标超额达成' },
   ],
 };

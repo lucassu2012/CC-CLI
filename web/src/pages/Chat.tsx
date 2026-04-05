@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Paperclip, Image, Brain, Wrench, CheckCircle2, Loader2, MessageSquare, Lightbulb, ThumbsUp, Pencil, Search, XCircle } from 'lucide-react';
 import { useText } from '../hooks/useText';
-import { demoConversations, type ChatMessage, type Suggestion } from '../data/chat';
+import { demoConversations as defaultConversations, type ChatMessage, type Suggestion } from '../data/chat';
+import { useScenario } from '../context/ScenarioContext';
 
 const phaseColors: Record<string, string> = {
   Think: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -65,6 +66,8 @@ const suggestionColors: Record<string, string> = {
 
 export default function Chat() {
   const { t } = useText();
+  const { scenario } = useScenario();
+  const demoConversations = scenario?.chatConversations ?? defaultConversations;
   const [activeConv, setActiveConv] = useState(0);
   const [displayedMessages, setDisplayedMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -72,7 +75,11 @@ export default function Chat() {
   const [pendingResponse, setPendingResponse] = useState<ChatMessage | null>(null);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
-  const conv = demoConversations[activeConv];
+  const scenarioKey = scenario?.meta.id ?? 'default';
+  const conv = demoConversations[activeConv] ?? demoConversations[0];
+
+  // Reset conversation when scenario changes
+  useEffect(() => { setActiveConv(0); }, [scenarioKey]);
 
   // Initialize with first message
   useEffect(() => {
@@ -81,7 +88,7 @@ export default function Chat() {
     setThinkingIdx(-1);
     setPendingResponse(null);
     setSelectedSuggestions(new Set());
-  }, [activeConv]);
+  }, [activeConv, scenarioKey]);
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }); }, [displayedMessages, thinkingIdx]);
 

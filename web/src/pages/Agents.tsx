@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Bot, ChevronDown, ChevronRight, Shield, Wrench, BarChart3, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft } from 'lucide-react';
 import { useText } from '../hooks/useText';
-import { domainAgents, type DomainAgent, type SubAgent } from '../data/agents';
-import { generatedSkills } from '../data/knowledge';
+import { domainAgents as defaultAgents, type DomainAgent, type SubAgent } from '../data/agents';
+import { generatedSkills as defaultSkills } from '../data/knowledge';
+import { useScenario } from '../context/ScenarioContext';
 import StatusBadge from '../components/StatusBadge';
 
 /* ─── Agent config data ─── */
@@ -150,6 +151,8 @@ function generateMemory(agent: DomainAgent, sub: SubAgent | undefined, t: (en: s
 
 function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgent?: SubAgent; onClose: () => void }) {
   const { t } = useText();
+  const { scenario: editorScenario } = useScenario();
+  const generatedSkills = editorScenario?.skills ?? defaultSkills;
   const [tab, setTab] = useState<EditorTab>('memory');
   const [selectedModel, setSelectedModel] = useState('gts-llm');
   const [saved, setSaved] = useState(false);
@@ -560,6 +563,8 @@ function AgentCard({ agent, onEdit, onEditSub }: { agent: DomainAgent; onEdit: (
 
 export default function Agents() {
   const { t } = useText();
+  const { scenario } = useScenario();
+  const domainAgents = scenario?.agents ?? defaultAgents;
   const [editingAgent, setEditingAgent] = useState<DomainAgent | null>(null);
   const [editingSubAgent, setEditingSubAgent] = useState<SubAgent | undefined>(undefined);
   const totalAgents = domainAgents.length;

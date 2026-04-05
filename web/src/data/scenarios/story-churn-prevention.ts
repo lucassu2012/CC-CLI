@@ -1,4 +1,5 @@
 import type { ScenarioData } from '../scenario-types';
+import type { KnowledgeEntry, Skill } from '../knowledge';
 
 export const storyChurnPrevention: ScenarioData = {
   meta: {
@@ -138,5 +139,133 @@ export const storyChurnPrevention: ScenarioData = {
     { id: 'wf-c2', workflowName: 'Personalized Offer Generation & Campaign', workflowNameZh: '个性化方案生成与营销', status: 'running' as const, startTime: '09:05:00', duration: '25min+', nodesExecuted: 5, totalNodes: 8, trigger: 'Auto — post-segmentation', triggerZh: '自动 — 细分后', result: '1,890 contacted, 78.5% retention so far', resultZh: '已触达1890位，当前挽留率78.5%', agentsInvolved: ['Precision Marketing Agent', 'Channel Opt Agent'] },
     { id: 'wf-c3', workflowName: 'QoE Proactive Optimization', workflowNameZh: 'QoE主动优化', status: 'running' as const, startTime: '09:10:00', duration: '20min+', nodesExecuted: 4, totalNodes: 6, trigger: 'Auto — QoE degradation detected', triggerZh: '自动 — 检测到QoE劣化', result: 'QoE improved from 3.2 to 3.8 in Futian', resultZh: '福田QoE从3.2提升至3.8', agentsInvolved: ['Experience Agent', 'Optimization Agent'] },
     { id: 'wf-c4', workflowName: 'Revenue Impact Assessment & Reporting', workflowNameZh: '收入影响评估与报告', status: 'completed' as const, startTime: '08:30:00', duration: '5min', nodesExecuted: 4, totalNodes: 4, trigger: 'Scheduled — daily', triggerZh: '定时 — 每日', result: '¥4.2M monthly revenue at risk, retention ROI 4.2x', resultZh: '月风险收入420万元，挽留ROI 4.2倍', agentsInvolved: ['Planning Agent', 'Value Planning Agent'] },
+  ],
+  chatConversations: [
+    {
+      id: 'conv-churn-analysis', title: 'High-Value Churn Prevention Campaign', titleZh: '高价值用户流失预防活动', domain: 'marketing',
+      messages: [
+        { id: 'msg-c1', role: 'system', content: '⚠️ CHURN RISK ALERT: 2,847 high-value users (ARPU>¥300) flagged with elevated churn probability (avg 0.72).', timestamp: '09:00:00' },
+        { id: 'msg-c2', role: 'user', content: 'Analyze the churn risk situation and recommend retention strategies.', timestamp: '09:00:30' },
+        { id: 'msg-c3', role: 'assistant', content: '## Churn Risk Analysis Report\n\nI\'ve completed a comprehensive analysis of **2,847 high-value users** showing churn risk signals.\n\n### Churn Drivers (Ranked by Impact):\n1. **Competitor Promotion** (38%): China Unicom ¥99 5G package — aggressive SMS targeting our users\n2. **QoE Degradation** (28%): Avg QoE dropped to 3.2 in Futian CBD; 340 VIP users affected\n3. **Repeated Complaints** (22%): 156 Diamond users with 3+ calls in 30 days\n4. **Usage Decline** (12%): 892 users with >30% MoM data usage drop\n\n### User Micro-Segments:\n| Segment | Count | Primary Driver | Recommended Action |\n|---------|-------|---------------|--------------------|\n| Price-Sensitive Switchers | 892 | Competitor pricing | Matched value offer + loyalty bonus |\n| Experience Frustrated | 340 | QoE degradation | Network optimization + premium QoS |\n| Service Dissatisfied | 156 | Complaint history | Dedicated service + compensation |\n| Silent Churners | 1,459 | Usage decline | Proactive engagement + personalized content |\n\n### Projected Impact:\n- **Retention Rate**: 78.5% (vs 66.2% baseline)\n- **Revenue Protected**: ¥4.2M/month\n- **Campaign ROI**: 4.2x',
+          timestamp: '09:01:15',
+          toolCalls: [
+            { id: 'tc-c1', name: 'crm_get_churn_scores', status: 'completed', input: '{ "segment": "high-value", "arpu_min": 300, "risk_threshold": 0.6 }', output: '2,847 users, avg churn prob 0.72', duration: '3.2s' },
+            { id: 'tc-c2', name: 'cem_get_qoe_scores', status: 'completed', input: '{ "segment": "at-risk-high-value", "area": "all" }', output: 'Avg QoE 3.8, Futian 3.2, 340 below threshold', duration: '2.1s' },
+            { id: 'tc-c3', name: 'crm_get_complaints', status: 'completed', input: '{ "min_calls": 3, "days": 30, "tier": "diamond" }', output: '156 users: billing 45%, network 32%, service 23%', duration: '1.8s' },
+            { id: 'tc-c4', name: 'marketing_generate_offers', status: 'completed', input: '{ "segments": 8, "personalization": true }', output: '6 templates, 2847 variants, est. ROI 4.2x', duration: '5.5s' },
+          ],
+          thinkingSteps: [
+            { phase: 'Think', phaseZh: '思考', content: 'Detecting multi-dimensional churn signals: competitor promotion, QoE degradation in Futian, complaint clustering, and usage decline. Need cross-reference CRM, CEM, and usage analytics.', contentZh: '检测多维流失信号：竞对促销、福田区QoE劣化、投诉聚集、用量下降。需交叉分析CRM、CEM和使用分析数据。', timestamp: '09:00:32' },
+            { phase: 'Act', phaseZh: '行动', content: 'Querying CRM churn model, CEM QoE, complaint history, usage trends. Running micro-segmentation on 47 behavioral features.', contentZh: '查询CRM流失模型、CEM QoE、投诉历史和使用趋势。对47个行为特征运行微细分。', timestamp: '09:00:40' },
+            { phase: 'Observe', phaseZh: '观察', content: 'Identified 4 churn driver clusters. Competitor pricing #1 (38%), but QoE issues affect highest-value users. Multi-pronged strategy needed.', contentZh: '识别4个流失驱动聚类。竞对价格第一(38%)，但QoE影响最高价值用户。需多管齐下策略。', timestamp: '09:00:55' },
+            { phase: 'Reflect', phaseZh: '反思', content: 'Price matching alone insufficient — QoE frustrated users need network optimization first. Recommend parallel tracks: retention offers + network quality improvement + complaint resolution.', contentZh: '仅价格匹配不够——QoE不满用户需先网络优化。建议并行：挽留方案+网络质量提升+投诉解决。', timestamp: '09:01:05' },
+          ],
+          suggestions: [
+            { id: 'sug-c1', text: 'Launch retention campaign now', textZh: '立即启动挽留营销', type: 'approve' },
+            { id: 'sug-c2', text: 'Review compensation packages first', textZh: '先审核补偿方案', type: 'explore' },
+            { id: 'sug-c3', text: 'Escalate QoE issue to network team', textZh: '将QoE问题上报网络团队', type: 'explore' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'conv-retention-exec', title: 'Retention Campaign Execution', titleZh: '挽留营销执行', domain: 'marketing',
+      messages: [
+        { id: 'msg-r1', role: 'system', content: '📊 Retention campaign launched: 6 offer templates, 2,847 personalized variants across 4 channels.', timestamp: '09:10:00' },
+        { id: 'msg-r2', role: 'user', content: 'How is the retention campaign performing? Show me real-time metrics.', timestamp: '09:30:00' },
+        { id: 'msg-r3', role: 'assistant', content: '## Campaign Performance Dashboard\n\n### Channel Performance:\n| Channel | Sent | Delivered | Opened | Accepted |\n|---------|------|-----------|--------|----------|\n| APP Push | 2,847 | 2,790 (98%) | 1,450 (52%) | 520 (18.3%) |\n| SMS | 2,847 | 2,820 (99%) | 1,680 (60%) | 380 (13.5%) |\n| WeChat | 2,100 | 2,065 (98.3%) | 1,230 (60%) | 450 (21.8%) |\n| Outbound Call | 500 | 485 (97%) | 485 (100%) | 310 (63.9%) |\n\n### Overall Metrics:\n- **Total Contacted**: 1,890 unique users (multi-channel dedup)\n- **Total Responded**: 892 (47.2%)\n- **Offers Accepted**: 698 (78.3% of respondents)\n- **Revenue Protected So Far**: ¥2.8M/month\n\n### Top Performing Offers:\n1. 🏆 **Loyalty Bonus Pack** — 89% acceptance (20% discount + 50GB bonus)\n2. **VIP Experience Upgrade** — 76% acceptance (priority QoS + dedicated support)\n3. **Contract Renewal Reward** — 71% acceptance (device upgrade discount)',
+          timestamp: '09:30:30',
+          toolCalls: [
+            { id: 'tc-r1', name: 'campaign_get_metrics', status: 'completed', input: '{ "campaign_id": "churn-retention-2847", "realtime": true }', output: '1890 contacted, 892 responded, 698 accepted', duration: '1.5s' },
+          ],
+          thinkingSteps: [
+            { phase: 'Think', phaseZh: '思考', content: 'Campaign running for 20 minutes. Need real-time performance across all 4 channels with deduplication.', contentZh: '营销活动运行20分钟。需要跨4个渠道的实时去重表现数据。', timestamp: '09:30:02' },
+            { phase: 'Observe', phaseZh: '观察', content: 'Outbound calls have highest acceptance (63.9%) but lowest scale. WeChat has best digital acceptance (21.8%). Overall 78.3% of respondents accepted — exceeding 75% target.', contentZh: '外呼接受率最高(63.9%)但规模最小。微信数字接受率最佳(21.8%)。整体78.3%响应者接受——超过75%目标。', timestamp: '09:30:25' },
+          ],
+          suggestions: [
+            { id: 'sug-r1', text: 'Scale up outbound calls for high-risk users', textZh: '对高风险用户扩大外呼规模', type: 'approve' },
+            { id: 'sug-r2', text: 'View per-segment breakdown', textZh: '查看各细分群详情', type: 'explore' },
+          ],
+        },
+      ],
+    },
+  ],
+  knowledgeEntries: [
+    { id: 'KB-C01', title: 'Multi-Dimensional Churn Prediction Model', titleZh: '多维流失预测模型', category: 'lesson', domain: 'marketing', severity: 'critical', rootCause: 'Single-factor churn models miss complex behavioral patterns leading to low prediction accuracy', rootCauseZh: '单因素流失模型遗漏复杂行为模式导致预测精度低', resolution: '1. Combine 47 behavioral features\n2. Include network QoE signals\n3. Cross-reference competitor activity\n4. Apply ensemble ML model\n5. Validate with A/B testing', resolutionZh: '1. 组合47个行为特征\n2. 纳入网络QoE信号\n3. 交叉参考竞对活动\n4. 应用集成ML模型\n5. A/B测试验证', confidence: 0.94, occurrences: 15, lastSeen: '2026-04-05', tags: ['churn', 'prediction', 'ml', 'behavioral'], relatedIds: ['KB-C02'] },
+    { id: 'KB-C02', title: 'Personalized Retention Offer Design', titleZh: '个性化挽留方案设计', category: 'procedure', domain: 'marketing', severity: 'major', rootCause: 'One-size-fits-all retention offers have low acceptance rates (<40%)', rootCauseZh: '千人一面的挽留方案接受率低(<40%)', resolution: '1. Segment users by churn driver\n2. Design offers matching driver\n3. Personalize value proposition\n4. Multi-channel delivery optimization\n5. Real-time acceptance tracking', resolutionZh: '1. 按流失驱动因素细分用户\n2. 设计匹配驱动因素的方案\n3. 个性化价值主张\n4. 多渠道投放优化\n5. 实时接受率跟踪', confidence: 0.91, occurrences: 22, lastSeen: '2026-04-05', tags: ['retention', 'personalization', 'offer', 'campaign'], relatedIds: ['KB-C01'] },
+    { id: 'KB-C03', title: 'Network Quality-Churn Correlation', titleZh: '网络质量与流失关联', category: 'lesson', domain: 'experience', severity: 'major', rootCause: 'Sustained QoE degradation in specific areas correlates with 2.5x higher churn probability', rootCauseZh: '特定区域持续QoE劣化与2.5倍流失概率正相关', resolution: '1. Map QoE scores to user geography\n2. Identify degradation hotspots\n3. Prioritize network investment\n4. Deploy proactive QoS protection\n5. Track QoE-churn correlation post-fix', resolutionZh: '1. QoE评分映射到用户地理位置\n2. 识别劣化热点\n3. 优先网络投资\n4. 部署主动QoS保护\n5. 修复后跟踪QoE-流失关联', confidence: 0.88, occurrences: 12, lastSeen: '2026-04-05', tags: ['qoe', 'churn', 'correlation', 'geography'], relatedIds: ['KB-C04'] },
+    { id: 'KB-C04', title: 'Competitor Intelligence Monitoring', titleZh: '竞对情报监控', category: 'procedure', domain: 'marketing', severity: 'major', rootCause: 'Delayed awareness of competitor promotions leads to reactive rather than proactive retention', rootCauseZh: '对竞对促销的感知滞后导致被动而非主动挽留', resolution: '1. Monitor competitor pricing feeds\n2. Track competitor SMS campaigns\n3. Analyze port-out request patterns\n4. Alert when promotion detected\n5. Auto-generate counter-offer recommendations', resolutionZh: '1. 监控竞对资费动态\n2. 跟踪竞对短信营销\n3. 分析携号转网请求模式\n4. 检测到促销时告警\n5. 自动生成反制方案建议', confidence: 0.86, occurrences: 8, lastSeen: '2026-04-05', tags: ['competitor', 'intelligence', 'monitoring', 'pricing'], relatedIds: ['KB-C01'] },
+    { id: 'KB-C05', title: 'Complaint-Driven Churn Prevention', titleZh: '投诉驱动流失预防', category: 'procedure', domain: 'experience', severity: 'major', rootCause: 'Users with 3+ complaints in 30 days have 4x higher churn probability than average', rootCauseZh: '30天内投诉3+次的用户流失概率是平均值的4倍', resolution: '1. Track complaint frequency per user\n2. Flag users exceeding threshold\n3. Assign dedicated service representative\n4. Proactive compensation offer\n5. Root cause resolution of complaint topic', resolutionZh: '1. 跟踪每用户投诉频率\n2. 标记超阈值用户\n3. 分配专属客服代表\n4. 主动补偿方案\n5. 根因解决投诉主题', confidence: 0.92, occurrences: 31, lastSeen: '2026-04-05', tags: ['complaint', 'churn', 'prevention', 'service'], relatedIds: ['KB-C03'] },
+    { id: 'KB-C06', title: 'Revenue Impact Monte Carlo Simulation', titleZh: '收入影响蒙特卡洛模拟', category: 'lesson', domain: 'planning', severity: 'major', rootCause: 'Simple churn revenue estimates fail to account for uncertainty and cascading effects', rootCauseZh: '简单流失收入估算无法考虑不确定性和级联效应', resolution: '1. Model churn probability distributions\n2. Simulate N=10000 scenarios\n3. Account for ARPU variance\n4. Include social influence spread\n5. Generate confidence intervals for revenue impact', resolutionZh: '1. 建模流失概率分布\n2. 模拟N=10000场景\n3. 考虑ARPU方差\n4. 包含社交影响扩散\n5. 生成收入影响置信区间', confidence: 0.87, occurrences: 6, lastSeen: '2026-04-05', tags: ['revenue', 'simulation', 'monte-carlo', 'planning'], relatedIds: ['KB-C01'] },
+  ] as KnowledgeEntry[],
+  skills: [
+    { id: 'SK-C01', name: 'Multi-Dimensional Churn Scoring', nameZh: '多维流失评分', domain: 'marketing', description: 'Combines 47 behavioral features with network QoE data and competitor intelligence to produce high-accuracy churn risk scores.', descriptionZh: '组合47个行为特征、网络QoE数据和竞对情报，生成高精度流失风险评分。', sourceKnowledgeIds: ['KB-C01'], triggerConditions: ['Monthly churn scoring cycle', 'Competitor promotion detected'], triggerConditionsZh: ['月度流失评分周期', '检测到竞对促销'], actions: ['Extract behavioral features', 'Query QoE scores', 'Run ensemble ML model', 'Generate risk rankings'], actionsZh: ['提取行为特征', '查询QoE评分', '运行集成ML模型', '生成风险排名'], applicableAgents: ['MarketingAgent', 'ChurnPreventionAgent'], confidence: 0.94, usageCount: 15, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-C02', name: 'AI Personalized Offer Generation', nameZh: 'AI个性化方案生成', domain: 'marketing', description: 'Generates personalized retention offers based on user value, usage patterns, and churn drivers using generative AI.', descriptionZh: '基于用户价值、使用模式和流失驱动因素，利用生成式AI生成个性化挽留方案。', sourceKnowledgeIds: ['KB-C02'], triggerConditions: ['Churn scoring completed', 'User segment defined'], triggerConditionsZh: ['流失评分完成', '用户分群已定义'], actions: ['Analyze user profile', 'Match offer templates to drivers', 'Generate personalized copy', 'A/B test variants'], actionsZh: ['分析用户画像', '匹配方案模板与驱动因素', '生成个性化文案', 'A/B测试变体'], applicableAgents: ['PrecisionMarketingAgent'], confidence: 0.91, usageCount: 22, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-C03', name: 'Proactive QoE Hotspot Optimization', nameZh: '主动QoE热点优化', domain: 'optimization', description: 'Identifies QoE degradation hotspots affecting high-value users and proactively optimizes network parameters.', descriptionZh: '识别影响高价值用户的QoE劣化热点，主动优化网络参数。', sourceKnowledgeIds: ['KB-C03'], triggerConditions: ['QoE degradation in high-value user area', 'Churn-QoE correlation threshold exceeded'], triggerConditionsZh: ['高价值用户区域QoE劣化', '流失-QoE关联阈值超标'], actions: ['Map QoE to user locations', 'Identify degradation root cause', 'Deploy targeted optimization', 'Validate QoE improvement'], actionsZh: ['QoE映射到用户位置', '识别劣化根因', '部署定向优化', '验证QoE改善'], applicableAgents: ['OptimizationAgent', 'ExperienceOptAgent'], confidence: 0.88, usageCount: 12, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-C04', name: 'Multi-Channel Campaign Orchestration', nameZh: '多渠道营销编排', domain: 'marketing', description: 'Orchestrates retention campaigns across APP push, SMS, WeChat, and outbound calls with optimal channel-user matching.', descriptionZh: '跨APP推送、短信、微信和外呼编排挽留营销，优化渠道-用户匹配。', sourceKnowledgeIds: ['KB-C02'], triggerConditions: ['Retention offers generated', 'Campaign approval received'], triggerConditionsZh: ['挽留方案已生成', '营销审批通过'], actions: ['Match channels to user preferences', 'Schedule delivery windows', 'Execute multi-wave campaign', 'Track real-time acceptance'], actionsZh: ['匹配渠道与用户偏好', '安排投放时间窗', '执行多波次营销', '跟踪实时接受率'], applicableAgents: ['ChannelOptAgent', 'MarketingAgent'], confidence: 0.92, usageCount: 18, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-C05', name: 'Complaint Escalation Prevention', nameZh: '投诉升级预防', domain: 'experience', description: 'Identifies users with repeated complaints and proactively intervenes with dedicated support and compensation before they churn.', descriptionZh: '识别重复投诉用户，在流失前主动干预提供专属支持和补偿。', sourceKnowledgeIds: ['KB-C05'], triggerConditions: ['User complaint count >=3 in 30 days', 'VIP user complaint detected'], triggerConditionsZh: ['用户30天内投诉>=3次', '检测到VIP用户投诉'], actions: ['Flag user for priority handling', 'Assign dedicated representative', 'Generate compensation offer', 'Schedule follow-up call'], actionsZh: ['标记用户优先处理', '分配专属客服', '生成补偿方案', '安排回访电话'], applicableAgents: ['ProactiveCareAgent', 'ExperienceAgent'], confidence: 0.90, usageCount: 31, lastUsed: '2026-04-05', status: 'active' },
+  ] as Skill[],
+  workflowTemplates: [
+    {
+      id: 'wft-churn-scoring', name: '流失风险评分与细分', nameEn: 'Churn Risk Scoring & Segmentation',
+      description: '数据采集→特征提取→ML评分→用户细分→方案匹配→营销审批', descriptionEn: 'Data collect → Feature extract → ML scoring → Segmentation → Offer match → Campaign approval',
+      nodes: [
+        { id: 't1', type: 'trigger', name: '风险预警', x: 50, y: 200 },
+        { id: 'a1', type: 'agent', name: '数据采集', agentType: 'marketing', x: 300, y: 200 },
+        { id: 'a2', type: 'agent', name: 'ML评分', agentType: 'marketing', x: 550, y: 200 },
+        { id: 'a3', type: 'agent', name: '用户细分', agentType: 'marketing', x: 800, y: 200 },
+        { id: 'a4', type: 'agent', name: '方案生成', agentType: 'marketing', x: 1050, y: 200 },
+        { id: 'c1', type: 'condition', name: '审批?', x: 1300, y: 200 },
+        { id: 'a5', type: 'action', name: '启动营��', x: 1550, y: 130 },
+        { id: 'a6', type: 'action', name: '人工审核', x: 1550, y: 280 },
+      ],
+      edges: [
+        { id: 'e1', source: 't1', target: 'a1' },
+        { id: 'e2', source: 'a1', target: 'a2' },
+        { id: 'e3', source: 'a2', target: 'a3' },
+        { id: 'e4', source: 'a3', target: 'a4' },
+        { id: 'e5', source: 'a4', target: 'c1' },
+        { id: 'e6', source: 'c1', target: 'a5', label: '通过' },
+        { id: 'e7', source: 'c1', target: 'a6', label: '需审核' },
+      ],
+    },
+    {
+      id: 'wft-retention-campaign', name: '多渠道挽留营销执行', nameEn: 'Multi-Channel Retention Campaign',
+      description: '渠道匹配→并行投放→效果监控→汇总→二次营销/结束', descriptionEn: 'Channel match → Parallel delivery → Monitor → Aggregate → Re-engage / Complete',
+      nodes: [
+        { id: 't1', type: 'trigger', name: '营销启动', x: 50, y: 200 },
+        { id: 'a1', type: 'agent', name: '渠道匹配', agentType: 'marketing', x: 300, y: 200 },
+        { id: 's1', type: 'split', name: '并行投放', x: 550, y: 200 },
+        { id: 'a2', type: 'action', name: 'APP推送', x: 800, y: 80 },
+        { id: 'a3', type: 'action', name: 'SMS+微信', x: 800, y: 200 },
+        { id: 'a4', type: 'action', name: '外呼', x: 800, y: 320 },
+        { id: 'm1', type: 'merge', name: '效果汇总', x: 1050, y: 200 },
+        { id: 'c1', type: 'condition', name: '达标?', x: 1300, y: 200 },
+        { id: 'a5', type: 'action', name: '结束报告', x: 1550, y: 130 },
+        { id: 'a6', type: 'agent', name: '二次营销', agentType: 'marketing', x: 1550, y: 280 },
+      ],
+      edges: [
+        { id: 'e1', source: 't1', target: 'a1' },
+        { id: 'e2', source: 'a1', target: 's1' },
+        { id: 'e3', source: 's1', target: 'a2' },
+        { id: 'e4', source: 's1', target: 'a3' },
+        { id: 'e5', source: 's1', target: 'a4' },
+        { id: 'e6', source: 'a2', target: 'm1' },
+        { id: 'e7', source: 'a3', target: 'm1' },
+        { id: 'e8', source: 'a4', target: 'm1' },
+        { id: 'e9', source: 'm1', target: 'c1' },
+        { id: 'e10', source: 'c1', target: 'a5', label: '达标' },
+        { id: 'e11', source: 'c1', target: 'a6', label: '未达标' },
+      ],
+    },
+  ],
+  auditLog: [
+    { id: 'AUD-C01', time: '09:00:05', level: 2, agentEn: 'Churn Prevention Agent', agentZh: '离网维挽Agent', actEn: 'Churn risk scoring for 2,847 users', actZh: '2847用户流失风险评分', status: 'completed', highRisk: false, detailEn: 'Multi-dimensional churn scoring using 47 behavioral features. 2,847 high-value users scored, 1,234 classified as high-risk (probability >0.8).', detailZh: '使用47个行为特征的多维流失评分。2847位高价值用户已评分，1234位归类为高风险(概率>0.8)。', impactEn: 'Analysis only, no user-facing impact', impactZh: '仅分析，无用户侧影响' },
+    { id: 'AUD-C02', time: '09:05:00', level: 2, agentEn: 'Value Insight Agent', agentZh: '价值洞察Agent', actEn: 'User micro-segmentation completed', actZh: '用户微细分完成', status: 'completed', highRisk: false, detailEn: 'Clustered 2,847 at-risk users into 8 behavioral segments: Price-Sensitive Switchers (892), Experience Frustrated (340), Service Dissatisfied (156), Silent Churners (1,459).', detailZh: '将2847位风险用户聚类为8个行为细分：价格敏感切换者(892)、体验不满者(340)、服务不满者(156)、沉默流失者(1459)。', impactEn: '8 segments identified for targeted campaigns', impactZh: '识别8个细分群用于定向营销' },
+    { id: 'AUD-C03', time: '09:10:00', level: 3, agentEn: 'Precision Marketing Agent', agentZh: '精准营销Agent', actEn: 'Personalized offer generation (approved)', actZh: '个性化方案生成（已审批）', status: 'approved', highRisk: false, detailEn: 'Generated 6 offer templates with 2,847 personalized variants. Budget allocation: ¥500K/month. Approved by Marketing Director. Estimated ROI: 4.2x.', detailZh: '生成6套方案模板和2847个个性化变体。预算分配：50万/月。市场总监已审批。预计ROI：4.2倍。', impactEn: '2,847 personalized offers generated, ¥500K budget', impactZh: '2847个个性化方案已生成，预算50万' },
+    { id: 'AUD-C04', time: '09:15:00', level: 4, agentEn: 'Experience Opt Agent', agentZh: '体验优化Agent', actEn: 'Futian QoE proactive optimization (auto)', actZh: '福田QoE主动优化（自动执行）', status: 'executed', highRisk: true, detailEn: 'Proactive parameter optimization in Futian CBD: adjusted antenna tilt on 8 cells, enabled 4CC CA, activated priority QoS for 340 high-value users. QoE improved from 3.2 to 3.8.', detailZh: '福田CBD主动参数优化：调整8个小区天线下倾角，启用4CC CA，为340位高价值用户激活优先QoS。QoE从3.2提升至3.8。', impactEn: '⚠️ 8 cells modified, 340 users QoS changed', impactZh: '⚠️ 8个小区参数修改，340用户QoS变更' },
+    { id: 'AUD-C05', time: '09:20:00', level: 3, agentEn: 'Channel Opt Agent', agentZh: '渠道优化Agent', actEn: 'Multi-channel campaign launched (approved)', actZh: '多渠道营销活动已启动（已审批）', status: 'approved', highRisk: false, detailEn: 'Launched retention campaign across 4 channels: APP push (2,847), SMS (2,847), WeChat (2,100), Outbound call (500 high-risk). Campaign approved by Marketing Director.', detailZh: '跨4渠道启动挽留营销：APP推送(2847)、短信(2847)、微信(2100)、外呼(500高风险)。市场总监已审批。', impactEn: '2,847 users contacted across 4 channels', impactZh: '2847用户通过4个渠道触达' },
+    { id: 'AUD-C06', time: '09:25:00', level: 2, agentEn: 'Proactive Care Agent', agentZh: '主动关怀Agent', actEn: 'Compensation packages prepared for 156 users', actZh: '为156位用户准备补偿方案', status: 'completed', highRisk: false, detailEn: 'Prepared personalized compensation packages for 156 users with 3+ complaints: 50GB bonus data + dedicated service representative + priority complaint handling.', detailZh: '为156位3+次投诉用户准备个性化补偿方案：50GB赠送流量+专属客服代表+优先投诉处理。', impactEn: '156 users, compensation packages pending approval', impactZh: '156位用户，补偿方案待审批' },
+    { id: 'AUD-C07', time: '09:30:00', level: 1, agentEn: 'Marketing Agent', agentZh: '营销Agent', actEn: 'Real-time campaign performance report', actZh: '实时营销效果报告', status: 'info', highRisk: false, detailEn: 'Campaign running 20 minutes: 1,890 contacted, 892 responded (47.2%), 698 accepted offers (78.3%). Revenue protected so far: ¥2.8M/month. On track to exceed 75% target.', detailZh: '营销运行20分钟：已触达1890位，892位响应(47.2%)，698位接受方案(78.3%)。已保护收入：280万/月。达标进度良好。', impactEn: 'Monitoring only — campaign metrics on track', impactZh: '仅监控 — 营销指标达标进展中' },
   ],
 };

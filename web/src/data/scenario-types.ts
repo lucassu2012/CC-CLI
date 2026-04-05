@@ -1,5 +1,7 @@
 import type { KpiMetric, AlertItem, TaskItem } from './dashboard';
 import type { DomainAgent } from './agents';
+import type { KnowledgeEntry, Skill } from './knowledge';
+import type { DemoConversation } from './chat';
 
 // Scenario metadata
 export interface ScenarioMeta {
@@ -23,7 +25,7 @@ export interface ScenarioDashboard {
   extraAlerts: AlertItem[];
 }
 
-// Chat conversation for the scenario
+// Chat conversation for the scenario (legacy — kept for backwards compat)
 export interface ScenarioChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -42,7 +44,7 @@ export interface ScenarioConversation {
   messages: ScenarioChatMessage[];
 }
 
-// Workflow execution
+// Workflow execution summary (dashboard-level)
 export interface ScenarioWorkflowExecution {
   id: string;
   workflowName: string;
@@ -59,11 +61,66 @@ export interface ScenarioWorkflowExecution {
   agentsInvolved: string[];
 }
 
+// Visual workflow template for the Workflows page canvas
+export interface ScenarioWfNode {
+  id: string;
+  type: 'trigger' | 'agent' | 'condition' | 'action' | 'merge' | 'split' | 'transform' | 'connector';
+  name: string;
+  agentType?: string;
+  subAgent?: string;
+  connectorType?: string;
+  x: number;
+  y: number;
+}
+
+export interface ScenarioWfEdge {
+  id: string;
+  source: string;
+  target: string;
+  label?: string;
+}
+
+export interface ScenarioWorkflowTemplate {
+  id: string;
+  name: string;
+  nameEn: string;
+  description: string;
+  descriptionEn: string;
+  nodes: ScenarioWfNode[];
+  edges: ScenarioWfEdge[];
+}
+
+// Permissions scenario data
+export interface ScenarioAuditEntry {
+  id: string;
+  time: string;
+  level: number;
+  agentEn: string;
+  agentZh: string;
+  actEn: string;
+  actZh: string;
+  status: string;
+  highRisk: boolean;
+  detailEn: string;
+  detailZh: string;
+  impactEn: string;
+  impactZh: string;
+}
+
 // The full scenario data package
 export interface ScenarioData {
   meta: ScenarioMeta;
   dashboard: ScenarioDashboard;
-  agents: DomainAgent[];  // reuse existing type
+  agents: DomainAgent[];
   conversations: ScenarioConversation[];
   workflows: ScenarioWorkflowExecution[];
+  // Chat page — full DemoConversation objects
+  chatConversations?: DemoConversation[];
+  // Knowledge page
+  knowledgeEntries?: KnowledgeEntry[];
+  skills?: Skill[];
+  // Workflows page — visual templates
+  workflowTemplates?: ScenarioWorkflowTemplate[];
+  // Permissions page
+  auditLog?: ScenarioAuditEntry[];
 }

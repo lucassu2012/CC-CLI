@@ -1,4 +1,5 @@
 import type { ScenarioData } from '../scenario-types';
+import type { KnowledgeEntry, Skill } from '../knowledge';
 
 export const storyAlarmStorm: ScenarioData = {
   meta: {
@@ -137,5 +138,140 @@ export const storyAlarmStorm: ScenarioData = {
     { id: 'wf-s2', workflowName: 'Traffic Rerouting & Recovery', workflowNameZh: '流量迂回与恢复', status: 'running', startTime: '14:24:00', duration: '5min+', nodesExecuted: 5, totalNodes: 7, trigger: 'Auto — backbone failure', triggerZh: '自动 — 骨干故障', result: '78% users restored via backup ring', resultZh: '78%用户通过备用环路恢复', agentsInvolved: ['Optimization Agent', 'Real-time Opt Agent'] },
     { id: 'wf-s3', workflowName: 'Field Dispatch & Fiber Repair', workflowNameZh: '外线派遣与光缆修复', status: 'running', startTime: '14:25:00', duration: '10min+', nodesExecuted: 3, totalNodes: 6, trigger: 'Auto — physical damage', triggerZh: '自动 — 物理损坏', result: 'Team en route, ETA 15min', resultZh: '团队在途，预计15分钟到达', agentsInvolved: ['Ops Agent', 'O&M Monitor Agent'] },
     { id: 'wf-s4', workflowName: 'Post-Recovery KPI Validation', workflowNameZh: '恢复后KPI验证', status: 'cancelled', startTime: '—', duration: '—', nodesExecuted: 0, totalNodes: 5, trigger: 'Manual — after repair', triggerZh: '手动 — 修复后', result: 'Pending fiber repair completion', resultZh: '等待光缆修复完成', agentsInvolved: ['Optimization Agent', 'Experience Agent'] },
+  ],
+  chatConversations: [
+    {
+      id: 'conv-alarm-rca', title: 'Alarm Storm Auto-Diagnosis', titleZh: '告警风暴自动诊断', domain: 'ops',
+      messages: [
+        { id: 'msg-1', role: 'system', content: '⚠️ ALARM STORM DETECTED: 847 alarms received in 3 minutes from Guangdong region. Auto-correlation initiated.', timestamp: '14:23:00' },
+        { id: 'msg-2', role: 'user', content: 'What is happening? Massive alarms flooding in from Guangdong region.', timestamp: '14:23:15' },
+        { id: 'msg-3', role: 'assistant', content: '## Alarm Storm Analysis\n\nI\'ve detected **847 alarms** in 3 minutes, primarily from the Guangdong Tianhe & Baiyun districts. Let me run root cause analysis.\n\n### Findings:\n- **Root Cause**: Fiber cut on backbone link **GD-TRUNK-07** at **KM12.3**\n- **Impact**: 23 BTS lost S1 connectivity, affecting ~45,200 users\n- **Correlation**: 847 alarms compressed to **1 root cause group** (99.8% confidence)\n\n### Automatic Actions Taken:\n1. ✅ Traffic rerouting via backup ring GD-TRUNK-08\n2. ✅ VIP QoS protection activated for 156 Diamond users\n3. ✅ Field team dispatched (ETA 25 min)\n4. ✅ Enterprise customer notifications sent\n\n### Current Status:\n- 78% of affected users restored via rerouting\n- Backup link at 89% capacity\n- Estimated full recovery: 45 min (pending fiber repair)',
+          timestamp: '14:23:45',
+          toolCalls: [
+            { id: 'tc-1', name: 'oss_get_alarms', status: 'completed', input: '{ "severity": "critical", "timeRange": "3min", "region": "GD" }', output: '847 alarms, 23 BTS affected', duration: '2.3s' },
+            { id: 'tc-2', name: 'adn_trigger_rca', status: 'completed', input: '{ "alarmGroup": "GD-TRUNK-07-cascade", "method": "topology-aware" }', output: 'Root cause: fiber cut at KM12.3, confidence 99.8%', duration: '8.1s' },
+            { id: 'tc-3', name: 'oss_get_topology', status: 'completed', input: '{ "linkId": "GD-TRUNK-07", "includeBackup": true }', output: 'Backup ring GD-TRUNK-08 available, capacity 2Gbps', duration: '1.5s' },
+            { id: 'tc-4', name: 'oss_reroute_traffic', status: 'completed', input: '{ "fromLink": "GD-TRUNK-07", "toLink": "GD-TRUNK-08", "affectedBTS": 23 }', output: 'Rerouting initiated, 78% users restored', duration: '12.5s' },
+          ],
+          thinkingSteps: [
+            { phase: 'Think', phaseZh: '思考', content: 'Detecting alarm pattern: 847 alarms in 3min, geographically clustered in Tianhe+Baiyun. This suggests a common upstream failure — likely transport/backbone.', contentZh: '检测告警模式：3分钟内847条告警，地理集中在天河+白云区。此模式表明上游公共故障，可能是传输/骨干层。', timestamp: '14:23:16' },
+            { phase: 'Act', phaseZh: '行动', content: 'Running topology-aware RCA correlating alarm timestamps, affected NE locations, and physical fiber paths. Cross-referencing with OTDR data.', contentZh: '运行拓扑感知RCA，关联告警时间戳、受影响网元位置和物理光缆路径。交叉参考OTDR数据。', timestamp: '14:23:20' },
+            { phase: 'Observe', phaseZh: '观察', content: 'RCA result: 99.8% confidence — fiber cut at GD-TRUNK-07 KM12.3. All 23 affected BTS are on this ring. Backup ring GD-TRUNK-08 available with 2Gbps capacity.', contentZh: 'RCA结果：99.8%置信度 — GD-TRUNK-07 KM12.3光缆断裂。所有23个受影响基站在此环上。备用环GD-TRUNK-08可用，2Gbps容量。', timestamp: '14:23:35' },
+            { phase: 'Reflect', phaseZh: '反思', content: 'Traffic rerouting is proceeding. Backup ring at 89% capacity — need to monitor for overload. VIP users protected. Field team dispatched with 25min ETA. Should prepare post-recovery KPI validation workflow.', contentZh: '流量迂回正在进行。备用环路利用率89%——需监控过载。VIP用户已保护。外线团队已派遣，预计25分钟到达。应准备恢复后KPI验证流程。', timestamp: '14:24:00' },
+          ],
+          suggestions: [
+            { id: 'sug-1', text: 'Approve traffic rerouting plan', textZh: '批准流量迂回方案', type: 'approve' },
+            { id: 'sug-2', text: 'Dispatch additional field team', textZh: '调派额外外线团队', type: 'explore' },
+            { id: 'sug-3', text: 'View affected user heatmap', textZh: '查看受影响用户热力图', type: 'explore' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'conv-traffic-reroute', title: 'Traffic Rerouting Coordination', titleZh: '流量迂回协调', domain: 'optimization',
+      messages: [
+        { id: 'msg-r1', role: 'system', content: '📡 Traffic rerouting workflow initiated for GD-TRUNK-07 failure. Backup ring GD-TRUNK-08 selected.', timestamp: '14:24:00' },
+        { id: 'msg-r2', role: 'user', content: 'What is the current rerouting status? Will the backup ring handle the load?', timestamp: '14:24:30' },
+        { id: 'msg-r3', role: 'assistant', content: '## Traffic Rerouting Status\n\n### Current Progress:\n- **78% of affected users** restored via GD-TRUNK-08 backup ring\n- Backup ring utilization: **89%** (capacity 2Gbps)\n- 5 critical BTS additionally covered by emergency microwave links (200Mbps)\n\n### Capacity Concerns:\n⚠️ GD-TRUNK-08 trending toward **95% utilization** within 30 minutes\n\n### Mitigation Actions:\n1. ✅ Neighbor cell load balancing (MLB) activated — offloading 2,400 users\n2. ✅ Reduced QoS for non-critical traffic classes\n3. 🔄 Requesting additional microwave backup (pending)\n\n### Estimated Timeline:\n- Field team ETA: **15 minutes**\n- Fiber splice estimate: **2-3 hours**\n- Full recovery: **~3 hours from now**',
+          timestamp: '14:25:00',
+          toolCalls: [
+            { id: 'tc-r1', name: 'ran_get_cell_kpis', status: 'completed', input: '{ "cells": "GD-TRUNK-08-ring", "metrics": ["utilization","throughput"] }', output: 'Utilization: 89%, trending up', duration: '1.8s' },
+            { id: 'tc-r2', name: 'ran_activate_mlb', status: 'completed', input: '{ "source": "affected_cells", "target": "neighbor_cells", "users": 2400 }', output: 'MLB active, 2400 users redistributed', duration: '8.2s' },
+          ],
+          thinkingSteps: [
+            { phase: 'Think', phaseZh: '思考', content: 'Backup ring at 89% is concerning. Need load shedding and MLB to prevent overload. Calculate remaining capacity headroom.', contentZh: '备用环路89%令人担忧。需要负载削减和MLB防止过载。计算剩余容量余量。', timestamp: '14:24:32' },
+            { phase: 'Act', phaseZh: '行动', content: 'Activating MLB on neighbor cells and reducing QoS for non-critical traffic. Requesting additional microwave backup link.', contentZh: '激活邻区MLB并降低非关键流量QoS。请求额外微波备份链路。', timestamp: '14:24:40' },
+            { phase: 'Observe', phaseZh: '观察', content: 'MLB successfully offloaded 2,400 users. Ring utilization stabilized at 85%. Microwave link request pending approval.', contentZh: 'MLB成功分流2400用户。环路利用率稳定在85%。微波链路请求待审批。', timestamp: '14:24:55' },
+          ],
+          suggestions: [
+            { id: 'sug-r1', text: 'Approve microwave backup activation', textZh: '批准微波备份激活', type: 'approve' },
+            { id: 'sug-r2', text: 'Show capacity forecast chart', textZh: '显示容量预测图表', type: 'explore' },
+          ],
+        },
+      ],
+    },
+  ],
+  knowledgeEntries: [
+    { id: 'KB-S01', title: 'Fiber Cut Recovery - Trunk Link', titleZh: '光纤中断恢复 - 干线链路', category: 'procedure', domain: 'ops', severity: 'critical', rootCause: 'Physical fiber damage on trunk links due to construction activity', rootCauseZh: '施工活动导致干线链路物理光纤损坏', resolution: '1. Activate backup paths\n2. Reroute traffic via redundant ring\n3. Dispatch fiber repair team\n4. Validate service restoration', resolutionZh: '1. 激活备用路径\n2. 通过冗余环路迂回流量\n3. 派遣光纤修复团队\n4. 验证服务恢复', confidence: 0.98, occurrences: 34, lastSeen: '2026-04-05', tags: ['fiber', 'trunk', 'recovery', 'rca'], relatedIds: ['KB-S02'] },
+    { id: 'KB-S02', title: 'Alarm Storm Correlation Methodology', titleZh: '告警风暴关联方法论', category: 'lesson', domain: 'ops', severity: 'critical', rootCause: 'Cascading alarms from single root cause overwhelming NOC operators', rootCauseZh: '单一根因引发的级联告警淹没NOC操作人员', resolution: '1. Topology-aware correlation\n2. Time-window clustering\n3. Confidence scoring\n4. Auto-suppress child alarms', resolutionZh: '1. 拓扑感知关联\n2. 时间窗口聚类\n3. 置信度评分\n4. 自动抑制子告警', confidence: 0.96, occurrences: 18, lastSeen: '2026-04-05', tags: ['alarm-storm', 'correlation', 'rca', 'noc'], relatedIds: ['KB-S01'] },
+    { id: 'KB-S03', title: 'OTDR-Based Fiber Break Localization', titleZh: 'OTDR光纤断点定位', category: 'procedure', domain: 'ops', severity: 'critical', rootCause: 'Need precise fiber break location for rapid repair dispatch', rootCauseZh: '需要精确光纤断点位置以快速派遣修复', resolution: '1. Trigger remote OTDR test\n2. Analyze reflection/loss pattern\n3. Calculate break distance (±5m)\n4. Map to GPS coordinates\n5. Dispatch team with exact location', resolutionZh: '1. 触发远程OTDR测试\n2. 分析反射/损耗模式\n3. 计算断点距离(±5m)\n4. 映射到GPS坐标\n5. 派遣团队至精确位置', confidence: 0.97, occurrences: 42, lastSeen: '2026-04-05', tags: ['otdr', 'fiber', 'localization', 'dispatch'], relatedIds: ['KB-S01'] },
+    { id: 'KB-S04', title: 'Traffic Rerouting Under Capacity Constraints', titleZh: '容量受限下的流量迂回', category: 'lesson', domain: 'optimization', severity: 'major', rootCause: 'Backup paths may not have full capacity of primary — risk of congestion cascade', rootCauseZh: '备用路径可能不具备主路径的全部容量——存在拥塞级联风险', resolution: '1. Calculate backup path headroom\n2. Enable MLB for load distribution\n3. Reduce non-critical QoS classes\n4. Monitor utilization trending\n5. Activate emergency microwave if >90%', resolutionZh: '1. 计算备用路径余量\n2. 启用MLB进行负载分配\n3. 降低非关键QoS等级\n4. 监控利用率趋势\n5. >90%时激活应急微波', confidence: 0.91, occurrences: 12, lastSeen: '2026-04-05', tags: ['rerouting', 'capacity', 'mlb', 'congestion'], relatedIds: ['KB-S05'] },
+    { id: 'KB-S05', title: 'VIP User Experience Protection During Outage', titleZh: '中断期间VIP用户体验保护', category: 'procedure', domain: 'experience', severity: 'major', rootCause: 'Network outages disproportionately impact VIP users who expect guaranteed QoE', rootCauseZh: '网络中断对期望保障QoE的VIP用户影响不成比例', resolution: '1. Identify affected VIP users via CEM\n2. Activate dedicated QoS bearers\n3. Priority routing through backup paths\n4. Proactive notification to VIP users\n5. Post-recovery QoE validation', resolutionZh: '1. 通过CEM识别受影响VIP用户\n2. 激活专用QoS承载\n3. 通过备用路径优先路由\n4. 主动通知VIP用户\n5. 恢复后QoE验证', confidence: 0.93, occurrences: 28, lastSeen: '2026-04-05', tags: ['vip', 'qoe', 'protection', 'outage'], relatedIds: ['KB-S04'] },
+    { id: 'KB-S06', title: 'Enterprise SLA Breach Prevention', titleZh: '企业SLA违规预防', category: 'procedure', domain: 'marketing', severity: 'major', rootCause: 'Network disruptions risk triggering enterprise SLA penalty clauses', rootCauseZh: '网络中断风险触发企业SLA惩罚条款', resolution: '1. Identify enterprise customers in affected area\n2. Check SLA terms and penalty thresholds\n3. Proactive incident notification\n4. Accelerate service restoration priority\n5. Document timeline for SLA compliance', resolutionZh: '1. 识别受影响区域的企业客户\n2. 检查SLA条款和惩罚阈值\n3. 主动事件通知\n4. 加速服务恢复优先级\n5. 记录时间线用于SLA合规', confidence: 0.90, occurrences: 9, lastSeen: '2026-04-05', tags: ['enterprise', 'sla', 'notification', 'compliance'], relatedIds: ['KB-S05'] },
+  ] as KnowledgeEntry[],
+  skills: [
+    { id: 'SK-S01', name: 'Topology-Aware Alarm Correlation', nameZh: '拓扑感知告警关联', domain: 'ops', description: 'Correlates cascading alarms using network topology graph to identify single root cause from hundreds of symptoms.', descriptionZh: '利用网络拓扑图关联级联告警，从数百条症状中定位单一根因。', sourceKnowledgeIds: ['KB-S01', 'KB-S02'], triggerConditions: ['Alarm rate >100/min', 'Geographic alarm clustering detected'], triggerConditionsZh: ['告警速率>100/min', '检测到地理告警聚集'], actions: ['Build alarm topology graph', 'Time-window clustering', 'Root cause scoring', 'Auto-suppress child alarms'], actionsZh: ['构建告警拓扑图', '时间窗口聚类', '根因评分', '自动抑制子告警'], applicableAgents: ['OpsAgent', 'FaultAnalysisAgent'], confidence: 0.98, usageCount: 34, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-S02', name: 'Automated Traffic Rerouting', nameZh: '自动化流量迂回', domain: 'optimization', description: 'Automatically identifies backup paths and reroutes traffic when primary link fails, with capacity-aware load balancing.', descriptionZh: '主链路故障时自动识别备用路径并迂回流量，具备容量感知的负载均衡。', sourceKnowledgeIds: ['KB-S04'], triggerConditions: ['Backbone link failure detected', 'BTS S1 connectivity loss'], triggerConditionsZh: ['检测到骨干链路故障', '基站S1连接中断'], actions: ['Query backup topology', 'Calculate path capacity', 'Execute rerouting', 'Activate MLB'], actionsZh: ['查询备用拓扑', '计算路径容量', '执行迂回', '激活MLB'], applicableAgents: ['OptimizationAgent', 'RealtimeOptAgent'], confidence: 0.94, usageCount: 18, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-S03', name: 'VIP QoE Emergency Protection', nameZh: 'VIP QoE紧急保护', domain: 'experience', description: 'Identifies VIP users in affected areas and activates dedicated QoS bearers to maintain experience during outages.', descriptionZh: '识别受影响区域的VIP用户，在中断期间激活专用QoS承载维护体验。', sourceKnowledgeIds: ['KB-S05'], triggerConditions: ['Network outage affecting VIP users', 'VIP QoE score <3.5'], triggerConditionsZh: ['网络中断影响VIP用户', 'VIP QoE评分<3.5'], actions: ['Query CEM for affected VIPs', 'Activate dedicated bearers', 'Priority routing', 'Send proactive notification'], actionsZh: ['查询CEM获取受影响VIP', '激活专用承载', '优先路由', '发送主动通知'], applicableAgents: ['ExperienceAgent', 'DeterministicExpAgent'], confidence: 0.93, usageCount: 28, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-S04', name: 'OTDR Remote Fiber Diagnostics', nameZh: 'OTDR远程光纤诊断', domain: 'ops', description: 'Triggers remote OTDR testing to precisely locate fiber breaks and map to GPS coordinates for rapid field dispatch.', descriptionZh: '触发远程OTDR测试精确定位光纤断点并映射至GPS坐标以快速现场派遣。', sourceKnowledgeIds: ['KB-S03'], triggerConditions: ['Fiber alarm detected', 'Multiple BTS loss on same ring'], triggerConditionsZh: ['检测到光纤告警', '同一环上多个基站中断'], actions: ['Trigger OTDR test', 'Analyze break pattern', 'Calculate GPS coordinates', 'Auto-dispatch field team'], actionsZh: ['触发OTDR测试', '分析断点模式', '计算GPS坐标', '自动派遣外线团队'], applicableAgents: ['OpsAgent', 'OMMonitorAgent'], confidence: 0.97, usageCount: 42, lastUsed: '2026-04-05', status: 'active' },
+    { id: 'SK-S05', name: 'Enterprise SLA Impact Assessment', nameZh: '企业SLA影响评估', domain: 'marketing', description: 'Automatically identifies enterprise customers affected by outage and assesses SLA breach risk for proactive communication.', descriptionZh: '自动识别受中断影响的企业客户并评估SLA违规风险以主动沟通。', sourceKnowledgeIds: ['KB-S06'], triggerConditions: ['Network outage in enterprise service area', 'SLA timer approaching threshold'], triggerConditionsZh: ['企业服务区域网络中断', 'SLA计时器接近阈值'], actions: ['Query affected enterprise accounts', 'Check SLA penalty terms', 'Send proactive notification', 'Escalate restoration priority'], actionsZh: ['查询受影响企业账户', '检查SLA惩罚条款', '发送主动通知', '提升恢复优先级'], applicableAgents: ['MarketingAgent', 'ChurnPreventionAgent'], confidence: 0.90, usageCount: 9, lastUsed: '2026-04-05', status: 'active' },
+  ] as Skill[],
+  workflowTemplates: [
+    {
+      id: 'wft-alarm-rca', name: '告警风暴关联与根因分析', nameEn: 'Alarm Storm Correlation & RCA',
+      description: '告警接收→风暴检测→��扑关联→根因定位→流量迂回→VIP保护→现场派遣', descriptionEn: 'Alarm intake → Storm detect → Topology correlate → RCA → Traffic reroute → VIP protect → Field dispatch',
+      nodes: [
+        { id: 't1', type: 'trigger', name: '告警接收', x: 50, y: 200 },
+        { id: 'c1', type: 'condition', name: '风暴检测', x: 250, y: 200 },
+        { id: 'a1', type: 'agent', name: '拓扑关联', agentType: 'ops', x: 450, y: 200 },
+        { id: 'a2', type: 'agent', name: 'OTDR诊断', agentType: 'ops', x: 650, y: 200 },
+        { id: 's1', type: 'split', name: '并行���复', x: 850, y: 200 },
+        { id: 'a3', type: 'agent', name: '流量迂回', agentType: 'optimization', x: 1050, y: 80 },
+        { id: 'a4', type: 'agent', name: 'VIP保护', agentType: 'experience', x: 1050, y: 200 },
+        { id: 'a5', type: 'agent', name: '现场派遣', agentType: 'ops', x: 1050, y: 320 },
+        { id: 'm1', type: 'merge', name: '恢复确认', x: 1250, y: 200 },
+        { id: 'a6', type: 'action', name: 'KPI验证', x: 1450, y: 200 },
+      ],
+      edges: [
+        { id: 'e1', source: 't1', target: 'c1' },
+        { id: 'e2', source: 'c1', target: 'a1', label: '风暴' },
+        { id: 'e3', source: 'a1', target: 'a2' },
+        { id: 'e4', source: 'a2', target: 's1' },
+        { id: 'e5', source: 's1', target: 'a3' },
+        { id: 'e6', source: 's1', target: 'a4' },
+        { id: 'e7', source: 's1', target: 'a5' },
+        { id: 'e8', source: 'a3', target: 'm1' },
+        { id: 'e9', source: 'a4', target: 'm1' },
+        { id: 'e10', source: 'a5', target: 'm1' },
+        { id: 'e11', source: 'm1', target: 'a6' },
+      ],
+    },
+    {
+      id: 'wft-traffic-reroute', name: '骨干故障流量迂回', nameEn: 'Backbone Failure Traffic Rerouting',
+      description: '故障检测→备用路径查询→容量评估→迂回执行→MLB激活→监控', descriptionEn: 'Fault detect → Backup path query → Capacity assess → Reroute execute → MLB activate → Monitor',
+      nodes: [
+        { id: 't1', type: 'trigger', name: '骨干故障', x: 50, y: 200 },
+        { id: 'a1', type: 'agent', name: '备用路径', agentType: 'optimization', x: 300, y: 200 },
+        { id: 'c1', type: 'condition', name: '容量足够?', x: 550, y: 200 },
+        { id: 'a2', type: 'action', name: '全量迂回', x: 800, y: 120 },
+        { id: 's1', type: 'split', name: '分级迂回', x: 800, y: 300 },
+        { id: 'a3', type: 'agent', name: 'MLB均衡', agentType: 'optimization', x: 1050, y: 230 },
+        { id: 'a4', type: 'agent', name: '微波备份', agentType: 'ops', x: 1050, y: 370 },
+        { id: 'm1', type: 'merge', name: '汇总', x: 1250, y: 300 },
+        { id: 'a5', type: 'action', name: '持续监控', x: 1450, y: 200 },
+      ],
+      edges: [
+        { id: 'e1', source: 't1', target: 'a1' },
+        { id: 'e2', source: 'a1', target: 'c1' },
+        { id: 'e3', source: 'c1', target: 'a2', label: '充足' },
+        { id: 'e4', source: 'c1', target: 's1', label: '不足' },
+        { id: 'e5', source: 's1', target: 'a3' },
+        { id: 'e6', source: 's1', target: 'a4' },
+        { id: 'e7', source: 'a3', target: 'm1' },
+        { id: 'e8', source: 'a4', target: 'm1' },
+        { id: 'e9', source: 'a2', target: 'a5' },
+        { id: 'e10', source: 'm1', target: 'a5' },
+      ],
+    },
+  ],
+  auditLog: [
+    { id: 'AUD-S01', time: '14:23:05', level: 4, agentEn: 'Fault Analysis Agent', agentZh: '故障分析Agent', actEn: 'Alarm storm correlation — 847 alarms → 1 root cause (auto)', actZh: '���警风暴关联 — 847条告警 → 1个根因（自动执行）', status: 'executed', highRisk: false, detailEn: 'Topology-aware correlation engine compressed 847 cascading alarms into 1 root cause group. Confidence: 99.8%. Processing time: 45 seconds.', detailZh: '拓扑感知关联引擎将847条级联告警压缩为1个根因组。置信度：99.8%。处理时间：45秒。', impactEn: '847 alarms compressed, NOC workload reduced 99%', impactZh: '847条告警压缩，NOC工作量降低99%' },
+    { id: 'AUD-S02', time: '14:23:50', level: 4, agentEn: 'Real-time Opt Agent', agentZh: '实时优化Agent', actEn: 'Traffic rerouting via GD-TRUNK-08 (auto)', actZh: '通过GD-TRUNK-08流量迂回（自动执行）', status: 'executed', highRisk: true, detailEn: 'Automatically rerouted traffic from failed GD-TRUNK-07 to backup ring GD-TRUNK-08. 78% of 45,200 affected users restored. Backup ring at 89% utilization.', detailZh: '自动将流量从故障GD-TRUNK-07迂回至备用��GD-TRUNK-08。45200受影响用户中78%已恢复。备用环利用率89%。', impactEn: '⚠️ 45,200 users affected, 35,256 restored — backup at 89% capacity', impactZh: '⚠️ 45200用户受影响，35256已恢复 — 备用环容量89%' },
+    { id: 'AUD-S03', time: '14:24:02', level: 3, agentEn: 'Deterministic Exp Agent', agentZh: '确定性体验Agent', actEn: 'VIP QoS bearer activation (approved)', actZh: 'VIP QoS承载激活（已审批）', status: 'approved', highRisk: false, detailEn: 'Activated dedicated QoS bearers for 156 Diamond-tier VIP users in affected area. QoE restored from 2.8 to 4.2/5.0 within 12 seconds. Pre-approved by NOC standing policy.', detailZh: '为受影响区域156位钻石卡VIP用户激活专用QoS承载。QoE在12秒内从2.8恢复至4.2/5.0。根据NOC常设策略预审批���', impactEn: '156 VIP users, QoE 2.8→4.2', impactZh: '156位VIP用户，QoE 2.8→4.2' },
+    { id: 'AUD-S04', time: '14:24:15', level: 3, agentEn: 'O&M Monitor Agent', agentZh: '运维监控Agent', actEn: 'Field team dispatch to KM12.3 (approved)', actZh: '外线团队派遣至KM12.3（已审批）', status: 'approved', highRisk: false, detailEn: 'Dispatched nearest available fiber repair team to GPS coordinates of break at GD-TRUNK-07 KM12.3. Team ETA: 25 minutes. Approved by NOC shift supervisor.', detailZh: '派遣最近可用光纤修复团队至GD-TRUNK-07 KM12.3断点GPS坐标。团队预计25分钟到达。由NOC值班主管审批。', impactEn: 'Field team dispatched, ETA 25min', impactZh: '外线团队已派遣，预计25分钟到达' },
+    { id: 'AUD-S05', time: '14:24:30', level: 2, agentEn: 'Churn Prevention Agent', agentZh: '离网维挽Agent', actEn: 'Enterprise customer notification sent', actZh: '企业客户通知已发送', status: 'completed', highRisk: false, detailEn: 'Sent incident notification to 23 enterprise accounts in affected area via SMS and email. Includes estimated recovery timeline and dedicated support hotline.', detailZh: '通过短信和邮件向受影响区域23个企业账户发送事件通知。包含预计恢复时间线和专属支持热线。', impactEn: '23 enterprise accounts notified', impactZh: '23个企业账户已通知' },
+    { id: 'AUD-S06', time: '14:25:00', level: 4, agentEn: 'Real-time Opt Agent', agentZh: '实时优���Agent', actEn: 'MLB activation for neighbor cells (auto)', actZh: '邻区MLB激活（自动执行）', status: 'executed', highRisk: true, detailEn: 'Activated Mobility Load Balancing across 12 neighbor cells to offload 2,400 users from congested backup ring. Ring utilization reduced from 89% to 85%.', detailZh: '��12个邻区激活移动负载均衡，从拥塞备用环分流2400用户。环路利用率从89%降至85%。', impactEn: '⚠️ 12 cells, 2400 users redistributed', impactZh: '⚠️ 12个小区，2400用户重新分配' },
+    { id: 'AUD-S07', time: '14:26:00', level: 5, agentEn: 'Event Assurance Agent', agentZh: '事件保障Agent', actEn: '⚠️ Emergency microwave link activation', actZh: '⚠️ 紧急微波链路激活', status: 'emergency', highRisk: true, detailEn: '🔴 CRITICAL: Backup ring approaching capacity limit. Emergency activated 2 microwave links providing 200Mbps each for 5 critical BTS sites. VP approval obtained within 3 minutes.', detailZh: '🔴 严重：备用环接近容量上限。紧急激活2条微波链路为5个关键基站各提供200Mbps。VP在3分钟内审批通过。', impactEn: '⚠️ 5 BTS, emergency capacity — HUMAN OVERSIGHT REQUIRED', impactZh: '⚠️ 5个基���，紧急容量 — 需人工监督' },
+    { id: 'AUD-S08', time: '14:28:00', level: 1, agentEn: 'Capacity Planning Agent', agentZh: '���量规划Agent', actEn: 'Backup ring capacity trending report', actZh: '备用环容量趋势报告', status: 'info', highRisk: false, detailEn: 'Continuous monitoring: GD-TRUNK-08 utilization stabilized at 85% after MLB activation. Projected safe for next 2 hours. Post-repair capacity plan being drafted.', detailZh: '持续监控：MLB激活后GD-TRUNK-08利用率稳定在85%。预计未来2小时安全。修复后容量方案起草中。', impactEn: 'Monitoring only — ring stable at 85%', impactZh: '仅监控 — 环路稳定在85%' },
   ],
 };

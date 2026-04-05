@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Play, Pause, Square, ChevronDown, GitBranch, ArrowRight, RefreshCw, X, Plus, Trash2, GripVertical, ZoomIn, ZoomOut, Maximize2, ArrowLeft } from 'lucide-react';
 import { useText } from '../hooks/useText';
+import { useScenario } from '../context/ScenarioContext';
 
 /* ------------------------------------------------------------------ */
 /*  Inline workflow template data (self-contained, no cross-import)   */
@@ -325,6 +326,18 @@ function edgePath(src: WfNode, tgt: WfNode): string {
 
 export default function Workflows() {
   const { t } = useText();
+  const { scenario } = useScenario();
+  // Merge scenario workflow templates (prepended) with built-in TEMPLATES
+  const allTemplates = useMemo(() => {
+    if (!scenario?.workflowTemplates?.length) return TEMPLATES;
+    const scenarioWfTemplates: WfTemplate[] = scenario.workflowTemplates.map(wt => ({
+      id: wt.id, name: wt.name, nameEn: wt.nameEn,
+      description: wt.description, descriptionEn: wt.descriptionEn,
+      nodes: wt.nodes as WfNode[], edges: wt.edges as WfEdge[],
+    }));
+    return [...scenarioWfTemplates, ...TEMPLATES];
+  }, [scenario]);
+  const scenarioKey = scenario?.meta.id ?? 'default';
   const [selectedTemplate, setSelectedTemplate] = useState(0);
   const [selectedNode, setSelectedNode] = useState<WfNode | null>(null);
   const [running, setRunning] = useState(false);
@@ -351,7 +364,10 @@ export default function Workflows() {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [scrollStart, setScrollStart] = useState({ x: 0, y: 0 });
 
-  const template = TEMPLATES[selectedTemplate];
+  // Reset when scenario changes
+  useEffect(() => { setSelectedTemplate(0); setIsCustom(false); setRunning(false); setActiveNodeIdx(-1); }, [scenarioKey]);
+
+  const template = allTemplates[selectedTemplate] ?? allTemplates[0];
   const nodes = isCustom ? customNodes : template.nodes;
   const edges = isCustom ? customEdges : template.edges;
 
@@ -587,7 +603,7 @@ export default function Workflows() {
             </button>
             {dropdownOpen && (
               <div className="absolute top-full left-0 mt-1 w-72 bg-bg-card border border-border rounded-lg shadow-xl z-50">
-                {TEMPLATES.map((tmpl, i) => (
+                {allTemplates.map((tmpl, i) => (
                   <button
                     key={tmpl.id}
                     onClick={() => { setSelectedTemplate(i); setDropdownOpen(false); setSelectedNode(null); setIsCustom(false); stopRun(); }}

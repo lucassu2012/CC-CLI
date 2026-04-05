@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Shield, Eye, Settings, CheckCircle2, XCircle, Clock, Activity, Unlock, X, AlertTriangle, ChevronRight, Edit3, Save } from 'lucide-react';
 import { useText } from '../hooks/useText';
+import { useScenario } from '../context/ScenarioContext';
 
 type LevelData = {
   level: number; color: string;
@@ -124,6 +125,9 @@ const AUDIT_LOG = [
 
 export default function Permissions() {
   const { t } = useText();
+  const { scenario } = useScenario();
+  const scenarioAudit = scenario?.auditLog ?? AUDIT_LOG;
+  const scenarioKey = scenario?.meta.id ?? 'default';
 
   // Editable levels
   const [levels, setLevels] = useState(INIT_LEVELS);
@@ -136,6 +140,8 @@ export default function Permissions() {
   const [auditTick, setAuditTick] = useState(0);
   const [auditDetail, setAuditDetail] = useState<typeof AUDIT_LOG[0] | null>(null);
   useEffect(() => { const iv = setInterval(() => setAuditTick(p => p + 1), 1500); return () => clearInterval(iv); }, []);
+  // Reset on scenario change
+  useEffect(() => { setAuditTick(0); setAuditDetail(null); }, [scenarioKey]);
 
   const openEditLevel = (lv: LevelData) => {
     setEditingLevel(lv.level);
@@ -294,7 +300,7 @@ export default function Permissions() {
           </h2>
           <div className="bg-bg-card rounded-xl border border-border overflow-hidden">
             <div className="divide-y divide-border">
-              {AUDIT_LOG.map((entry, i) => {
+              {scenarioAudit.map((entry, i) => {
                 const lv = levels[entry.level - 1];
                 const sc = entry.status === 'approved' ? 'text-status-green bg-status-green/10'
                   : entry.status === 'executed' ? 'text-accent-cyan bg-accent-cyan/10'
@@ -302,7 +308,7 @@ export default function Permissions() {
                   : entry.status === 'emergency' ? 'text-status-red bg-status-red/10'
                   : entry.status === 'completed' ? 'text-status-green bg-status-green/10'
                   : 'text-text-muted bg-bg-tertiary';
-                const active = (auditTick + i) % AUDIT_LOG.length === 0;
+                const active = (auditTick + i) % scenarioAudit.length === 0;
                 return (
                   <div key={i}
                     onClick={() => setAuditDetail(entry)}
