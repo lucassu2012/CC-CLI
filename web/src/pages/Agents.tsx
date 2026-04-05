@@ -544,26 +544,40 @@ const SUB_AGENT_ICONS: Record<string, { icon: typeof Compass; color: string }[]>
   ],
 };
 
-/* Animated connection line */
-function FlowLine({ color = '#06b6d4', length = 'w-full' }: { color?: string; length?: string }) {
+/* Rich connection column — protocol badge, animated line, status text (Dashboard style) */
+function RichFlow({ label, status, color = '#06b6d4', active, direction = '→' }: {
+  label: string; status: string; color?: string; active?: boolean; direction?: string;
+}) {
   return (
-    <div className={`relative h-[2px] ${length}`}>
-      <div className="absolute inset-0 bg-border rounded-full" />
-      <div className="absolute inset-0 rounded-full" style={{
-        background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
-        boxShadow: `0 0 6px ${color}40`,
-        animation: 'flowPulse 2s ease-in-out infinite',
-      }} />
+    <div className="flex flex-col items-center">
+      <span className={`text-[7px] font-mono px-1.5 py-0.5 rounded mb-1 transition-all duration-500 ${active ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30' : 'bg-bg-tertiary text-text-muted border border-transparent'}`}>
+        {label}
+      </span>
+      <div className="relative w-full h-[2px]">
+        <div className="absolute inset-0 bg-border rounded-full" />
+        <div className={`absolute top-0 h-full rounded-full transition-all duration-1000 ${active ? 'shadow-[0_0_6px_rgba(6,182,212,0.4)]' : ''}`}
+          style={{ width: active ? '100%' : '0%', left: 0, backgroundColor: active ? color : 'transparent' }} />
+      </div>
+      <div className="flex items-center gap-0.5 mt-0.5">
+        <span className={`text-[7px] font-bold ${active ? 'text-accent-cyan' : 'text-text-muted'}`}>{direction}</span>
+        <span className={`text-[7px] font-mono ${active ? 'text-status-green' : 'text-text-muted'}`}>{status}</span>
+      </div>
     </div>
   );
 }
 
 /* ─── Mode 1: Direct Routing (Classifier-Based) ─── */
-function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onClickMemory, t }: {
-  agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void;
+function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory, onClickMemory, t }: {
+  agents: DomainAgent[]; tick: number; onSelectAgent: (agent: DomainAgent) => void;
   onClickConvHistory: () => void; onClickMemory: () => void;
   t: (en: string, zh: string) => string;
 }) {
+  const FLOWS = [
+    { label: 'NLP', status: t('Intent parse', '意图解析'), color: '#8b5cf6' },
+    { label: 'A2A-T', status: t('Route select', '路由选择'), color: '#8b5cf6' },
+    { label: 'MCP', status: t('Tool call', '工具调用'), color: '#06b6d4' },
+    { label: 'Response', status: t('Stream out', '流式输出'), color: '#06b6d4' },
+  ];
   return (
     <div className="p-4 flex flex-col h-full">
       {/* Main horizontal flow — centered vertically */}
@@ -576,7 +590,10 @@ function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onCl
           <span className="text-[9px] text-text-muted">{t('User Input', '用户输入')}</span>
         </div>
 
-        <div className="flex items-center shrink-0 px-1"><FlowLine color="#8b5cf6" length="w-10" /></div>
+        {/* Flow 1: Input → Classifier */}
+        <div className="shrink-0 px-1" style={{ width: 72 }}>
+          <RichFlow label={FLOWS[0].label} status={FLOWS[0].status} color={FLOWS[0].color} active={tick % 4 === 0} direction="→" />
+        </div>
 
         {/* Classifier */}
         <div className="flex-1 rounded-xl border-2 p-3 min-w-0" style={{ borderColor: '#10b98150', backgroundColor: '#10b98106', maxWidth: 170 }}>
@@ -592,7 +609,10 @@ function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onCl
           </div>
         </div>
 
-        <div className="flex items-center shrink-0 px-1"><FlowLine color="#8b5cf6" length="w-8" /></div>
+        {/* Flow 2: Classifier → Agents */}
+        <div className="shrink-0 px-1" style={{ width: 72 }}>
+          <RichFlow label={FLOWS[1].label} status={FLOWS[1].status} color={FLOWS[1].color} active={tick % 4 === 1} direction="→" />
+        </div>
 
         {/* Domain Agents */}
         <div className="flex-[2] rounded-xl border-2 p-3 min-w-0" style={{ borderColor: '#8b5cf650', backgroundColor: '#8b5cf606' }}>
@@ -620,7 +640,10 @@ function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onCl
           </div>
         </div>
 
-        <div className="flex items-center shrink-0 px-1"><FlowLine color="#06b6d4" length="w-8" /></div>
+        {/* Flow 3: Agents → Processing */}
+        <div className="shrink-0 px-1" style={{ width: 72 }}>
+          <RichFlow label={FLOWS[2].label} status={FLOWS[2].status} color={FLOWS[2].color} active={tick % 4 === 2} direction="→" />
+        </div>
 
         {/* Processing */}
         <div className="flex-1 rounded-xl border-2 p-3 min-w-0" style={{ borderColor: '#06b6d450', backgroundColor: '#06b6d406', maxWidth: 170 }}>
@@ -636,7 +659,10 @@ function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onCl
           </div>
         </div>
 
-        <div className="flex items-center shrink-0 px-1"><FlowLine color="#06b6d4" length="w-10" /></div>
+        {/* Flow 4: Processing → Response */}
+        <div className="shrink-0 px-1" style={{ width: 72 }}>
+          <RichFlow label={FLOWS[3].label} status={FLOWS[3].status} color={FLOWS[3].color} active={tick % 4 === 3} direction="→" />
+        </div>
 
         {/* Response */}
         <div className="flex flex-col items-center gap-1.5 shrink-0 w-20">
@@ -677,8 +703,8 @@ function DirectRoutingTopology({ agents, onSelectAgent, onClickConvHistory, onCl
 }
 
 /* ─── Mode 2: Hierarchical Teams (Supervisor) ─── */
-function HierarchicalTopology({ agents, onSelectAgent, onSelectSubAgent, onClickMemory, onClickContext, onClickSupervisor, t }: {
-  agents: DomainAgent[]; onSelectAgent: (agent: DomainAgent) => void;
+function HierarchicalTopology({ agents, tick, onSelectAgent, onSelectSubAgent, onClickMemory, onClickContext, onClickSupervisor, t }: {
+  agents: DomainAgent[]; tick: number; onSelectAgent: (agent: DomainAgent) => void;
   onSelectSubAgent: (agent: DomainAgent, subIdx: number) => void;
   onClickMemory: () => void; onClickContext: () => void; onClickSupervisor: () => void;
   t: (en: string, zh: string) => string;
@@ -689,6 +715,13 @@ function HierarchicalTopology({ agents, onSelectAgent, onSelectSubAgent, onClick
     { en: 'Context Routing', zh: '上下文路由', icon: Share2 },
     { en: 'Conflict Resolution', zh: '冲突仲裁', icon: AlertTriangle },
     { en: 'Result Aggregation', zh: '结果聚合', icon: Layers },
+  ];
+  const CONN_LABELS = [
+    { label: 'A2A-T', status: t('Delegating', '委派中') },
+    { label: 'Context', status: t('Syncing', '同步中') },
+    { label: 'Conflicts', status: t('Resolving', '仲裁中') },
+    { label: 'Activity', status: t('Monitoring', '监控中') },
+    { label: 'CoT', status: t('Reasoning', '推理中') },
   ];
   return (
     <div className="p-4 flex flex-col h-full">
@@ -718,14 +751,18 @@ function HierarchicalTopology({ agents, onSelectAgent, onSelectSubAgent, onClick
           </div>
         </div>
 
-        {/* Center: A2A-T connection lines — color-matched, single label */}
-        <div className="flex flex-col justify-between shrink-0 py-1 relative" style={{ width: 56 }}>
-          <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 text-[7px] font-mono px-1.5 py-0.5 rounded bg-bg-primary border border-border text-accent-cyan/80 whitespace-nowrap z-10">A2A-T</span>
-          {agents.map(a => (
-            <div key={a.id} className="flex-1 flex items-center justify-center">
-              <FlowLine color={AGENT_COLORS[a.id] || supColor} length="w-full" />
-            </div>
-          ))}
+        {/* Center: A2A-T animated connection column — Dashboard style with protocol + status */}
+        <div className="flex flex-col justify-between shrink-0 px-1 py-1" style={{ width: 80 }}>
+          {agents.map((a, i) => {
+            const conn = CONN_LABELS[i] || CONN_LABELS[0];
+            const color = AGENT_COLORS[a.id] || supColor;
+            const active = tick % agents.length === i;
+            return (
+              <div key={a.id} className="flex-1 flex items-center justify-center">
+                <RichFlow label={conn.label} status={conn.status} color={color} active={active} direction="⇄" />
+              </div>
+            );
+          })}
         </div>
 
         {/* Right: Domain Agent rows — sub-agent icons inside the card */}
@@ -902,8 +939,8 @@ export default function Agents() {
           {/* Topology content */}
           <div className="flex-1 overflow-auto">
             {topoMode === 'direct'
-              ? <DirectRoutingTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onClickConvHistory={() => setTeamTab('context')} onClickMemory={() => navigate('/knowledge')} t={t} />
-              : <HierarchicalTopology agents={domainAgents} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onSelectSubAgent={(a, idx) => { setEditingAgent(a); setEditingSubAgent(a.subAgents[idx]); }} onClickMemory={() => navigate('/knowledge')} onClickContext={() => setTeamTab('context')} onClickSupervisor={() => setTeamTab('conflicts')} t={t} />
+              ? <DirectRoutingTopology agents={domainAgents} tick={eventTick} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onClickConvHistory={() => setTeamTab('context')} onClickMemory={() => navigate('/knowledge')} t={t} />
+              : <HierarchicalTopology agents={domainAgents} tick={eventTick} onSelectAgent={(a) => { setEditingAgent(a); setEditingSubAgent(undefined); }} onSelectSubAgent={(a, idx) => { setEditingAgent(a); setEditingSubAgent(a.subAgents[idx]); }} onClickMemory={() => navigate('/knowledge')} onClickContext={() => setTeamTab('context')} onClickSupervisor={() => setTeamTab('conflicts')} t={t} />
             }
           </div>
         </div>
