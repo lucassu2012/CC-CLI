@@ -201,7 +201,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-4 px-5 py-3 border-b border-border bg-bg-card shrink-0">
+      <div className="flex items-center gap-2 md:gap-4 px-3 md:px-5 py-3 border-b border-border bg-bg-card shrink-0">
         <button onClick={() => { if (editingSubAgent) { switchSubAgent(undefined); } else { onClose(); } }}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover border border-border text-sm cursor-pointer">
           <ArrowLeft className="w-4 h-4" /> {t('Back', '返回')}
@@ -227,9 +227,37 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
         </div>
       </div>
 
+      {/* Mobile: horizontal tab bar */}
+      <div className="md:hidden border-b border-border bg-bg-secondary px-2 py-1.5 overflow-x-auto shrink-0">
+        <div className="flex gap-1 min-w-max">
+          {EDITOR_TABS.map(tb => {
+            const Icon = tb.icon;
+            const active = tab === tb.key;
+            return (
+              <button key={tb.key} onClick={() => setTab(tb.key)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap cursor-pointer transition-all ${active ? 'bg-accent-cyan/15 text-accent-cyan' : 'text-text-secondary hover:bg-bg-hover'}`}>
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                {t(tb.label, tb.labelZh)}
+              </button>
+            );
+          })}
+          <div className="w-px bg-border mx-1" />
+          {agent.subAgents.map(sub => {
+            const isActive = editingSubAgent?.id === sub.id;
+            return (
+              <button key={sub.id} onClick={() => switchSubAgent(sub)}
+                className={`flex items-center gap-1 px-2 py-1.5 text-xs rounded-lg whitespace-nowrap cursor-pointer transition-all ${isActive ? 'bg-purple-500/15 text-purple-400' : 'text-text-secondary hover:bg-bg-hover'}`}>
+                <StatusBadge status={sub.status} size="sm" />
+                {t(sub.name, sub.nameZh)}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-1 overflow-hidden">
-        {/* Left tabs */}
-        <div className="w-44 border-r border-border bg-bg-secondary p-2 shrink-0">
+        {/* Left tabs — desktop only */}
+        <div className="hidden md:block w-44 border-r border-border bg-bg-secondary p-2 shrink-0">
           {EDITOR_TABS.map(tb => {
             const Icon = tb.icon;
             const active = tab === tb.key;
@@ -582,6 +610,7 @@ function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory
     <div className="p-4 flex flex-col h-full">
       {/* Main horizontal flow — centered vertically */}
       <div className="flex-1 flex items-center gap-0 overflow-x-auto">
+        <div className="flex items-center gap-0 min-w-[600px] w-full">
         {/* User Input */}
         <div className="flex flex-col items-center gap-1.5 shrink-0 w-20">
           <div className="w-11 h-11 rounded-xl bg-bg-tertiary/50 border border-border flex items-center justify-center">
@@ -671,6 +700,7 @@ function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory
           </div>
           <span className="text-[9px] text-text-muted">{t('Response', '响应')}</span>
         </div>
+        </div>{/* end min-w wrapper */}
       </div>
 
       {/* Bottom row */}
@@ -726,6 +756,7 @@ function HierarchicalTopology({ agents, tick, onSelectAgent, onSelectSubAgent, o
   return (
     <div className="p-4 flex flex-col h-full">
       <div className="flex-1 flex gap-0 items-stretch min-h-0 overflow-x-auto">
+        <div className="flex gap-0 items-stretch min-w-[580px] w-full">
         {/* Left: Supervisor container */}
         <div className="rounded-xl border-2 p-3 flex flex-col shrink-0" style={{ borderColor: supColor + '50', backgroundColor: supColor + '06', width: 210 }}>
           <div className="flex items-center gap-2 mb-3 pb-2 border-b cursor-pointer" style={{ borderColor: supColor + '20' }} onClick={onClickSupervisor}>
@@ -804,6 +835,7 @@ function HierarchicalTopology({ agents, tick, onSelectAgent, onSelectSubAgent, o
             );
           })}
         </div>
+        </div>{/* end min-w wrapper */}
       </div>
 
       {/* Bottom: Memory & Context */}

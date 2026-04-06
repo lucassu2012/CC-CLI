@@ -778,7 +778,7 @@ export default function Topology() {
 
         <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_300px] gap-3">
         {/* Layer filter panel (Azure DT Explorer model viewer) */}
-        <div className="bg-bg-card rounded-xl border border-border p-3 w-40">
+        <div className="bg-bg-card rounded-xl border border-border p-3 w-full md:w-40">
           <h4 className="text-[10px] font-medium text-text-secondary uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <Layers className="w-3 h-3" />{t('Layers', '层级')}
           </h4>

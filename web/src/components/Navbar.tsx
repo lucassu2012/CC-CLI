@@ -25,9 +25,7 @@ export default function Navbar() {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4">
-        <div className="hidden sm:block">
-          <ScenarioSwitcher />
-        </div>
+        <ScenarioSwitcher />
 
         <div className="flex items-center gap-2 text-xs">
           <Wifi className="w-3.5 h-3.5 text-status-green" />

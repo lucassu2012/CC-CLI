@@ -66,14 +66,14 @@ export default function ScenarioSwitcher() {
         className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-bg-tertiary hover:bg-bg-hover text-text-secondary hover:text-text-primary text-xs transition-all cursor-pointer"
       >
         <BookOpen className="w-3.5 h-3.5" />
-        <span className="max-w-[120px] truncate">{currentName}</span>
+        <span className="max-w-[80px] sm:max-w-[120px] truncate">{currentName}</span>
         <ChevronDown className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 w-[360px] bg-bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
+          <div className="fixed inset-x-3 top-14 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-1 w-auto sm:w-[360px] bg-bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden max-h-[80vh] overflow-y-auto">
             {/* Header */}
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <div>

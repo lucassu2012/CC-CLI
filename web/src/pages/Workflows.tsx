@@ -655,7 +655,7 @@ export default function Workflows() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left: Node palette */}
-        <div className="w-48 border-r border-border bg-bg-card p-3 shrink-0 overflow-auto">
+        <div className="hidden md:block w-48 border-r border-border bg-bg-card p-3 shrink-0 overflow-auto">
           <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">{t('Node Types', '节点类型')}</h3>
           {(['trigger', 'agent', 'connector', 'condition', 'action', 'merge', 'split', 'transform'] as const).map(type => {
             const c = COLORS[type];

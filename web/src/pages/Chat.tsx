@@ -167,24 +167,40 @@ export default function Chat() {
 
       {/* Center: Chat area */}
       <div className="flex-1 flex flex-col">
-        <div className="px-5 py-3 border-b border-border bg-bg-card flex items-center gap-3">
-          <Brain className="w-5 h-5 text-accent-cyan" />
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary">{t(conv.title, conv.titleZh)}</h3>
+        <div className="px-3 md:px-5 py-3 border-b border-border bg-bg-card flex items-center gap-3">
+          <Brain className="w-5 h-5 text-accent-cyan shrink-0" />
+          <div className="min-w-0 flex-1">
+            {/* Mobile: dropdown conversation switcher */}
+            <div className="md:hidden">
+              <select
+                value={activeConv}
+                onChange={(e) => setActiveConv(Number(e.target.value))}
+                className="w-full text-sm font-semibold text-text-primary bg-transparent border-none outline-none cursor-pointer appearance-none"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0 center', paddingRight: '16px' }}
+              >
+                {demoConversations.map((c, i) => (
+                  <option key={c.id} value={i} className="bg-bg-card text-text-primary">
+                    {t(c.title, c.titleZh)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Desktop: static title */}
+            <h3 className="text-sm font-semibold text-text-primary hidden md:block">{t(conv.title, conv.titleZh)}</h3>
             <p className="text-xs text-text-muted">{t('Human-AI Collaboration', '人机协同')} · {t('TAOR Loop', 'TAOR循环')}</p>
           </div>
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ml-auto flex items-center gap-1.5 shrink-0">
             <div className="w-2 h-2 rounded-full bg-status-green animate-pulse" />
             <span className="text-xs text-status-green">{t('Agent Active', 'Agent运行中')}</span>
           </div>
         </div>
 
-        <div ref={scrollRef} className="flex-1 overflow-auto p-5 space-y-4">
+        <div ref={scrollRef} className="flex-1 overflow-auto p-3 md:p-5 space-y-4">
           {displayedMessages.map(msg => {
             const isMsgSelected = selectedSuggestions.has(msg.id);
             return (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[75%] ${msg.role === 'user' ? 'bg-accent-cyan/15 border border-accent-cyan/20' : 'bg-bg-card border border-border'} rounded-2xl px-4 py-3`}>
+              <div className={`max-w-[90%] md:max-w-[75%] ${msg.role === 'user' ? 'bg-accent-cyan/15 border border-accent-cyan/20' : 'bg-bg-card border border-border'} rounded-2xl px-4 py-3`}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`text-[10px] font-bold uppercase tracking-wider ${msg.role === 'user' ? 'text-accent-cyan' : 'text-status-green'}`}>
                     {msg.role === 'user' ? t('You', '用户') : t('IOE Agent', 'IOE Agent')}
