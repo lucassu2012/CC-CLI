@@ -741,7 +741,7 @@ function HierarchicalTopology({ agents, tick, onSelectAgent, onSelectSubAgent, o
             {SUP_ITEMS.map(item => {
               const SIcon = item.icon;
               return (
-                <div key={item.en} className="flex-1 flex items-center gap-2 px-2.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02]"
+                <div key={item.en} onClick={onClickSupervisor} className="flex-1 flex items-center gap-2 px-2.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02] cursor-pointer"
                   style={{ backgroundColor: supColor + '08', borderColor: supColor + '20', color: supColor }}>
                   <SIcon className="w-3 h-3 shrink-0" style={{ color: supColor }} />
                   {t(item.en, item.zh)}

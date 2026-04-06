@@ -623,7 +623,7 @@ function UserTwin({ t }: { t: (en: string, zh: string) => string }) {
                 {/* Revenue value */}
                 <div className="shrink-0 text-right">
                   <p className="text-lg font-bold text-status-green">{u.value}</p>
-                  <button className="mt-1 px-3 py-1 rounded-lg text-[10px] bg-status-green/10 text-status-green border border-status-green/30 cursor-pointer hover:bg-status-green/20 transition-all">
+                  <button onClick={() => alert(t('Offer pushed successfully', '优惠已成功推送'))} className="mt-1 px-3 py-1 rounded-lg text-[10px] bg-status-green/10 text-status-green border border-status-green/30 cursor-pointer hover:bg-status-green/20 transition-all">
                     {t('Push Offer','推送优惠')}
                   </button>
                 </div>

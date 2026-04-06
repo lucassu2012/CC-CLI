@@ -642,7 +642,7 @@ export default function Workflows() {
             </button>
           ) : (
             <>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-status-yellow/20 text-status-yellow text-sm font-medium cursor-pointer">
+              <button onClick={stopRun} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-status-yellow/20 text-status-yellow text-sm font-medium hover:bg-status-yellow/30 transition-colors cursor-pointer">
                 <Pause className="w-4 h-4" /> {t('Pause', '暂停')}
               </button>
               <button onClick={stopRun} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-status-red/20 text-status-red text-sm font-medium hover:bg-status-red/30 transition-colors cursor-pointer">
