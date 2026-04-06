@@ -54,7 +54,7 @@ function formatChatContent(content: string): string {
 
   return out.join('\n')
     .replace(/\*\*(.*?)\*\*/g, '<strong class="text-accent-cyan">$1</strong>')
-    .replace(/✅/g, '<span class="text-status-green">✅</span>');
+    .replace(/✅/g, '<span class="text-status-green font-bold">&#10003;</span>');
 }
 
 const suggestionColors: Record<string, string> = {

@@ -938,7 +938,7 @@ export default function Workflows() {
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: AGENT_COLORS[selectedNode.agentType] }} />
                     <span className="text-sm text-text-secondary">
-                      {selectedNode.agentType === 'ops' ? '网络运维' : selectedNode.agentType === 'optimization' ? '网络优化' : selectedNode.agentType === 'experience' ? '体验保障' : selectedNode.agentType === 'planning' ? '规划' : '运营支撑'}Agent
+                      {selectedNode.agentType === 'ops' ? t('O&M Agent', '网络运维Agent') : selectedNode.agentType === 'optimization' ? t('Optimization Agent', '网络优化Agent') : selectedNode.agentType === 'experience' ? t('Experience Agent', '体验保障Agent') : selectedNode.agentType === 'planning' ? t('Planning Agent', '规划Agent') : t('Marketing Agent', '运营支撑Agent')}
                     </span>
                   </div>
                 </div>

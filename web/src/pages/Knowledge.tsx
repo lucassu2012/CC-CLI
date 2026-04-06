@@ -555,7 +555,7 @@ export default function Knowledge() {
                   <span className="text-[10px] text-text-muted">{entry.id}</span>
                   {skillCount > 0 && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30 flex items-center gap-0.5">
-                      <Zap className="w-2.5 h-2.5" />{skillCount} Skill
+                      <Zap className="w-2.5 h-2.5" />{skillCount} {t('Skill', 'Skill')}
                     </span>
                   )}
                   <span className="text-[10px] text-text-muted ml-auto">{entry.domain}</span>
