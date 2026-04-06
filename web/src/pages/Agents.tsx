@@ -376,7 +376,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
                   </div>
                 </div>
               ))}
-              <button className="w-full py-3 border border-dashed border-border rounded-xl text-xs text-text-muted hover:text-accent-cyan hover:border-accent-cyan/30 transition-colors cursor-pointer">
+              <button onClick={() => alert(t('Custom SOP editor coming soon', '自定义SOP编辑器即将推出'))} className="w-full py-3 border border-dashed border-border rounded-xl text-xs text-text-muted hover:text-accent-cyan hover:border-accent-cyan/30 transition-colors cursor-pointer">
                 + {t('Add Custom SOP', '添加自定义SOP')}
               </button>
             </div>

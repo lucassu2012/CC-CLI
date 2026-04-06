@@ -235,8 +235,8 @@ export default function Chat() {
 
         <div className="px-5 py-3 border-t border-border bg-bg-card">
           <div className="flex items-center gap-2">
-            <button className="p-2 text-text-muted hover:text-text-primary cursor-pointer"><Paperclip className="w-4 h-4" /></button>
-            <button className="p-2 text-text-muted hover:text-text-primary cursor-pointer"><Image className="w-4 h-4" /></button>
+            <button onClick={() => alert(t('File upload coming soon', '文件上传即将推出'))} className="p-2 text-text-muted hover:text-text-primary cursor-pointer"><Paperclip className="w-4 h-4" /></button>
+            <button onClick={() => alert(t('Image upload coming soon', '图片上传即将推出'))} className="p-2 text-text-muted hover:text-text-primary cursor-pointer"><Image className="w-4 h-4" /></button>
             <div className="flex-1 bg-bg-primary rounded-xl border border-border px-4 py-2.5 text-sm text-text-muted cursor-pointer" onClick={advanceConversation}>
               {t('Select a suggested action above to continue...', '请选择上方建议操作继续对话...')}
             </div>
