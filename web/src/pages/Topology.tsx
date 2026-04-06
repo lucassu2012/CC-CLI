@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Radio, Server, Database, Wifi, X, Activity, Users, Zap, CheckCircle2, Play, Search, Filter, Layers, Eye, EyeOff, ZoomIn, ZoomOut, Maximize2, Terminal, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
+import { Radio, Server, Database, Wifi, X, Activity, Users, Zap, CheckCircle2, Play, Search, Filter, Layers, Eye, EyeOff, ZoomIn, ZoomOut, Maximize2, Terminal, ChevronDown, ChevronUp, ArrowRight, Network } from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { topoNodes, topoLinks, type TopoNode } from '../data/topology';
 import StatusBadge from '../components/StatusBadge';
@@ -709,7 +709,7 @@ export default function Topology() {
       {/* Header with tabs */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-lg font-semibold text-text-primary">{t('Digital Twin Platform', '数字孪生平台')}</h1>
+          <h1 className="text-lg font-semibold text-text-primary flex items-center gap-2"><Network className="w-5 h-5 text-accent-cyan" />{t('Digital Twin', '数字孪生')}</h1>
           <p className="text-xs text-text-muted mt-0.5">{t('Multi-scenario simulation & pre-validation engine', '多场景仿真与预验证引擎')}</p>
         </div>
         <div className="flex items-center gap-2">

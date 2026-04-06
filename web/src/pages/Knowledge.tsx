@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Book, AlertCircle, Lightbulb, FileText, Tag, X, Zap, CheckCircle2, Loader2, ChevronRight, Shield, ChevronDown, Globe, Clock, Server, Edit3, Save } from 'lucide-react';
+import { Search, Book, AlertCircle, Lightbulb, FileText, Tag, X, Zap, CheckCircle2, Loader2, ChevronRight, Shield, ChevronDown, Globe, Clock, Server, Edit3, Save, BookOpen } from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { knowledgeEntries as defaultKnowledgeEntries, generatedSkills as defaultGeneratedSkills, type KnowledgeEntry, type Skill } from '../data/knowledge';
 import { useScenario } from '../context/ScenarioContext';
@@ -443,7 +443,7 @@ export default function Knowledge() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-lg font-semibold text-text-primary">{t('Knowledge Base & Skills', '知识库与Skill')}</h1>
+          <h1 className="text-lg font-semibold text-text-primary flex items-center gap-2"><BookOpen className="w-5 h-5 text-accent-cyan" />{t('Knowledge Base & Skills', '知识库与Skill')}</h1>
           <p className="text-xs text-text-muted mt-0.5">{knowledgeEntries.length} {t('entries', '条目')} · {skills.length} {t('skills', '个Skill')}</p>
         </div>
       </div>

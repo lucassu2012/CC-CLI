@@ -907,7 +907,7 @@ export default function Agents() {
       {/* ─── Header ─── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-text-primary">{t('Multi-Agent Team', '多智能体团队')}</h1>
+          <h1 className="text-lg font-semibold text-text-primary flex items-center gap-2"><Bot className="w-5 h-5 text-accent-cyan" />{t('Multi-Agent Team', '多智能体团队')}</h1>
           <p className="text-xs text-text-muted mt-0.5">1 {t('Supervisor', 'Supervisor')} · {domainAgents.length} {t('domain agents', '领域Agent')} · {totalSubAgents} {t('sub-agents', '子Agent')}</p>
         </div>
         <div className="flex items-center gap-6 text-center text-xs">
