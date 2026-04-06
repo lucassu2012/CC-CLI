@@ -592,8 +592,8 @@ export default function Workflows() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-bg-card shrink-0">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between px-3 md:px-5 py-3 border-b border-border bg-bg-card shrink-0 flex-wrap gap-2">
+        <div className="flex items-center gap-4 flex-wrap">
           <GitBranch className="w-5 h-5 text-accent-cyan" />
           <div className="relative">
             <button
@@ -604,7 +604,7 @@ export default function Workflows() {
               <ChevronDown className="w-4 h-4 text-text-muted" />
             </button>
             {dropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 w-72 bg-bg-card border border-border rounded-lg shadow-xl z-50">
+              <div className="absolute top-full left-0 mt-1 w-64 sm:w-72 bg-bg-card border border-border rounded-lg shadow-xl z-50">
                 {allTemplates.map((tmpl, i) => (
                   <button
                     key={tmpl.id}
@@ -912,7 +912,7 @@ export default function Workflows() {
 
         {/* Right: Config panel */}
         {selectedNode && (
-          <div className="w-64 border-l border-border bg-bg-card p-4 shrink-0 overflow-auto">
+          <div className="hidden md:block md:w-64 border-l border-border bg-bg-card p-4 shrink-0 overflow-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-text-primary">{t('Node Config', '节点配置')}</h3>
               <button onClick={() => setSelectedNode(null)} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-4 h-4" /></button>

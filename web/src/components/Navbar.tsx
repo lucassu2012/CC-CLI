@@ -1,15 +1,20 @@
-import { Activity, Bell, Globe, Wifi } from 'lucide-react';
+import { Activity, Bell, Globe, Menu, Wifi } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useText } from '../hooks/useText';
 import ScenarioSwitcher from './ScenarioSwitcher';
 
 export default function Navbar() {
   const toggleLanguage = useStore((s) => s.toggleLanguage);
+  const setMobileSidebarOpen = useStore((s) => s.setMobileSidebarOpen);
   const { t, language } = useText();
 
   return (
     <header className="h-14 bg-bg-secondary border-b border-border flex items-center justify-between px-4 shrink-0 z-50">
       <div className="flex items-center gap-3">
+        {/* Mobile hamburger */}
+        <button onClick={() => setMobileSidebarOpen(true)} className="md:hidden text-text-secondary hover:text-text-primary cursor-pointer">
+          <Menu className="w-5 h-5" />
+        </button>
         <div className="w-8 h-8 rounded-lg bg-accent-cyan/20 flex items-center justify-center">
           <Activity className="w-5 h-5 text-accent-cyan" />
         </div>
@@ -19,12 +24,14 @@ export default function Navbar() {
         </span>
       </div>
 
-      <div className="flex items-center gap-4">
-        <ScenarioSwitcher />
+      <div className="flex items-center gap-2 sm:gap-4">
+        <div className="hidden sm:block">
+          <ScenarioSwitcher />
+        </div>
 
         <div className="flex items-center gap-2 text-xs">
           <Wifi className="w-3.5 h-3.5 text-status-green" />
-          <span className="text-status-green">{t('System Online', '系统在线')}</span>
+          <span className="text-status-green hidden sm:inline">{t('System Online', '系统在线')}</span>
         </div>
 
         <div className="relative">

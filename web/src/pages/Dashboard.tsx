@@ -35,8 +35,8 @@ const taskStatusIcon: Record<string, React.ReactNode> = {
 function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-[600px] max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" onClick={onClose}>
+      <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-full max-w-[600px] max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-4 h-4" /></button>
@@ -161,7 +161,7 @@ export default function Dashboard() {
   const ts = (v: string) => t(TIMESTAMP_MAP[v] || v, v);
 
   return (
-    <div className="p-5 space-y-5 overflow-auto h-full">
+    <div className="p-3 md:p-5 space-y-5 overflow-auto h-full">
       {/* System status header with pulse */}
       <div className="flex items-center gap-3 mb-1">
         <div className={`w-2 h-2 rounded-full bg-status-green transition-opacity duration-1000 ${pulseClass}`} />
@@ -180,7 +180,7 @@ export default function Dashboard() {
           <span className="ml-2 w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
           <span className="text-xs text-text-muted font-normal">{t('Live', '实时')}</span>
         </h2>
-        <div className="grid grid-cols-3 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
           {liveKpis.map(kpi => {
             const TIcon = trendIcon[kpi.trend];
             const trendColor = kpi.trend === 'up' ? (kpi.id === 'alarm-count' ? 'text-status-red' : 'text-status-green') : kpi.trend === 'down' ? (kpi.id === 'alarm-count' || kpi.id === 'mttr' ? 'text-status-green' : 'text-status-red') : 'text-text-muted';
@@ -223,7 +223,7 @@ export default function Dashboard() {
       {/* ② Domain Agent Status (clickable to drill into sub-agents) */}
       <section>
         <h2 className="text-sm font-medium text-text-secondary mb-3">{t('Domain Agent Status', '领域智能体状态')}</h2>
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {agents.map(agent => (
             <div key={agent.id}
               onClick={() => setAgentModal(agent)}
@@ -261,7 +261,7 @@ export default function Dashboard() {
             6/6 {t('Online', '在线')}
           </span>
         </h2>
-        <div className="grid grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
           {[
             { id: 'oss', name: 'OSS平台', nameEn: 'OSS Platform', color: '#f97316', status: 'connected', latency: 12, api: 'CORBA/MTOSI', tasks: 1247 },
             { id: 'ticket', name: '工单系统', nameEn: 'Ticket/ITSM', color: '#8b5cf6', status: 'connected', latency: 8, api: 'REST API', tasks: 892 },
@@ -291,7 +291,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* ③ Recent Tasks (dynamic, clickable) */}
         <section>
           <h2 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-2">
@@ -859,8 +859,8 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
   const permColor: Record<string, string> = { L1: 'text-status-green', L2: 'text-accent-cyan', L3: 'text-status-yellow', L4: 'text-status-orange', L5: 'text-status-red' };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-[1060px] max-h-[92vh] overflow-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" onClick={onClose}>
+      <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-full max-w-[1060px] max-h-[92vh] overflow-auto" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
@@ -878,6 +878,7 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
         <div className="p-6 space-y-5">
           {/* ── Unified Architecture Diagram: 3 columns ── */}
           <div className="bg-bg-primary rounded-xl border border-border p-5">
+            <div className="overflow-x-auto md:overflow-x-visible">
             <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-0" style={{ minHeight: 320 }}>
 
               {/* Column 1: External System */}
@@ -1079,6 +1080,7 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
                   </div>
                 </div>
               ))}
+            </div>
             </div>
           </div>
 

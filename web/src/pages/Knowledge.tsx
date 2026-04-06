@@ -69,7 +69,7 @@ function SkillDetail({ skill, onClose }: { skill: Skill; onClose: () => void }) 
         </div>
         <button onClick={onClose} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-4 h-4" /></button>
       </div>
-      <div className="grid grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-bg-primary rounded-lg p-2.5 text-center">
           <p className="text-lg font-semibold text-text-primary">{(skill.confidence * 100).toFixed(0)}%</p>
           <p className="text-[10px] text-text-muted">{t('Confidence', '置信度')}</p>
@@ -223,7 +223,7 @@ function DetailPanel({ entry, skills, onClose }: { entry: KnowledgeEntry; skills
         </div>
         <button onClick={onClose} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-4 h-4" /></button>
       </div>
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
         <div className="bg-bg-primary rounded-lg p-2.5">
           <p className="text-xs text-text-muted mb-1">{t('Confidence', '置信度')}</p>
           <div className="flex items-center gap-2">
@@ -439,7 +439,7 @@ export default function Knowledge() {
   }
 
   return (
-    <div className="p-5 overflow-auto h-full">
+    <div className="p-3 md:p-5 overflow-auto h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
@@ -499,7 +499,7 @@ export default function Knowledge() {
             ))}
           </div>
         </div>
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
           {filteredSkills.map(skill => (
             <SkillCard key={skill.id} skill={skill} selected={selectedSkill?.id === skill.id}
               onClick={() => { setSelectedSkill(prev => prev?.id === skill.id ? null : skill); setSelected(null); setGenerating(false); }} />
@@ -541,7 +541,7 @@ export default function Knowledge() {
       </div>
 
       {/* KB Entries Grid */}
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="space-y-2">
           {filtered.map(entry => {
             const cat = categoryConfig[entry.category];

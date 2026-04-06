@@ -66,7 +66,7 @@ function NodeDetail({ node, onClose }: { node: TopoNode; onClose: () => void }) 
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {node.details.ip && (
           <div className="bg-bg-primary rounded-lg p-2.5">
             <p className="text-[10px] text-text-muted">IP</p>
@@ -214,7 +214,7 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_280px] gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-3">
         {/* RF Coverage Map (CloudRF-style) */}
         <div className="bg-bg-card rounded-xl border border-border p-3 overflow-hidden">
           <div className="flex items-center justify-between mb-2">
@@ -326,7 +326,7 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
                   <h4 className="text-xs font-semibold text-text-primary flex items-center gap-1.5"><Radio className="w-3.5 h-3.5 text-accent-cyan" />{c.name}</h4>
                   <button onClick={() => setSelectedCell(null)} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-3.5 h-3.5" /></button>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px]">
                   {[
                     { l: t('Frequency', '频段'), v: c.freq },
                     { l: t('Power', '功率'), v: `${c.power} dBm` },
@@ -519,7 +519,7 @@ function UserTwin({ t }: { t: (en: string, zh: string) => string }) {
       {/* Churn Prediction View */}
       {activeView === 'churn' && (
         <div className="space-y-2">
-          <div className="grid grid-cols-4 gap-3 mb-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
             {[
               { l: t('High Risk','高风险'), v: '5', c: 'text-status-red', bg: 'bg-status-red/10 border-status-red/30' },
               { l: t('Avg Risk Score','平均风险分'), v: '78.2', c: 'text-status-yellow', bg: 'bg-status-yellow/10 border-status-yellow/30' },
@@ -582,7 +582,7 @@ function UserTwin({ t }: { t: (en: string, zh: string) => string }) {
       {/* Lead Identification View */}
       {activeView === 'lead' && (
         <div className="space-y-2">
-          <div className="grid grid-cols-4 gap-3 mb-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
             {[
               { l: t('Leads Found','识别潜客'), v: '4', c: 'text-status-green', bg: 'bg-status-green/10 border-status-green/30' },
               { l: t('Avg Confidence','平均置信度'), v: '85%', c: 'text-accent-cyan', bg: 'bg-accent-cyan/10 border-accent-cyan/30' },
@@ -705,7 +705,7 @@ export default function Topology() {
   const svgHeight = 500;
 
   return (
-    <div className="p-5 overflow-auto h-full">
+    <div className="p-3 md:p-5 overflow-auto h-full">
       {/* Header with tabs */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -761,7 +761,7 @@ export default function Topology() {
         </div>
 
         {/* Stats bar */}
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {[
             { l: t('Twins','孪生实例'), v: filteredNodes.length, c: 'text-accent-cyan' },
             { l: t('Relationships','关系'), v: filteredLinks.length, c: 'text-text-primary' },
@@ -776,7 +776,7 @@ export default function Topology() {
           ))}
         </div>
 
-        <div className="grid grid-cols-[auto_1fr_300px] gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_300px] gap-3">
         {/* Layer filter panel (Azure DT Explorer model viewer) */}
         <div className="bg-bg-card rounded-xl border border-border p-3 w-40">
           <h4 className="text-[10px] font-medium text-text-secondary uppercase tracking-wider mb-2 flex items-center gap-1.5">

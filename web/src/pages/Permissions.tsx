@@ -166,7 +166,7 @@ export default function Permissions() {
   };
 
   return (
-    <div className="p-5 overflow-auto h-full space-y-5">
+    <div className="p-3 md:p-5 overflow-auto h-full space-y-5">
       <div>
         <h1 className="text-lg font-semibold text-text-primary flex items-center gap-2">
           <Shield className="w-5 h-5 text-accent-cyan" />
@@ -178,7 +178,7 @@ export default function Permissions() {
       {/* ① Permission Levels with inline escalation */}
       <section>
         <h2 className="text-sm font-medium text-text-secondary mb-3">{t('Permission Levels & Escalation', '权限等级与升级策略')}</h2>
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {levels.map((lv, lvIdx) => {
             const Icon = lv.icon;
             return (
@@ -242,7 +242,7 @@ export default function Permissions() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* ② Permission Matrix — editable */}
         <section>
           <h2 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-2">
@@ -337,8 +337,8 @@ export default function Permissions() {
 
       {/* Level Edit Modal */}
       {editingLevel !== null && editForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => { setEditingLevel(null); setEditForm(null); }}>
-          <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-[600px] max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" onClick={() => { setEditingLevel(null); setEditForm(null); }}>
+          <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-full max-w-[600px] max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div className="flex items-center gap-2">
                 <span className="font-mono font-bold px-2 py-1 rounded text-sm" style={{ backgroundColor: editForm.color + '20', color: editForm.color }}>L{editForm.level}</span>
@@ -347,7 +347,7 @@ export default function Permissions() {
               <button onClick={() => { setEditingLevel(null); setEditForm(null); }} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-4 h-4" /></button>
             </div>
             <div className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Name (EN)', '名称（英文）')}</label>
                   <input className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none" value={editForm.nameEn} onChange={e => setEditForm({ ...editForm, nameEn: e.target.value })} />
@@ -357,7 +357,7 @@ export default function Permissions() {
                   <input className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none" value={editForm.nameZh} onChange={e => setEditForm({ ...editForm, nameZh: e.target.value })} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Description (EN)', '描述（英文）')}</label>
                   <textarea rows={2} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none resize-none" value={editForm.descEn} onChange={e => setEditForm({ ...editForm, descEn: e.target.value })} />
@@ -367,7 +367,7 @@ export default function Permissions() {
                   <textarea rows={2} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none resize-none" value={editForm.descZh} onChange={e => setEditForm({ ...editForm, descZh: e.target.value })} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Approval (EN)', '审批（英文）')}</label>
                   <input className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none" value={editForm.approvalEn} onChange={e => setEditForm({ ...editForm, approvalEn: e.target.value })} />
@@ -404,8 +404,8 @@ export default function Permissions() {
 
       {/* Audit Detail Modal */}
       {auditDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setAuditDetail(null)}>
-          <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-[600px] max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" onClick={() => setAuditDetail(null)}>
+          <div className="bg-bg-card border border-border rounded-2xl shadow-2xl w-full max-w-[600px] max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
             <div className={`flex items-center justify-between px-5 py-4 border-b ${auditDetail.highRisk ? 'border-status-red/30 bg-status-red/5' : 'border-border'}`}>
               <div className="flex items-center gap-2">
                 <span className="font-mono font-bold px-2 py-1 rounded text-xs" style={{ backgroundColor: levels[auditDetail.level - 1].color + '20', color: levels[auditDetail.level - 1].color }}>L{auditDetail.level}</span>
@@ -416,7 +416,7 @@ export default function Permissions() {
               <button onClick={() => setAuditDetail(null)} className="text-text-muted hover:text-text-primary cursor-pointer"><X className="w-4 h-4" /></button>
             </div>
             <div className="p-5 space-y-4">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <div className="bg-bg-primary rounded-lg border border-border p-3">
                   <p className="text-[10px] text-text-muted mb-1">{t('Time', '时间')}</p>
                   <p className="text-xs font-mono text-text-primary">{auditDetail.time}</p>

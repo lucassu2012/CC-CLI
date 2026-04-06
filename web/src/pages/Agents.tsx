@@ -267,7 +267,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
                 <h3 className="text-sm font-semibold text-text-primary">{t('Multi-Layer Memory', '多层记忆体系')}</h3>
                 <span className="text-xs text-text-muted ml-2">{t('Harness-style hierarchical memory for Agent context', '类Harness分层记忆，管理Agent上下文')}</span>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {MEMORY_LAYERS.map(layer => (
                   <div key={layer.key} className="bg-bg-card rounded-xl border border-border p-4">
                     <div className="flex items-center gap-2 mb-2">
@@ -297,7 +297,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
               </div>
               <div>
                 <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t(agent.domain + ' Domain Skills', agent.domainZh + '领域Skill')}</h4>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {domainSkills.map(skill => {
                     const on = enabledSkills.has(skill.id);
                     return (
@@ -322,7 +322,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
               {otherSkills.length > 0 && (
                 <div>
                   <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t('Cross-Domain Skills', '跨域Skill（可选启用）')}</h4>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                     {otherSkills.map(skill => {
                       const on = enabledSkills.has(skill.id);
                       return (
@@ -413,7 +413,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
               </div>
               <div className="bg-bg-card rounded-xl border border-border p-4 mt-4">
                 <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">{t('Inference Parameters', '推理参数')}</h4>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {[
                     { label: 'Temperature', value: '0.3', desc: '低温度保证输出稳定', descEn: 'Low temperature for stable output' },
                     { label: 'Max Tokens', value: '8192', desc: '最大输出长度', descEn: 'Maximum output length' },
@@ -439,7 +439,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
                 <h3 className="text-sm font-semibold text-text-primary">{t('Digital Twin Binding', '数字孪生绑定')}</h3>
                 <span className="text-xs text-text-muted ml-2">{t('Domain-specific twin models for simulation & verification', '领域专属孪生模型，用于仿真验证')}</span>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {domainTwins.map(twin => {
                   const on = enabledTwins.has(twin.name);
                   return (
@@ -473,7 +473,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
               </div>
               <div className="bg-bg-card rounded-xl border border-border p-4">
                 <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t('Twin Usage Statistics', '孪生使用统计')}</h4>
-                <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-center">
                   <div>
                     <p className="text-lg font-semibold text-text-primary">{Math.floor(agent.taskCount * 0.7)}</p>
                     <p className="text-[10px] text-text-muted">{t('Simulations Run', '仿真次数')}</p>
@@ -581,7 +581,7 @@ function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory
   return (
     <div className="p-4 flex flex-col h-full">
       {/* Main horizontal flow — centered vertically */}
-      <div className="flex-1 flex items-center gap-0">
+      <div className="flex-1 flex items-center gap-0 overflow-x-auto">
         {/* User Input */}
         <div className="flex flex-col items-center gap-1.5 shrink-0 w-20">
           <div className="w-11 h-11 rounded-xl bg-bg-tertiary/50 border border-border flex items-center justify-center">
@@ -725,7 +725,7 @@ function HierarchicalTopology({ agents, tick, onSelectAgent, onSelectSubAgent, o
   ];
   return (
     <div className="p-4 flex flex-col h-full">
-      <div className="flex-1 flex gap-0 items-stretch min-h-0">
+      <div className="flex-1 flex gap-0 items-stretch min-h-0 overflow-x-auto">
         {/* Left: Supervisor container */}
         <div className="rounded-xl border-2 p-3 flex flex-col shrink-0" style={{ borderColor: supColor + '50', backgroundColor: supColor + '06', width: 210 }}>
           <div className="flex items-center gap-2 mb-3 pb-2 border-b cursor-pointer" style={{ borderColor: supColor + '20' }} onClick={onClickSupervisor}>
@@ -903,14 +903,14 @@ export default function Agents() {
   }
 
   return (
-    <div className="p-4 overflow-auto h-full space-y-4">
+    <div className="p-3 md:p-4 overflow-auto h-full space-y-4">
       {/* ─── Header ─── */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-text-primary flex items-center gap-2"><Bot className="w-5 h-5 text-accent-cyan" />{t('Multi-Agent Team', '多智能体团队')}</h1>
           <p className="text-xs text-text-muted mt-0.5">1 {t('Supervisor', 'Supervisor')} · {domainAgents.length} {t('domain agents', '领域Agent')} · {totalSubAgents} {t('sub-agents', '子Agent')}</p>
         </div>
-        <div className="flex items-center gap-6 text-center text-xs">
+        <div className="flex items-center gap-6 text-center text-xs flex-wrap">
           <div><p className="text-base font-semibold text-text-primary tabular-nums">{supervisor.tasksCoordinated.toLocaleString()}</p><p className="text-text-muted">{t('Tasks Coord.', '协调任务')}</p></div>
           <div><p className="text-base font-semibold text-accent-cyan tabular-nums">{supervisor.contextSyncs.toLocaleString()}</p><p className="text-text-muted">{t('Context Syncs', '上下文同步')}</p></div>
           <div><p className="text-base font-semibold text-status-yellow tabular-nums">{supervisor.conflictsResolved}</p><p className="text-text-muted">{t('Conflicts', '冲突解决')}</p></div>
@@ -918,7 +918,7 @@ export default function Agents() {
       </div>
 
       {/* ─── Main: Agent Topology + Team Panel ─── */}
-      <div className="flex gap-4" style={{ minHeight: 420 }}>
+      <div className="flex flex-col md:flex-row gap-4" style={{ minHeight: 420 }}>
         {/* Left: Topology */}
         <div className="flex-1 bg-bg-card rounded-xl border border-border overflow-hidden min-w-0 flex flex-col">
           {/* Header */}
@@ -946,7 +946,7 @@ export default function Agents() {
         </div>
 
         {/* Right: Team panel */}
-        <div className="w-[380px] bg-bg-card rounded-xl border border-border flex flex-col overflow-hidden shrink-0">
+        <div className="w-full md:w-[380px] bg-bg-card rounded-xl border border-border flex flex-col overflow-hidden shrink-0">
           {/* Tabs */}
           <div className="flex border-b border-border shrink-0">
             {TEAM_TABS.map(tb => {
@@ -1045,7 +1045,7 @@ export default function Agents() {
           <span className="text-sm font-medium text-text-secondary">{t('Domain Agents', '领域Agent')}</span>
           <span className="text-xs text-text-muted">— {t('click to configure', '点击配置')}</span>
         </div>
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {domainAgents.map(agent => {
             const color = AGENT_COLORS[agent.id] || '#06b6d4';
             const activeSubCount = agent.subAgents.filter(s => s.status === 'active').length;

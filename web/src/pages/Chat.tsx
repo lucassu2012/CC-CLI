@@ -147,7 +147,7 @@ export default function Chat() {
   return (
     <div className="h-full flex overflow-hidden">
       {/* Left: Conversation list */}
-      <div className="w-60 border-r border-border bg-bg-card flex flex-col shrink-0">
+      <div className="hidden md:flex w-60 border-r border-border bg-bg-card flex-col shrink-0">
         <div className="p-3 border-b border-border">
           <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-accent-cyan" />
@@ -233,7 +233,7 @@ export default function Chat() {
           )}
         </div>
 
-        <div className="px-5 py-3 border-t border-border bg-bg-card">
+        <div className="px-3 md:px-5 py-3 border-t border-border bg-bg-card">
           <div className="flex items-center gap-2">
             <button onClick={() => alert(t('File upload coming soon', '文件上传即将推出'))} className="p-2 text-text-muted hover:text-text-primary cursor-pointer"><Paperclip className="w-4 h-4" /></button>
             <button onClick={() => alert(t('Image upload coming soon', '图片上传即将推出'))} className="p-2 text-text-muted hover:text-text-primary cursor-pointer"><Image className="w-4 h-4" /></button>
@@ -247,7 +247,7 @@ export default function Chat() {
       </div>
 
       {/* Right: Agent Thinking */}
-      <div className="w-72 border-l border-border bg-bg-card flex flex-col shrink-0">
+      <div className="hidden lg:flex w-72 border-l border-border bg-bg-card flex-col shrink-0">
         <div className="px-4 py-3 border-b border-border">
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2"><Brain className="w-4 h-4 text-accent-cyan" />{t('Agent Thinking', 'Agent思维')}</h3>
           <p className="text-[10px] text-text-muted mt-0.5">{t('Think → Act → Observe → Reflect', '思考 → 行动 → 观察 → 反思')}</p>
