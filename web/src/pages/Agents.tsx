@@ -45,10 +45,10 @@ const DIGITAL_TWINS: Record<string, { name: string; nameEn: string; desc: string
 };
 
 const MEMORY_LAYERS = [
-  { key: 'system', label: '系统记忆', labelEn: 'System Memory', icon: '🏛️', desc: '全局规则/安全边界/操作规范', descEn: 'Global rules, safety boundaries, operational standards', color: 'text-accent-cyan' },
-  { key: 'domain', label: '领域记忆', labelEn: 'Domain Memory', icon: '🧠', desc: '领域知识/专业经验/最佳实践', descEn: 'Domain knowledge, expertise, best practices', color: 'text-accent-cyan' },
-  { key: 'session', label: '会话记忆', labelEn: 'Session Memory', icon: '💬', desc: '当前任务上下文/操作历史', descEn: 'Current task context, action history', color: 'text-accent-cyan' },
-  { key: 'episode', label: '情景记忆', labelEn: 'Episode Memory', icon: '📖', desc: '历史案例/故障经验/成功模式', descEn: 'Historical cases, fault experiences, success patterns', color: 'text-accent-cyan' },
+  { key: 'system', label: '系统记忆', labelEn: 'System Memory', icon: 'Layers', desc: '全局规则/安全边界/操作规范', descEn: 'Global rules, safety boundaries, operational standards', color: 'text-accent-cyan' },
+  { key: 'domain', label: '领域记忆', labelEn: 'Domain Memory', icon: 'Brain', desc: '领域知识/专业经验/最佳实践', descEn: 'Domain knowledge, expertise, best practices', color: 'text-accent-cyan' },
+  { key: 'session', label: '会话记忆', labelEn: 'Session Memory', icon: 'MessageSquare', desc: '当前任务上下文/操作历史', descEn: 'Current task context, action history', color: 'text-accent-cyan' },
+  { key: 'episode', label: '情景记忆', labelEn: 'Episode Memory', icon: 'BookOpen', desc: '历史案例/故障经验/成功模式', descEn: 'Historical cases, fault experiences, success patterns', color: 'text-accent-cyan' },
 ];
 
 const SOP_TEMPLATES: Record<string, { name: string; nameEn: string; steps: string[]; stepsEn: string[] }[]> = {
@@ -271,7 +271,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
                 {MEMORY_LAYERS.map(layer => (
                   <div key={layer.key} className="bg-bg-card rounded-xl border border-border p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">{layer.icon}</span>
+                      {(() => { const MIcon = { Layers, Brain, MessageSquare, BookOpen }[layer.icon] || Layers; return <MIcon className="w-5 h-5 text-accent-cyan shrink-0" />; })()}
                       <div>
                         <h4 className={`text-sm font-medium ${layer.color}`}>{t(layer.labelEn, layer.label)}</h4>
                         <p className="text-[10px] text-text-muted">{t(layer.descEn, layer.desc)}</p>
@@ -733,7 +733,7 @@ function HierarchicalTopology({ agents, tick, onSelectAgent, onSelectSubAgent, o
               <Crown className="w-4 h-4 text-accent-cyan" />
             </div>
             <div>
-              <div className="text-[11px] font-bold text-accent-cyan">SUPERVISOR AGENT</div>
+              <div className="text-[11px] font-bold text-accent-cyan">{t('SUPERVISOR AGENT', 'SUPERVISOR AGENT')}</div>
               <div className="text-[8px] text-text-muted">{t('Think → Act → Observe', '思考 → 行动 → 观察')}</div>
             </div>
           </div>
@@ -864,7 +864,7 @@ const DECISION_LABELS: Record<string, { en: string; zh: string; color: string }>
 };
 
 function AgentBadge({ agentId, agents, t }: { agentId: string; agents: DomainAgent[]; t: (en: string, zh: string) => string }) {
-  if (agentId === 'ioe-supervisor') return <span className="text-[9px] bg-accent-cyan/20 text-accent-cyan px-1.5 py-0.5 rounded">Supervisor</span>;
+  if (agentId === 'ioe-supervisor') return <span className="text-[9px] bg-accent-cyan/20 text-accent-cyan px-1.5 py-0.5 rounded">{t('Supervisor', 'Supervisor')}</span>;
   const a = agents.find(x => x.id === agentId);
   const color = AGENT_COLORS[agentId] || '#06b6d4';
   const label = AGENT_DOMAIN_LABEL[agentId];
@@ -908,7 +908,7 @@ export default function Agents() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-text-primary">{t('Multi-Agent Team', '多智能体团队')}</h1>
-          <p className="text-xs text-text-muted mt-0.5">1 Supervisor · {domainAgents.length} {t('domain agents', '领域Agent')} · {totalSubAgents} {t('sub-agents', '子Agent')}</p>
+          <p className="text-xs text-text-muted mt-0.5">1 {t('Supervisor', 'Supervisor')} · {domainAgents.length} {t('domain agents', '领域Agent')} · {totalSubAgents} {t('sub-agents', '子Agent')}</p>
         </div>
         <div className="flex items-center gap-6 text-center text-xs">
           <div><p className="text-base font-semibold text-text-primary tabular-nums">{supervisor.tasksCoordinated.toLocaleString()}</p><p className="text-text-muted">{t('Tasks Coord.', '协调任务')}</p></div>

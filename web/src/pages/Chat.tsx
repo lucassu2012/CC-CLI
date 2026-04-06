@@ -171,7 +171,7 @@ export default function Chat() {
           <Brain className="w-5 h-5 text-accent-cyan" />
           <div>
             <h3 className="text-sm font-semibold text-text-primary">{t(conv.title, conv.titleZh)}</h3>
-            <p className="text-xs text-text-muted">{t('Human-AI Collaboration', '人机协同')} · TAOR Loop</p>
+            <p className="text-xs text-text-muted">{t('Human-AI Collaboration', '人机协同')} · {t('TAOR Loop', 'TAOR循环')}</p>
           </div>
           <div className="ml-auto flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-status-green animate-pulse" />
@@ -187,7 +187,7 @@ export default function Chat() {
               <div className={`max-w-[75%] ${msg.role === 'user' ? 'bg-accent-cyan/15 border border-accent-cyan/20' : 'bg-bg-card border border-border'} rounded-2xl px-4 py-3`}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`text-[10px] font-bold uppercase tracking-wider ${msg.role === 'user' ? 'text-accent-cyan' : 'text-status-green'}`}>
-                    {msg.role === 'user' ? t('You', '用户') : 'IOE Agent'}
+                    {msg.role === 'user' ? t('You', '用户') : t('IOE Agent', 'IOE Agent')}
                   </span>
                   <span className="text-[10px] text-text-muted">{msg.timestamp}</span>
                 </div>
@@ -250,7 +250,7 @@ export default function Chat() {
       <div className="w-72 border-l border-border bg-bg-card flex flex-col shrink-0">
         <div className="px-4 py-3 border-b border-border">
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2"><Brain className="w-4 h-4 text-accent-cyan" />{t('Agent Thinking', 'Agent思维')}</h3>
-          <p className="text-[10px] text-text-muted mt-0.5">Think → Act → Observe → Reflect</p>
+          <p className="text-[10px] text-text-muted mt-0.5">{t('Think → Act → Observe → Reflect', '思考 → 行动 → 观察 → 反思')}</p>
         </div>
         <div className="flex-1 overflow-auto p-3 space-y-2">
           {(() => {

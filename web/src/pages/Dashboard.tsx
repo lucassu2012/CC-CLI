@@ -1015,7 +1015,7 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
                       <Server className="w-4 h-4 text-accent-cyan" />
                       <div>
                         <div className="text-[11px] font-bold text-accent-cyan">{t('TAOR Orchestrator', 'TAOR 编排器')}</div>
-                        <div className="text-[8px] text-text-muted">Think → Act → Observe → Repeat</div>
+                        <div className="text-[8px] text-text-muted">{t('Think → Act → Observe → Repeat', '思考 → 行动 → 观察 → 重复')}</div>
                       </div>
                     </div>
                   </div>

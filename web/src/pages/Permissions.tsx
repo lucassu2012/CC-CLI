@@ -104,7 +104,7 @@ const AUDIT_LOG = [
   { id: 'AUD-004', time: '14:17:55', level: 3, agentEn: 'Fault Analysis Agent', agentZh: '故障分析Agent', actEn: 'Root cause fix BTS-GD-012 (pending approval)', actZh: '根因修复 BTS-GD-012（待审批）', status: 'pending', highRisk: true,
     detailEn: 'RCA identified faulty BBU board causing intermittent S1 link drops on BTS-GD-012. Proposed fix: switch to redundant BBU path and schedule hardware replacement. Awaiting NOC approval.',
     detailZh: 'RCA识别出故障BBU板卡导致BTS-GD-012间歇性S1链路中断。建议方案：切换至冗余BBU路径并安排硬件更换。等待NOC审批。',
-    impactEn: '⚠️ ~3000 users at risk, requires human decision', impactZh: '⚠️ ~3000用户受影响，需人工决策' },
+    impactEn: '~3000 users at risk, requires human decision', impactZh: '~3000用户受影响，需人工决策' },
   { id: 'AUD-005', time: '14:15:30', level: 1, agentEn: 'O&M Monitor Agent', agentZh: '运维监控Agent', actEn: 'KPI threshold alert - Haizhu throughput drop', actZh: 'KPI阈值告警 - 海珠区吞吐量下降', status: 'info', highRisk: false,
     detailEn: 'Detected DL throughput drop below threshold (current: 420Mbps, threshold: 500Mbps) in Haizhu district cluster HZ-C03. Monitoring continues, auto-escalation in 15min if no recovery.',
     detailZh: '检测到海珠区集群HZ-C03下行吞吐量低于阈值（当前420Mbps，阈值500Mbps）。持续监控中，15分钟无恢复将自动升级。',
@@ -117,10 +117,10 @@ const AUDIT_LOG = [
     detailEn: 'Deployed personalized retention offer to 156 high-value users identified as churn-risk (probability >0.7). Offer includes 20% discount + bonus data for 3 months. Approved by Marketing Director.',
     detailZh: '向156名识别为高流失风险（概率>0.7）的高价值用户投放个性化维挽方案。方案包含8折优惠+3个月赠送流量。已获市场总监审批。',
     impactEn: '156 users, revenue protection ~¥280K/mo', impactZh: '156用户，收入保护~28万/月' },
-  { id: 'AUD-008', time: '14:05:20', level: 5, agentEn: 'Event Assurance Agent', agentZh: '事件保障Agent', actEn: '⚠️ Emergency capacity expansion - Stadium', actZh: '⚠️ 紧急扩容 - 体育场', status: 'emergency', highRisk: true,
-    detailEn: '🔴 CRITICAL: Stadium event with 60K attendees causing network congestion. Auto-activated emergency capacity: +4 temporary cells, load balancing across 12 sectors, MLB enabled. VP Li approved within 5 minutes. HUMAN OVERSIGHT REQUIRED for duration.',
-    detailZh: '🔴 严重：体育场6万人活动导致网络拥塞。自动激活紧急扩容：+4个临时小区，12扇区负载均衡，MLB已启用。VP李总5分钟内审批通过。活动期间需人工持续监控。',
-    impactEn: '⚠️ 60K users, 16 cells affected — HUMAN INTERVENTION MANDATORY', impactZh: '⚠️ 6万用户，16小区受影响 — 必须人工干预' },
+  { id: 'AUD-008', time: '14:05:20', level: 5, agentEn: 'Event Assurance Agent', agentZh: '事件保障Agent', actEn: 'Emergency capacity expansion - Stadium', actZh: '紧急扩容 - 体育场', status: 'emergency', highRisk: true,
+    detailEn: 'CRITICAL: Stadium event with 60K attendees causing network congestion. Auto-activated emergency capacity: +4 temporary cells, load balancing across 12 sectors, MLB enabled. VP Li approved within 5 minutes. HUMAN OVERSIGHT REQUIRED for duration.',
+    detailZh: '严重：体育场6万人活动导致网络拥塞。自动激活紧急扩容：+4个临时小区，12扇区负载均衡，MLB已启用。VP李总5分钟内审批通过。活动期间需人工持续监控。',
+    impactEn: '60K users, 16 cells affected — HUMAN INTERVENTION MANDATORY', impactZh: '6万用户，16小区受影响 — 必须人工干预' },
 ];
 
 export default function Permissions() {
@@ -456,7 +456,7 @@ export default function Permissions() {
               {auditDetail.highRisk && (
                 <div className="bg-status-red/10 border border-status-red/30 rounded-lg p-3 flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-status-red shrink-0" />
-                  <p className="text-xs text-status-red font-medium">{t('⚠️ This operation is classified as HIGH RISK — human intervention and decision-making is mandatory before, during, or after execution.', '⚠️ 此操作被归类为高风险 — 执行前、执行中或执行后必须有人工干预与决策。')}</p>
+                  <p className="text-xs text-status-red font-medium">{t('This operation is classified as HIGH RISK — human intervention and decision-making is mandatory before, during, or after execution.', '此操作被归类为高风险 — 执行前、执行中或执行后必须有人工干预与决策。')}</p>
                 </div>
               )}
             </div>
