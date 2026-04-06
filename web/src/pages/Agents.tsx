@@ -609,10 +609,10 @@ function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory
   return (
     <div className="p-4 flex flex-col h-full">
       {/* Main horizontal flow — centered vertically */}
-      <div className="flex-1 flex items-center gap-0 overflow-x-auto">
-        <div className="flex items-center gap-0 min-w-[600px] w-full">
+      <div className="flex-1 flex items-center overflow-x-auto">
+        <div className="flex items-center gap-0 min-w-[700px] w-full">
         {/* User Input */}
-        <div className="flex flex-col items-center gap-1.5 shrink-0 w-20">
+        <div className="flex flex-col items-center gap-1.5 shrink-0" style={{ width: 70 }}>
           <div className="w-11 h-11 rounded-xl bg-bg-tertiary/50 border border-border flex items-center justify-center">
             <MessageSquare className="w-5 h-5 text-text-muted" />
           </div>
@@ -620,12 +620,12 @@ function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory
         </div>
 
         {/* Flow 1: Input → Classifier */}
-        <div className="shrink-0 px-1" style={{ width: 72 }}>
+        <div className="shrink-0" style={{ width: 65 }}>
           <RichFlow label={FLOWS[0].label} status={FLOWS[0].status} color={FLOWS[0].color} active={tick % 4 === 0} direction="→" />
         </div>
 
         {/* Classifier */}
-        <div className="flex-1 rounded-xl border-2 p-3 min-w-0" style={{ borderColor: '#10b98150', backgroundColor: '#10b98106', maxWidth: 170 }}>
+        <div className="shrink-0 rounded-xl border-2 p-3" style={{ borderColor: '#10b98150', backgroundColor: '#10b98106', width: 130 }}>
           <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: '#10b98120' }}>
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98118' }}>
               <Search className="w-3.5 h-3.5" style={{ color: '#10b981' }} />
@@ -639,12 +639,12 @@ function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory
         </div>
 
         {/* Flow 2: Classifier → Agents */}
-        <div className="shrink-0 px-1" style={{ width: 72 }}>
+        <div className="shrink-0" style={{ width: 65 }}>
           <RichFlow label={FLOWS[1].label} status={FLOWS[1].status} color={FLOWS[1].color} active={tick % 4 === 1} direction="→" />
         </div>
 
         {/* Domain Agents */}
-        <div className="flex-[2] rounded-xl border-2 p-3 min-w-0" style={{ borderColor: '#8b5cf650', backgroundColor: '#8b5cf606' }}>
+        <div className="shrink-0 rounded-xl border-2 p-3" style={{ borderColor: '#8b5cf650', backgroundColor: '#8b5cf606', width: 180 }}>
           <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: '#8b5cf620' }}>
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf618' }}>
               <Bot className="w-3.5 h-3.5 text-accent-purple" />
@@ -652,14 +652,14 @@ function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory
             <span className="text-[11px] font-bold text-accent-purple">{t('DOMAIN AGENTS', '领域 AGENT')}</span>
             <span className="text-[9px] text-text-muted ml-auto">{agents.length} {t('agents', '个')}</span>
           </div>
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="space-y-1">
             {agents.map(a => {
               const color = AGENT_COLORS[a.id] || '#8b5cf6';
               const label = AGENT_DOMAIN_LABEL[a.id];
               const AIcon = AGENT_LUCIDE[a.id] || Bot;
               return (
                 <div key={a.id} onClick={() => onSelectAgent(a)}
-                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[10px] font-medium cursor-pointer transition-all hover:scale-[1.02]"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[9px] font-medium cursor-pointer transition-all hover:scale-[1.02]"
                   style={{ backgroundColor: color + '08', borderColor: color + '20', color }}>
                   <AIcon className="w-3 h-3 shrink-0" style={{ color }} />
                   {label ? t(label.en, label.zh) : t(a.domain, a.domainZh)}
@@ -670,12 +670,12 @@ function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory
         </div>
 
         {/* Flow 3: Agents → Processing */}
-        <div className="shrink-0 px-1" style={{ width: 72 }}>
+        <div className="shrink-0" style={{ width: 65 }}>
           <RichFlow label={FLOWS[2].label} status={FLOWS[2].status} color={FLOWS[2].color} active={tick % 4 === 2} direction="→" />
         </div>
 
         {/* Processing */}
-        <div className="flex-1 rounded-xl border-2 p-3 min-w-0" style={{ borderColor: '#06b6d450', backgroundColor: '#06b6d406', maxWidth: 170 }}>
+        <div className="shrink-0 rounded-xl border-2 p-3" style={{ borderColor: '#06b6d450', backgroundColor: '#06b6d406', width: 130 }}>
           <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: '#06b6d420' }}>
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#06b6d418' }}>
               <Cpu className="w-3.5 h-3.5 text-accent-cyan" />
@@ -689,12 +689,12 @@ function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory
         </div>
 
         {/* Flow 4: Processing → Response */}
-        <div className="shrink-0 px-1" style={{ width: 72 }}>
+        <div className="shrink-0" style={{ width: 65 }}>
           <RichFlow label={FLOWS[3].label} status={FLOWS[3].status} color={FLOWS[3].color} active={tick % 4 === 3} direction="→" />
         </div>
 
         {/* Response */}
-        <div className="flex flex-col items-center gap-1.5 shrink-0 w-20">
+        <div className="flex flex-col items-center gap-1.5 shrink-0" style={{ width: 70 }}>
           <div className="w-11 h-11 rounded-xl bg-bg-tertiary/50 border border-border flex items-center justify-center">
             <Send className="w-5 h-5 text-text-muted" />
           </div>

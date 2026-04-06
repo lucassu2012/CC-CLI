@@ -13,7 +13,7 @@ import Permissions from './pages/Permissions';
 export default function App() {
   return (
     <ScenarioProvider>
-      <div className="h-screen flex flex-col bg-bg-primary">
+      <div className="h-dvh flex flex-col bg-bg-primary">
         <Navbar />
         <div className="flex flex-1 overflow-hidden">
           <Sidebar />
