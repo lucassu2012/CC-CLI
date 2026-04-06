@@ -182,7 +182,7 @@ export default function Permissions() {
           {levels.map((lv, lvIdx) => {
             const Icon = lv.icon;
             return (
-              <div key={lv.level} className="bg-bg-card rounded-xl border border-border hover:border-accent-cyan/30 transition-all">
+              <div key={lv.level} onClick={() => openEditLevel(lv)} className="bg-bg-card rounded-xl border border-border hover:border-accent-cyan/30 transition-all cursor-pointer">
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: lv.color + '20' }}>
