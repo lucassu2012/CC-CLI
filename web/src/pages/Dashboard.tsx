@@ -223,7 +223,7 @@ export default function Dashboard() {
       </section>
 
       {/* ①-b LLM Core (Gemma 4) Status Banner */}
-      <section onClick={() => navigate('/ai-brain')} className="cursor-pointer group">
+      <section onClick={() => navigate('/lab')} className="cursor-pointer group">
         <div className="bg-bg-card rounded-xl border border-border p-4 hover:border-accent-cyan/40 transition-all relative overflow-hidden">
           {/* Animated scan line */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">

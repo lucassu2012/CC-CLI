@@ -8,7 +8,7 @@ import Agents from './pages/Agents';
 import Workflows from './pages/Workflows';
 import Knowledge from './pages/Knowledge';
 import Topology from './pages/Topology';
-import AIBrain from './pages/AIBrain';
+import Lab from './pages/Lab';
 import Permissions from './pages/Permissions';
 
 export default function App() {
@@ -26,7 +26,7 @@ export default function App() {
               <Route path="/workflows" element={<Workflows />} />
               <Route path="/knowledge" element={<Knowledge />} />
               <Route path="/topology" element={<Topology />} />
-              <Route path="/ai-brain" element={<AIBrain />} />
+              <Route path="/lab" element={<Lab />} />
               <Route path="/permissions" element={<Permissions />} />
             </Routes>
           </main>
