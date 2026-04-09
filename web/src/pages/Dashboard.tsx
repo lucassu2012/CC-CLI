@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, XCircle,
   Clock, Loader2, Activity, X, ChevronRight, Zap, Radio, Plug, Users, ChevronDown,
-  Terminal, Server, ArrowRightLeft, Shield, Wrench, RefreshCw, Play,
+  Terminal, Server, ArrowRightLeft, Shield, Wrench, RefreshCw, Play, Brain, Cpu, Gauge,
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { useText } from '../hooks/useText';
@@ -50,6 +51,7 @@ function Modal({ open, onClose, title, children }: { open: boolean; onClose: () 
 /* ─── Main ─── */
 export default function Dashboard() {
   const { t } = useText();
+  const navigate = useNavigate();
   const { scenario } = useScenario();
 
   // Scenario-aware data sources
@@ -217,6 +219,52 @@ export default function Dashboard() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* ①-b LLM Core (Gemma 4) Status Banner */}
+      <section onClick={() => navigate('/ai-brain')} className="cursor-pointer group">
+        <div className="bg-bg-card rounded-xl border border-border p-4 hover:border-accent-cyan/40 transition-all relative overflow-hidden">
+          {/* Animated scan line */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-accent-cyan/40 to-transparent animate-pulse" />
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-cyan/20 to-accent-purple/20 border border-accent-cyan/30 flex items-center justify-center shrink-0">
+                <Brain className="w-5 h-5 text-accent-cyan" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm font-semibold text-text-primary">{t('LLM Core', 'LLM 核心')}</h3>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent-cyan/15 text-accent-cyan font-mono">Gemma 4 27B</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-status-green" />
+                  <span className="text-[10px] text-status-green">{t('Online', '在线')}</span>
+                </div>
+                <p className="text-[10px] text-text-muted mt-0.5">{t('Powering IOE PADE pipeline: Perception → Analysis → Decision → Execution', '驱动 IOE PADE 流水线: 感知 → 分析 → 决策 → 执行')}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 sm:gap-6 text-[10px] shrink-0">
+              <div className="text-center">
+                <Gauge className="w-3.5 h-3.5 text-text-muted mx-auto mb-0.5" />
+                <p className="text-text-muted">{t('Latency', '延迟')}</p>
+                <p className="text-sm font-semibold text-text-primary tabular-nums">142<span className="text-[10px] text-text-muted ml-0.5">ms</span></p>
+              </div>
+              <div className="text-center">
+                <Zap className="w-3.5 h-3.5 text-text-muted mx-auto mb-0.5" />
+                <p className="text-text-muted">{t('Throughput', '吞吐')}</p>
+                <p className="text-sm font-semibold text-text-primary tabular-nums">4,280<span className="text-[10px] text-text-muted ml-0.5">tok/s</span></p>
+              </div>
+              <div className="text-center">
+                <Cpu className="w-3.5 h-3.5 text-text-muted mx-auto mb-0.5" />
+                <p className="text-text-muted">GPU</p>
+                <p className="text-sm font-semibold text-status-green tabular-nums">73%</p>
+              </div>
+              <div className="flex items-center gap-1 text-accent-cyan opacity-0 group-hover:opacity-100 transition-opacity">
+                {t('Details', '详情')} <ChevronRight className="w-3 h-3" />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

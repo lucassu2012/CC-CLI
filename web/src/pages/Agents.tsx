@@ -11,9 +11,10 @@ import StatusBadge from '../components/StatusBadge';
 /* ─── Agent config data ─── */
 
 const MODELS = [
+  { id: 'gemma-4-27b', name: 'Gemma 4 27B', desc: 'IOE核心大脑 · 27B参数 · 电信LoRA微调 · 本地部署', descEn: 'IOE Core Brain · 27B params · Telecom LoRA fine-tuned · Local deployment' },
+  { id: 'gemma-4-9b', name: 'Gemma 4 9B', desc: '轻量推理 · 9B参数 · 边缘部署', descEn: 'Lightweight inference · 9B params · Edge deployment' },
   { id: 'gts-llm', name: 'GTS-LLM', desc: '电信专用大模型 · 718B参数 · 全能力', descEn: 'Telecom LLM · 718B params · Full capability' },
   { id: 'pangu-72b', name: 'PanGu-Telecom-72B', desc: '盘古电信 · 72B参数 · 推理增强', descEn: 'PanGu Telecom · 72B · Reasoning-enhanced' },
-  { id: 'pangu-7b', name: 'PanGu-Telecom-7B', desc: '盘古电信 · 7B参数 · 轻量快速', descEn: 'PanGu Telecom · 7B · Lightweight fast' },
   { id: 'deepseek-v3', name: 'DeepSeek-V3', desc: '通用大模型 · MoE架构 · 开源', descEn: 'General LLM · MoE · Open-source' },
   { id: 'qwen-72b', name: 'Qwen-72B', desc: '通义千问 · 72B · 多语言', descEn: 'Qwen · 72B · Multilingual' },
 ];
