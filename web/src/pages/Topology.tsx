@@ -160,32 +160,24 @@ const RF_W = 740;
 const RF_H = 480;
 const RF_GRID = 10; // px pitch of each coverage grid cell
 
-function rfLerp(a: number, b: number, t: number) {
-  return Math.round(a + (b - a) * t);
-}
-function rfHex(c: [number, number, number]) {
-  return `#${c.map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('')}`;
-}
-// Continuous RSRP → experience-quality color (cyan/teal=good → yellow → pink=poor)
+// Match reference: colorForQuality maps normalized quality (0=poor, 1=good)
+// to semi-transparent rgba, letting the map background show through.
 function rfColor(rsrp: number): string {
-  const stops: { v: number; c: [number, number, number] }[] = [
-    { v: -72, c: [39, 189, 174] },  // strong  — teal (#27BDAE)
-    { v: -85, c: [80, 200, 140] },  // good    — teal-green
-    { v: -93, c: [255, 200, 61] },  // mid     — amber (#FFC83D)
-    { v: -101, c: [242, 100, 80] }, // weak    — salmon
-    { v: -109, c: [231, 76, 92] },  // poor    — pink (#E74C5C)
-  ];
-  if (rsrp >= stops[0].v) return rfHex(stops[0].c);
-  if (rsrp <= stops[stops.length - 1].v) return rfHex(stops[stops.length - 1].c);
-  for (let i = 0; i < stops.length - 1; i++) {
-    const a = stops[i];
-    const b = stops[i + 1];
-    if (rsrp <= a.v && rsrp >= b.v) {
-      const t = (a.v - rsrp) / (a.v - b.v);
-      return rfHex([rfLerp(a.c[0], b.c[0], t), rfLerp(a.c[1], b.c[1], t), rfLerp(a.c[2], b.c[2], t)]);
-    }
+  const norm = Math.max(0, Math.min(1, (rsrp + 115) / 50)); // 0=poor, 1=good
+  if (norm >= 0.62) {
+    // Good — teal with dynamic alpha
+    const a = 0.10 + (norm - 0.62) * 0.35;
+    return `rgba(39, 189, 174, ${a.toFixed(3)})`;
   }
-  return rfHex(stops[stops.length - 1].c);
+  if (norm >= 0.32) {
+    // Mid — orange-to-yellow, green channel interpolates 120→210
+    const t = (norm - 0.32) / 0.30;
+    const g = Math.round(120 + 90 * t);
+    return `rgba(242, ${g}, 58, 0.22)`;
+  }
+  // Poor — pink/red with dynamic alpha
+  const a = 0.18 + (0.32 - norm) * 0.70;
+  return `rgba(231, 76, 92, ${a.toFixed(3)})`;
 }
 
 /* ─── Experience Twin: RF Coverage Simulation ─── */
@@ -215,7 +207,7 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
   const gridCells = useMemo(() => {
     const cols = Math.ceil(RF_W / RF_GRID);
     const rows = Math.ceil(RF_H / RF_GRID);
-    const out: { key: string; x: number; y: number; color: string; opacity: number }[] = [];
+    const out: { key: string; x: number; y: number; color: string }[] = [];
     for (let r = 0; r < rows; r++) {
       for (let col = 0; col < cols; col++) {
         const px = col * RF_GRID + RF_GRID / 2;
@@ -225,15 +217,11 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
           const dx = px - c.x;
           const dy = py - c.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          // peak RSRP at tower, linear falloff out to ~1.4× radius
           const signal = c.rsrp - 32 * (dist / (c.radius * 1.4));
           if (signal > best) best = signal;
         }
         best = Math.max(-115, Math.min(-65, best));
-        // stronger cells render slightly more opaque for depth
-        const norm = (best + 115) / 50; // 0 (poor) → 1 (strong)
-        const opacity = 0.78 + norm * 0.17;
-        out.push({ key: `${col}-${r}`, x: col * RF_GRID, y: r * RF_GRID, color: rfColor(best), opacity });
+        out.push({ key: `${col}-${r}`, x: col * RF_GRID, y: r * RF_GRID, color: rfColor(best) });
       }
     }
     return out;
@@ -286,12 +274,12 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
             </h3>
             <div className="flex items-center gap-2.5 text-[10px] text-text-muted">
               <span className="text-text-muted/70 mr-0.5">{RF_GRID}m {t('grid', '栅格')}</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#27BDAE' }} />{t('Good', '良好')} ≥-85</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#FFC83D' }} />{t('Mid', '一般')} -85~-98</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#E74C5C' }} />{t('Poor', '较差')} &lt;-98</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'rgba(39, 189, 174, 0.6)' }} />{t('Good', '良好')} ≥-95</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'rgba(242, 165, 58, 0.6)' }} />{t('Mid', '一般')} -110~-95</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'rgba(231, 76, 92, 0.7)' }} />{t('Poor', '较差')} &lt;-110</span>
             </div>
           </div>
-          <svg viewBox="0 0 740 480" className="w-full rounded-lg" style={{ background: 'var(--color-bg-secondary)' }}>
+          <svg viewBox="0 0 740 480" className="w-full rounded-lg" style={{ background: 'var(--color-map-bg)' }}>
             <defs>
               {/* thin grid lines drawn over the heatmap cells */}
               <pattern id="rfgrid" width={RF_GRID} height={RF_GRID} patternUnits="userSpaceOnUse">
@@ -306,11 +294,12 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
               <path d="M -20 380 C 250 330, 500 420, 760 360" />
             </g>
 
-            {/* Grid coverage heatmap — sharp rectangular cells */}
+            {/* Grid coverage heatmap — sharp rectangular cells with 0.5px gap */}
             <g>
               {gridCells.map(g => (
-                <rect key={g.key} x={g.x} y={g.y} width={RF_GRID} height={RF_GRID}
-                  fill={g.color} opacity={g.opacity} className="transition-all duration-700" />
+                <rect key={g.key} x={g.x} y={g.y} width={RF_GRID - 0.5} height={RF_GRID - 0.5}
+                  fill={g.color} stroke="rgba(255,255,255,0.04)" strokeWidth="0.5"
+                  className="transition-all duration-700" />
               ))}
             </g>
 
