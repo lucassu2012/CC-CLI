@@ -27,20 +27,20 @@ const THEMES: ThemeMeta[] = [
   {
     id: 'ioh',
     name: 'IOH',
-    nameZh: 'IOH 印尼',
+    nameZh: 'IOH 深色',
     desc: 'Indosat Ooredoo Hutchison',
-    descZh: 'Indosat Ooredoo Hutchison',
+    descZh: 'Indosat 深色品牌主题',
     icon: Flame,
-    swatches: ['#1A0F13', '#E89313', '#C8102E'],
+    swatches: ['#1A0F13', '#FF3D60', '#E89313'],
   },
   {
     id: 'light',
     name: 'Light',
-    nameZh: '浅色',
-    desc: 'Clean daytime theme',
-    descZh: '清爽日间主题',
+    nameZh: 'IOH 浅色',
+    desc: 'IOH light brand theme',
+    descZh: 'Indosat 浅色品牌主题',
     icon: Sun,
-    swatches: ['#ffffff', '#0891b2', '#2563eb'],
+    swatches: ['#F7F1ED', '#E6007E', '#F37021'],
   },
 ];
 

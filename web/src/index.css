@@ -49,16 +49,16 @@ body {
    to every color utility (backgrounds, text, borders) automatically.
    ────────────────────────────────────────────────────────── */
 
-/* IOH — Indosat Ooredoo Hutchison (dark maroon + orange→red brand) */
+/* IOH — Indosat Ooredoo Hutchison (dark maroon + pink/red brand) */
 :root[data-theme="ioh"] {
   --color-bg-primary: #1A0F13;
   --color-bg-secondary: #23141A;
   --color-bg-tertiary: #332029;
   --color-bg-card: #2A1A22;
   --color-bg-hover: #3D2832;
-  --color-accent-cyan: #E89313;
-  --color-accent-blue: #FFC83D;
-  --color-accent-purple: #FF3D60;
+  --color-accent-cyan: #FF3D60;
+  --color-accent-blue: #E89313;
+  --color-accent-purple: #C8102E;
   --color-status-green: #27BDAE;
   --color-status-yellow: #FFC83D;
   --color-status-red: #E74C5C;
@@ -71,25 +71,26 @@ body {
   --font-sans: 'Space Grotesk', 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
-/* Light — clean daytime theme */
+/* Light — IOH light brand (warm cream + magenta/orange accents) */
 :root[data-theme="light"] {
-  --color-bg-primary: #f1f5f9;
-  --color-bg-secondary: #ffffff;
-  --color-bg-tertiary: #e2e8f0;
-  --color-bg-card: #ffffff;
-  --color-bg-hover: #eef2f7;
-  --color-accent-cyan: #0891b2;
-  --color-accent-blue: #2563eb;
-  --color-accent-purple: #7c3aed;
-  --color-status-green: #16a34a;
-  --color-status-yellow: #ca8a04;
-  --color-status-red: #dc2626;
-  --color-status-orange: #ea580c;
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #94a3b8;
-  --color-border: #e2e8f0;
+  --color-bg-primary: #F7F1ED;
+  --color-bg-secondary: #FFFFFF;
+  --color-bg-tertiary: #F3E0D6;
+  --color-bg-card: #FFFFFF;
+  --color-bg-hover: #FAEFE9;
+  --color-accent-cyan: #E6007E;
+  --color-accent-blue: #F37021;
+  --color-accent-purple: #C8006B;
+  --color-status-green: #1F8B81;
+  --color-status-yellow: #F58220;
+  --color-status-red: #E83F3F;
+  --color-status-orange: #D4541A;
+  --color-text-primary: #2A2D31;
+  --color-text-secondary: #3F2F36;
+  --color-text-muted: #6A4F58;
+  --color-border: #E0C9BF;
   --color-map-bg: #FAF3EE;
+  --font-sans: 'Space Grotesk', 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 @keyframes fadeIn {
