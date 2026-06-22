@@ -9,7 +9,9 @@ export interface KpiDataPoint {
 
 export interface KpiSeries {
   name: string;
+  nameZh: string;
   unit: string;
+  unitZh?: string;
   data: KpiDataPoint[];
   threshold?: { warning: number; critical: number };
 }
@@ -27,7 +29,8 @@ function makeData(values: number[]): KpiDataPoint[] {
 
 export const kpiMetrics = {
   networkAvailability: {
-    name: '网络可用率',
+    name: 'Network Availability',
+    nameZh: '网络可用率',
     unit: '%',
     data: makeData([
       99.98, 99.99, 99.99, 99.99, 99.99, 99.98,
@@ -39,7 +42,8 @@ export const kpiMetrics = {
   } as KpiSeries,
 
   callDropRate: {
-    name: '掉话率',
+    name: 'Call Drop Rate',
+    nameZh: '掉话率',
     unit: '%',
     data: makeData([
       0.32, 0.28, 0.25, 0.22, 0.20, 0.23,
@@ -51,7 +55,8 @@ export const kpiMetrics = {
   } as KpiSeries,
 
   handoverSuccessRate: {
-    name: '切换成功率',
+    name: 'Handover Success Rate',
+    nameZh: '切换成功率',
     unit: '%',
     data: makeData([
       99.45, 99.52, 99.58, 99.62, 99.65, 99.55,
@@ -63,7 +68,8 @@ export const kpiMetrics = {
   } as KpiSeries,
 
   averageThroughputDL: {
-    name: '平均下行吞吐量',
+    name: 'Avg DL Throughput',
+    nameZh: '平均下行吞吐量',
     unit: 'Mbps',
     data: makeData([
       285.3, 312.5, 340.2, 355.8, 362.1, 348.6,
@@ -75,7 +81,8 @@ export const kpiMetrics = {
   } as KpiSeries,
 
   averageThroughputUL: {
-    name: '平均上行吞吐量',
+    name: 'Avg UL Throughput',
+    nameZh: '平均上行吞吐量',
     unit: 'Mbps',
     data: makeData([
       42.5, 48.2, 52.8, 55.3, 56.8, 53.2,
@@ -87,8 +94,10 @@ export const kpiMetrics = {
   } as KpiSeries,
 
   activeUsers: {
-    name: '在线用户数',
-    unit: '万',
+    name: 'Active Users',
+    nameZh: '在线用户数',
+    unit: '10K',
+    unitZh: '万',
     data: makeData([
       12.3, 8.5, 5.2, 3.8, 3.2, 4.5,
       15.6, 28.3, 42.5, 48.6, 52.3, 55.8,
@@ -98,7 +107,8 @@ export const kpiMetrics = {
   } as KpiSeries,
 
   trafficVolume: {
-    name: '流量',
+    name: 'Traffic Volume',
+    nameZh: '流量',
     unit: 'TB',
     data: makeData([
       2.8, 1.9, 1.2, 0.8, 0.7, 1.0,
@@ -109,7 +119,8 @@ export const kpiMetrics = {
   } as KpiSeries,
 
   averageLatency: {
-    name: '平均时延',
+    name: 'Avg Latency',
+    nameZh: '平均时延',
     unit: 'ms',
     data: makeData([
       8.2, 7.5, 6.8, 6.2, 5.8, 6.5,
@@ -121,7 +132,8 @@ export const kpiMetrics = {
   } as KpiSeries,
 
   prbUtilization: {
-    name: 'PRB利用率',
+    name: 'PRB Utilization',
+    nameZh: 'PRB利用率',
     unit: '%',
     data: makeData([
       25.3, 18.2, 12.5, 8.8, 7.2, 10.5,
@@ -133,8 +145,10 @@ export const kpiMetrics = {
   } as KpiSeries,
 
   userExperienceScore: {
-    name: '用户体验评分',
-    unit: '分',
+    name: 'User Experience Score',
+    nameZh: '用户体验评分',
+    unit: 'pts',
+    unitZh: '分',
     data: makeData([
       8.8, 9.0, 9.2, 9.3, 9.4, 9.2,
       8.6, 8.0, 7.5, 7.2, 7.0, 6.8,
@@ -149,6 +163,7 @@ export const kpiMetrics = {
 export const regionalKpiSummary = [
   {
     region: '广东',
+    regionEn: 'Guangdong',
     availability: 99.92,
     avgThroughputDL: 215.6,
     avgLatency: 14.3,
@@ -160,6 +175,7 @@ export const regionalKpiSummary = [
   },
   {
     region: '浙江',
+    regionEn: 'Zhejiang',
     availability: 99.95,
     avgThroughputDL: 238.2,
     avgLatency: 12.8,
@@ -171,6 +187,7 @@ export const regionalKpiSummary = [
   },
   {
     region: '北京',
+    regionEn: 'Beijing',
     availability: 99.88,
     avgThroughputDL: 202.5,
     avgLatency: 15.6,
@@ -214,14 +231,14 @@ export const techTrafficSplit = hours.map((time, i) => ({
 
 // Top 10 高负荷小区
 export const topLoadedCells = [
-  { siteId: 'GD-GZ-002', cellId: 'GD-GZ-002A', name: '珠江新城站-A扇区', prbUtil: 92.3, users: 523, throughput: 125.6 },
-  { siteId: 'BJ-CY-001', cellId: 'BJ-CY-001B', name: '国贸CBD站-B扇区', prbUtil: 90.8, users: 612, throughput: 118.2 },
-  { siteId: 'GD-SZ-002', cellId: 'GD-SZ-002A', name: '福田CBD站-A扇区', prbUtil: 89.5, users: 548, throughput: 122.8 },
-  { siteId: 'ZJ-HZ-004', cellId: 'ZJ-HZ-004C', name: '滨江高新区站-C扇区', prbUtil: 88.2, users: 478, throughput: 115.3 },
-  { siteId: 'BJ-DC-001', cellId: 'BJ-DC-001A', name: '东城王府井站-A扇区', prbUtil: 87.6, users: 502, throughput: 112.5 },
-  { siteId: 'GD-SZ-004', cellId: 'GD-SZ-004B', name: '南山后海站-B扇区', prbUtil: 86.9, users: 456, throughput: 108.6 },
-  { siteId: 'ZJ-HZ-002', cellId: 'ZJ-HZ-002A', name: '钱江新城站-A扇区', prbUtil: 85.3, users: 435, throughput: 132.4 },
-  { siteId: 'BJ-FT-002', cellId: 'BJ-FT-002D', name: '大兴机场站-D扇区', prbUtil: 84.8, users: 389, throughput: 145.2 },
-  { siteId: 'GD-GZ-004', cellId: 'GD-GZ-004A', name: '广州塔站-A扇区', prbUtil: 83.5, users: 367, throughput: 138.6 },
-  { siteId: 'BJ-CY-002', cellId: 'BJ-CY-002C', name: '望京SOHO站-C扇区', prbUtil: 82.1, users: 398, throughput: 105.8 },
+  { siteId: 'GD-GZ-002', cellId: 'GD-GZ-002A', name: '珠江新城站-A扇区', nameEn: 'Zhujiang New Town-Sector A', prbUtil: 92.3, users: 523, throughput: 125.6 },
+  { siteId: 'BJ-CY-001', cellId: 'BJ-CY-001B', name: '国贸CBD站-B扇区', nameEn: 'Guomao CBD-Sector B', prbUtil: 90.8, users: 612, throughput: 118.2 },
+  { siteId: 'GD-SZ-002', cellId: 'GD-SZ-002A', name: '福田CBD站-A扇区', nameEn: 'Futian CBD-Sector A', prbUtil: 89.5, users: 548, throughput: 122.8 },
+  { siteId: 'ZJ-HZ-004', cellId: 'ZJ-HZ-004C', name: '滨江高新区站-C扇区', nameEn: 'Binjiang Hi-Tech-Sector C', prbUtil: 88.2, users: 478, throughput: 115.3 },
+  { siteId: 'BJ-DC-001', cellId: 'BJ-DC-001A', name: '东城王府井站-A扇区', nameEn: 'Wangfujing-Sector A', prbUtil: 87.6, users: 502, throughput: 112.5 },
+  { siteId: 'GD-SZ-004', cellId: 'GD-SZ-004B', name: '南山后海站-B扇区', nameEn: 'Nanshan Houhai-Sector B', prbUtil: 86.9, users: 456, throughput: 108.6 },
+  { siteId: 'ZJ-HZ-002', cellId: 'ZJ-HZ-002A', name: '钱江新城站-A扇区', nameEn: 'Qianjiang New Town-Sector A', prbUtil: 85.3, users: 435, throughput: 132.4 },
+  { siteId: 'BJ-FT-002', cellId: 'BJ-FT-002D', name: '大兴机场站-D扇区', nameEn: 'Daxing Airport-Sector D', prbUtil: 84.8, users: 389, throughput: 145.2 },
+  { siteId: 'GD-GZ-004', cellId: 'GD-GZ-004A', name: '广州塔站-A扇区', nameEn: 'Canton Tower-Sector A', prbUtil: 83.5, users: 367, throughput: 138.6 },
+  { siteId: 'BJ-CY-002', cellId: 'BJ-CY-002C', name: '望京SOHO站-C扇区', nameEn: 'Wangjing SOHO-Sector C', prbUtil: 82.1, users: 398, throughput: 105.8 },
 ];

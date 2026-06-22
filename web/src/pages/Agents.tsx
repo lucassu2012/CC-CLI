@@ -363,7 +363,7 @@ function AgentEditor({ agent, subAgent, onClose }: { agent: DomainAgent; subAgen
                             </div>
                             <span className="text-[10px] font-medium text-text-primary truncate">{t(skill.name, skill.nameZh)}</span>
                           </div>
-                          <p className="text-[10px] text-text-muted truncate mt-1 ml-6">{skill.domain}</p>
+                          <p className="text-[10px] text-text-muted truncate mt-1 ml-6">{AGENT_DOMAIN_LABEL[skill.domain] ? t(AGENT_DOMAIN_LABEL[skill.domain].en, AGENT_DOMAIN_LABEL[skill.domain].zh) : skill.domain}</p>
                         </div>
                       );
                     })}
@@ -826,7 +826,7 @@ function HierarchicalTopology({ agents, tick, onSelectAgent, onSelectSubAgent, o
                       <div key={idx} onClick={() => onSelectSubAgent(a, idx)}
                         className="w-6 h-6 rounded-md border flex items-center justify-center cursor-pointer transition-all hover:scale-110"
                         style={{ borderColor: color + '25', backgroundColor: color + '0a' }}
-                        title={a.subAgents[idx]?.name || ''}>
+                        title={a.subAgents[idx] ? t(a.subAgents[idx].name, a.subAgents[idx].nameZh) : ''}>
                         <SIcon className="w-3 h-3" style={{ color: color + 'bb' }} />
                       </div>
                     );

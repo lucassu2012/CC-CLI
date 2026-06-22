@@ -41,6 +41,7 @@ export interface DemoConversation {
   title: string;
   titleZh: string;
   domain: string;
+  domainZh?: string;
   messages: ChatMessage[];
 }
 
@@ -49,7 +50,8 @@ export const demoConversations: DemoConversation[] = [
     id: 'conv-network',
     title: 'Network Fault Investigation',
     titleZh: '网络故障排查',
-    domain: 'ops',
+    domain: 'Operations',
+    domainZh: '运维',
     messages: [
       {
         id: 'msg-1',
@@ -222,7 +224,8 @@ export const demoConversations: DemoConversation[] = [
     id: 'conv-experience',
     title: 'VIP Experience Assurance',
     titleZh: 'VIP用户体验保障',
-    domain: 'experience',
+    domain: 'Experience',
+    domainZh: '体验',
     messages: [
       {
         id: 'msg-e1',
@@ -334,7 +337,8 @@ export const demoConversations: DemoConversation[] = [
     id: 'conv-market',
     title: 'Precision Marketing Campaign',
     titleZh: '5G套餐精准营销',
-    domain: 'marketing',
+    domain: 'Marketing',
+    domainZh: '营销',
     messages: [
       {
         id: 'msg-m1',

@@ -318,6 +318,23 @@ export const extraTasks: TaskItem[] = [
   },
 ];
 
+/* Chinese → English agent name mapping for bilingual rendering */
+export const AGENT_NAME_EN: Record<string, string> = {
+  '运维监控Agent': 'O&M Monitoring Agent',
+  '故障分析Agent': 'Fault Analysis Agent',
+  '实时优化Agent': 'Real-time Optimization Agent',
+  '体验保障Agent': 'Experience Assurance Agent',
+  '确定性体验Agent': 'Deterministic Experience Agent',
+  '事件保障Agent': 'Event Assurance Agent',
+  '工程优化Agent': 'Engineering Optimization Agent',
+  '离网维挽Agent': 'Churn Prevention Agent',
+  '潜客识别Agent': 'Lead Identification Agent',
+  '市场收益预测Agent': 'Market Revenue Forecast Agent',
+  '投诉预处理Agent': 'Complaint Early-Warning Agent',
+  '网络仿真Agent': 'Network Simulation Agent',
+  '价值洞察Agent': 'Value Insight Agent',
+};
+
 /* Extra alert pool for dynamic rotation */
 export const extraAlerts: AlertItem[] = [
   {

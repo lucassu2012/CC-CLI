@@ -446,8 +446,9 @@ export default function Workflows() {
     const y = (e.clientY - rect.top) / zoom - NODE_H / 2;
     const id = `n${_nextId++}`;
     const connectorType = e.dataTransfer.getData('connectorType') || undefined;
-    const names: Record<string, string> = { trigger: t('New Trigger', '新触发器'), agent: agentType ? (t(SUB_AGENTS[agentType]?.nameEn, SUB_AGENTS[agentType]?.name) || 'Agent') : 'Agent', condition: t('New Condition', '新条件'), action: t('New Action', '新动作'), merge: t('Merge', '合并'), split: t('Split', '拆分'), transform: t('Transform', '转换'), connector: connectorType ? (t(CONNECTORS[connectorType]?.nameEn, CONNECTORS[connectorType]?.name) || t('Connector', '连接器')) : t('Connector', '连接器') };
-    const newNode: WfNode = { id, type, name: names[type] || type, agentType, connectorType, x: Math.max(0, x), y: Math.max(0, y) };
+    const namesCn: Record<string, string> = { trigger: '新触发器', agent: agentType ? (SUB_AGENTS[agentType]?.name || 'Agent') : 'Agent', condition: '新条件', action: '新动作', merge: '合并', split: '拆分', transform: '转换', connector: connectorType ? (CONNECTORS[connectorType]?.name || '连接器') : '连接器' };
+    const namesEn: Record<string, string> = { trigger: 'New Trigger', agent: agentType ? (SUB_AGENTS[agentType]?.nameEn || 'Agent') : 'Agent', condition: 'New Condition', action: 'New Action', merge: 'Merge', split: 'Split', transform: 'Transform', connector: connectorType ? (CONNECTORS[connectorType]?.nameEn || 'Connector') : 'Connector' };
+    const newNode: WfNode = { id, type, name: namesCn[type] || type, nameEn: namesEn[type] || type, agentType, connectorType, x: Math.max(0, x), y: Math.max(0, y) };
     if (!isCustom) {
       setCustomNodes([...template.nodes, newNode]);
       setCustomEdges([...template.edges]);
@@ -519,7 +520,7 @@ export default function Workflows() {
   }, [isCustom, selectedNode]);
 
   const handleNewWorkflow = useCallback(() => {
-    setCustomNodes([{ id: 'start', type: 'trigger', name: t('Start', '开始'), x: 400, y: 40 }]);
+    setCustomNodes([{ id: 'start', type: 'trigger', name: '开始', nameEn: 'Start', x: 400, y: 40 }]);
     setCustomEdges([]);
     setIsCustom(true);
     setSelectedNode(null);
@@ -527,7 +528,10 @@ export default function Workflows() {
   }, [stopRun]);
 
   const handleSelectAgent = useCallback((nodeId: string, agentType: string, subAgent: string) => {
-    setCustomNodes(prev => prev.map(n => n.id === nodeId ? { ...n, agentType, subAgent, name: subAgent } : n));
+    const ag = SUB_AGENTS[agentType];
+    const idx = ag ? ag.subs.indexOf(subAgent) : -1;
+    const nameEn = ag && idx >= 0 ? ag.subsEn[idx] : subAgent;
+    setCustomNodes(prev => prev.map(n => n.id === nodeId ? { ...n, agentType, subAgent, name: subAgent, nameEn } : n));
     setAgentPicker(null);
   }, []);
 
@@ -838,7 +842,7 @@ export default function Workflows() {
                   {/* Subtitle: agent type or node type */}
                   <text x={node.x + 52} y={node.y + NODE_H / 2 + 10}
                     style={{ fill: 'var(--color-text-muted)' }} fontSize="9" dominantBaseline="middle">
-                    {node.subAgent || (node.connectorType ? t(CONNECTORS[node.connectorType]?.nameEn, CONNECTORS[node.connectorType]?.name) : node.agentType ? t(SUB_AGENTS[node.agentType]?.nameEn, SUB_AGENTS[node.agentType]?.name) : node.type)}
+                    {node.subAgent ? (() => { const ag = node.agentType && SUB_AGENTS[node.agentType]; if (!ag) return node.subAgent; const idx = ag.subs.indexOf(node.subAgent); return idx >= 0 ? t(ag.subsEn[idx], ag.subs[idx]) : node.subAgent; })() : (node.connectorType ? t(CONNECTORS[node.connectorType]?.nameEn, CONNECTORS[node.connectorType]?.name) : node.agentType ? t(SUB_AGENTS[node.agentType]?.nameEn, SUB_AGENTS[node.agentType]?.name) : node.type)}
                   </text>
                   {/* n8n-style left port (input) */}
                   <circle cx={node.x} cy={node.y + NODE_H / 2} r={5}
@@ -999,8 +1003,12 @@ export default function Workflows() {
                   <label className="text-xs text-text-muted block mb-1">{t('Sub-Agent', '子Agent')}</label>
                   <select value={selectedNode.subAgent || ''} onChange={e => {
                     const val = e.target.value;
-                    setCustomNodes(prev => prev.map(n => n.id === selectedNode.id ? { ...n, subAgent: val, name: val || SUB_AGENTS[selectedNode.agentType!].name } : n));
-                    setSelectedNode({ ...selectedNode, subAgent: val, name: val || SUB_AGENTS[selectedNode.agentType!].name });
+                    const ag = SUB_AGENTS[selectedNode.agentType!];
+                    const idx = ag ? ag.subs.indexOf(val) : -1;
+                    const enName = ag && idx >= 0 ? ag.subsEn[idx] : (val || ag.nameEn);
+                    const cnName = val || ag.name;
+                    setCustomNodes(prev => prev.map(n => n.id === selectedNode.id ? { ...n, subAgent: val, name: cnName, nameEn: enName } : n));
+                    setSelectedNode({ ...selectedNode, subAgent: val, name: cnName, nameEn: enName });
                   }} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm text-text-primary">
                     <option value="">{t('Select sub-agent...', '选择子Agent...')}</option>
                     {SUB_AGENTS[selectedNode.agentType].subs.map((s, i) => <option key={s} value={s}>{t(SUB_AGENTS[selectedNode.agentType!].subsEn[i], s)}</option>)}

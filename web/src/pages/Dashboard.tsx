@@ -8,7 +8,7 @@ import {
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { useText } from '../hooks/useText';
 import { useScenario } from '../context/ScenarioContext';
-import { kpiMetrics as defaultKpiBase, activeAlerts as defaultAlerts, recentTasks as defaultTasks, extraTasks as defaultExtraTasks, extraAlerts as defaultExtraAlerts, type TaskItem, type AlertItem } from '../data/dashboard';
+import { kpiMetrics as defaultKpiBase, activeAlerts as defaultAlerts, recentTasks as defaultTasks, extraTasks as defaultExtraTasks, extraAlerts as defaultExtraAlerts, AGENT_NAME_EN, type TaskItem, type AlertItem } from '../data/dashboard';
 import { domainAgents as defaultAgents, type SubAgent } from '../data/agents';
 import StatusBadge from '../components/StatusBadge';
 
@@ -16,8 +16,10 @@ import StatusBadge from '../components/StatusBadge';
 const trendIcon = { up: TrendingUp, down: TrendingDown, stable: Minus };
 const TIMESTAMP_MAP: Record<string, string> = {
   '刚刚': 'Just now', '2分钟前': '2 min ago', '5分钟前': '5 min ago',
-  '15分钟前': '15 min ago', '20分钟前': '20 min ago', '35分钟前': '35 min ago',
+  '8分钟前': '8 min ago', '15分钟前': '15 min ago', '20分钟前': '20 min ago',
+  '25分钟前': '25 min ago', '30分钟前': '30 min ago', '35分钟前': '35 min ago',
   '1小时前': '1 hr ago', '1.5小时前': '1.5 hr ago', '2小时前': '2 hr ago',
+  '3小时前': '3 hr ago', '4小时前': '4 hr ago', '6小时前': '6 hr ago',
 };
 const severityColor: Record<string, string> = {
   critical: 'border-status-red text-status-red bg-status-red/10',
@@ -161,6 +163,8 @@ export default function Dashboard() {
 
   /* Timestamp translator */
   const ts = (v: string) => t(TIMESTAMP_MAP[v] || v, v);
+  /* Agent name translator (Chinese → English) */
+  const an = (zh: string) => t(AGENT_NAME_EN[zh] || zh, zh);
 
   return (
     <div className="p-3 md:p-5 space-y-5 overflow-auto h-full">
@@ -325,7 +329,7 @@ export default function Dashboard() {
                 <span className="text-xs font-medium text-text-primary truncate">{t(sys.nameEn, sys.name)}</span>
                 <div className="w-1.5 h-1.5 rounded-full bg-status-green ml-auto shrink-0" />
               </div>
-              <p className="text-[10px] text-text-muted mb-2">{t(sys.nameEn, sys.name) === sys.nameEn ? sys.name : sys.nameEn}</p>
+              <p className="text-[10px] text-text-muted font-mono mb-2">{sys.api}</p>
               <div className="space-y-1 text-[10px]">
                 <div className="flex justify-between"><span className="text-text-muted">{t('Protocol', '协议')}</span><span className="text-text-secondary font-mono">{sys.api}</span></div>
                 <div className="flex justify-between"><span className="text-text-muted">{t('Latency', '延迟')}</span><span className="text-status-green">{sys.latency}ms</span></div>
@@ -358,7 +362,7 @@ export default function Dashboard() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-text-primary truncate">{t(task.title, task.titleZh)}</p>
                     <div className="flex items-center gap-2 text-xs text-text-muted">
-                      <span>{task.agent}</span>
+                      <span>{an(task.agent)}</span>
                       {task.collaborators && task.collaborators.length > 0 && (
                         <span className="flex items-center gap-0.5 text-accent-cyan/70">
                           <Users className="w-3 h-3" />+{task.collaborators.length}
@@ -396,7 +400,7 @@ export default function Dashboard() {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-text-primary truncate">{t(alert.title, alert.titleZh)}</p>
-                    <p className="text-xs text-text-muted">{alert.source}</p>
+                    <p className="text-xs text-text-muted">{an(alert.source)}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-xs text-text-muted">{ts(alert.timestamp)}</p>
@@ -533,7 +537,7 @@ export default function Dashboard() {
                   <Zap className="w-4 h-4 text-accent-cyan" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-accent-cyan">{taskModal.agent}</div>
+                  <div className="text-sm font-medium text-accent-cyan">{an(taskModal.agent)}</div>
                   <div className="text-[10px] text-text-muted">{t('Primary executor', '主要执行者')}</div>
                 </div>
                 <span className="text-xs bg-accent-cyan/10 text-accent-cyan px-2 py-0.5 rounded-full">{t('Lead', '主导')}</span>
@@ -557,7 +561,7 @@ export default function Dashboard() {
                           <Users className="w-3 h-3 text-purple-400" />
                         </div>
                         <div className="flex-1">
-                          <div className="text-xs font-medium text-text-primary">{collab}</div>
+                          <div className="text-xs font-medium text-text-primary">{an(collab)}</div>
                         </div>
                         <span className="text-[10px] bg-purple-500/10 text-purple-400 px-1.5 py-0.5 rounded">{t('Assist', '协同')}</span>
                       </div>
@@ -592,7 +596,7 @@ export default function Dashboard() {
             </div>
             <div>
               <div className="text-xs text-text-muted mb-1">{t('Source', '来源')}</div>
-              <div className="text-sm text-text-secondary">{alertModal.source}</div>
+              <div className="text-sm text-text-secondary">{an(alertModal.source)}</div>
             </div>
             <div>
               <div className="text-xs text-text-muted mb-1">{t('Detail', '详情')}</div>

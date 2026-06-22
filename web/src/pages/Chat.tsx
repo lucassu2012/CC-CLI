@@ -159,7 +159,7 @@ export default function Chat() {
             <button key={c.id} onClick={() => setActiveConv(i)}
               className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer ${i === activeConv ? 'bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20' : 'text-text-secondary hover:bg-bg-primary border border-transparent'}`}>
               <div className="font-medium truncate">{t(c.title, c.titleZh)}</div>
-              <div className="text-xs text-text-muted mt-0.5">{c.domain}</div>
+              <div className="text-xs text-text-muted mt-0.5">{t(c.domain, c.domainZh ?? c.domain)}</div>
             </button>
           ))}
         </div>

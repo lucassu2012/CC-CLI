@@ -16,6 +16,12 @@ const statusColors: Record<string, string> = {
   deprecated: 'bg-bg-tertiary text-text-muted border-border',
 };
 
+const STATUS_LABELS: Record<string, { en: string; zh: string }> = {
+  active: { en: 'Active', zh: '已激活' },
+  draft: { en: 'Draft', zh: '草稿' },
+  deprecated: { en: 'Deprecated', zh: '已弃用' },
+};
+
 
 const SKILL_DOMAINS = [
   { key: 'all' as const, label: 'All', labelZh: '全部', color: 'text-accent-cyan' },
@@ -40,7 +46,7 @@ function SkillCard({ skill, selected, onClick }: { skill: Skill; selected: boole
       <div className="flex items-center gap-2 mb-1">
         <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: domainColor }} />
         <h4 className="text-xs font-medium text-text-primary truncate">{t(skill.name, skill.nameZh)}</h4>
-        <span className={`text-[9px] px-1 py-0 rounded border ml-auto shrink-0 ${statusColors[skill.status]}`}>{skill.status}</span>
+        <span className={`text-[9px] px-1 py-0 rounded border ml-auto shrink-0 ${statusColors[skill.status]}`}>{t(STATUS_LABELS[skill.status]?.en ?? skill.status, STATUS_LABELS[skill.status]?.zh ?? skill.status)}</span>
       </div>
       <p className="text-[10px] text-text-muted line-clamp-1 mb-1.5">{t(skill.description, skill.descriptionZh)}</p>
       <div className="flex items-center gap-2 text-[9px] text-text-muted">
@@ -257,7 +263,7 @@ function DetailPanel({ entry, skills, onClose }: { entry: KnowledgeEntry; skills
                 <Zap className="w-3 h-3 text-accent-cyan" />
                 <span className="text-accent-cyan font-mono">{s.id}</span>
                 <span className="text-text-primary">{t(s.name, s.nameZh)}</span>
-                <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded border ${statusColors[s.status]}`}>{s.status}</span>
+                <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded border ${statusColors[s.status]}`}>{t(STATUS_LABELS[s.status]?.en ?? s.status, STATUS_LABELS[s.status]?.zh ?? s.status)}</span>
               </div>
             ))}</div>
           </div>
@@ -558,7 +564,7 @@ export default function Knowledge() {
                       <Zap className="w-2.5 h-2.5" />{skillCount} {t('Skill', 'Skill')}
                     </span>
                   )}
-                  <span className="text-[10px] text-text-muted ml-auto">{entry.domain}</span>
+                  <span className="text-[10px] text-text-muted ml-auto">{t(SKILL_DOMAINS.find(d => d.key === entry.domain)?.label ?? entry.domain, SKILL_DOMAINS.find(d => d.key === entry.domain)?.labelZh ?? entry.domain)}</span>
                 </div>
                 <h3 className="text-sm font-medium text-text-primary">{t(entry.title, entry.titleZh)}</h3>
                 <div className="flex items-center gap-3 mt-2 text-xs text-text-muted">

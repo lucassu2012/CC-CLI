@@ -406,9 +406,9 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
             <h4 className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-2">{t('VIP Experience', 'VIP用户体验')}</h4>
             <div className="space-y-1.5">
               {[
-                { name: 'VIP-张总', rsrp: scenario > 0 ? -72 : -88, sinr: scenario > 0 ? 18 : 8, rate: scenario > 0 ? '256Mbps' : '67Mbps' },
-                { name: 'VIP-李总', rsrp: scenario > 0 ? -68 : -82, sinr: scenario > 0 ? 22 : 12, rate: scenario > 0 ? '312Mbps' : '145Mbps' },
-                { name: 'VIP-王总', rsrp: scenario > 0 ? -75 : -95, sinr: scenario > 0 ? 15 : 5, rate: scenario > 0 ? '198Mbps' : '32Mbps' },
+                { name: t('VIP-Zhang', 'VIP-张总'), rsrp: scenario > 0 ? -72 : -88, sinr: scenario > 0 ? 18 : 8, rate: scenario > 0 ? '256Mbps' : '67Mbps' },
+                { name: t('VIP-Li', 'VIP-李总'), rsrp: scenario > 0 ? -68 : -82, sinr: scenario > 0 ? 22 : 12, rate: scenario > 0 ? '312Mbps' : '145Mbps' },
+                { name: t('VIP-Wang', 'VIP-王总'), rsrp: scenario > 0 ? -75 : -95, sinr: scenario > 0 ? 15 : 5, rate: scenario > 0 ? '198Mbps' : '32Mbps' },
               ].map((v, i) => (
                 <div key={i} className="bg-bg-primary rounded-lg p-2">
                   <div className="flex items-center justify-between mb-1">
@@ -469,10 +469,10 @@ function UserTwin({ t }: { t: (en: string, zh: string) => string }) {
 
   // Lead identification users
   const leadUsers = [
-    { id: 1, name: t('Chen Siyuan', '陈思远'), phone: '138****7712', current: t('Ice Cream 99', '冰激凌99'), predicted: t('Enjoy 199', '畅享199'), confidence: 94, trigger: t('3-month data overflow, video consumption +200%', '流量连续3月溢出, 视频消费增长200%'), value: '+¥100/月' },
-    { id: 2, name: t('Huang Xiaoming', '黄小明'), phone: '136****3345', current: t('Basic Plan', '基础套餐'), predicted: t('5G Premium 399', '5G尊享399'), confidence: 88, trigger: t('Purchased 5G phone, frequent HD video usage', '已购5G手机, 频繁使用高清视频'), value: '+¥340/月' },
-    { id: 3, name: t('Wu Lihua', '吴丽华'), phone: '139****9901', current: t('Ice Cream 129', '冰激凌129'), predicted: t('Family Bundle', '家庭融合版'), confidence: 82, trigger: t('3 family SIMs scattered, broadband expiring', '家庭成员3张卡分散消费, 宽带即将到期'), value: '+¥80/月' },
-    { id: 4, name: t('Zhou Jie', '周杰'), phone: '135****6678', current: t('Enjoy 59', '畅享59'), predicted: t('Ice Cream 129', '冰激凌129'), confidence: 76, trigger: t('Rising data trend, night data pack maxed', '数据用量上升趋势, 夜间流量包已满'), value: '+¥70/月' },
+    { id: 1, name: t('Chen Siyuan', '陈思远'), phone: '138****7712', current: t('Ice Cream 99', '冰激凌99'), predicted: t('Enjoy 199', '畅享199'), confidence: 94, trigger: t('3-month data overflow, video consumption +200%', '流量连续3月溢出, 视频消费增长200%'), value: t('+¥100/mo', '+¥100/月') },
+    { id: 2, name: t('Huang Xiaoming', '黄小明'), phone: '136****3345', current: t('Basic Plan', '基础套餐'), predicted: t('5G Premium 399', '5G尊享399'), confidence: 88, trigger: t('Purchased 5G phone, frequent HD video usage', '已购5G手机, 频繁使用高清视频'), value: t('+¥340/mo', '+¥340/月') },
+    { id: 3, name: t('Wu Lihua', '吴丽华'), phone: '139****9901', current: t('Ice Cream 129', '冰激凌129'), predicted: t('Family Bundle', '家庭融合版'), confidence: 82, trigger: t('3 family SIMs scattered, broadband expiring', '家庭成员3张卡分散消费, 宽带即将到期'), value: t('+¥80/mo', '+¥80/月') },
+    { id: 4, name: t('Zhou Jie', '周杰'), phone: '135****6678', current: t('Enjoy 59', '畅享59'), predicted: t('Ice Cream 129', '冰激凌129'), confidence: 76, trigger: t('Rising data trend, night data pack maxed', '数据用量上升趋势, 夜间流量包已满'), value: t('+¥70/mo', '+¥70/月') },
   ];
 
   // LUM prediction animation
@@ -563,7 +563,7 @@ function UserTwin({ t }: { t: (en: string, zh: string) => string }) {
               { l: t('High Risk','高风险'), v: '5', c: 'text-status-red', bg: 'bg-status-red/10 border-status-red/30' },
               { l: t('Avg Risk Score','平均风险分'), v: '78.2', c: 'text-status-yellow', bg: 'bg-status-yellow/10 border-status-yellow/30' },
               { l: t('Intervened','已干预'), v: `${intervened.size}`, c: 'text-status-green', bg: 'bg-status-green/10 border-status-green/30' },
-              { l: t('Predicted ARPU Save','预计挽回ARPU'), v: '¥616/月', c: 'text-accent-cyan', bg: 'bg-accent-cyan/10 border-accent-cyan/30' },
+              { l: t('Predicted ARPU Save','预计挽回ARPU'), v: t('¥616/mo','¥616/月'), c: 'text-accent-cyan', bg: 'bg-accent-cyan/10 border-accent-cyan/30' },
             ].map((s, i) => (
               <div key={i} className={`rounded-lg border px-3 py-2 ${s.bg}`}>
                 <p className="text-[10px] text-text-muted">{s.l}</p>
@@ -624,7 +624,7 @@ function UserTwin({ t }: { t: (en: string, zh: string) => string }) {
             {[
               { l: t('Leads Found','识别潜客'), v: '4', c: 'text-status-green', bg: 'bg-status-green/10 border-status-green/30' },
               { l: t('Avg Confidence','平均置信度'), v: '85%', c: 'text-accent-cyan', bg: 'bg-accent-cyan/10 border-accent-cyan/30' },
-              { l: t('Revenue Potential','收入潜力'), v: '+¥590/月', c: 'text-status-green', bg: 'bg-status-green/10 border-status-green/30' },
+              { l: t('Revenue Potential','收入潜力'), v: t('+¥590/mo','+¥590/月'), c: 'text-status-green', bg: 'bg-status-green/10 border-status-green/30' },
               { l: t('Conversion Rate','预计转化率'), v: '34.2%', c: 'text-text-primary', bg: 'bg-bg-card border-border' },
             ].map((s, i) => (
               <div key={i} className={`rounded-lg border px-3 py-2 ${s.bg}`}>
@@ -676,15 +676,15 @@ function UserTwin({ t }: { t: (en: string, zh: string) => string }) {
 
 
 /* ─── Simulation Log Entry ─── */
-interface LogEntry { time: string; level: 'info' | 'warn' | 'error'; msg: string; }
+interface LogEntry { time: string; level: 'info' | 'warn' | 'error'; msg: string; msgEn: string; }
 const INITIAL_LOGS: LogEntry[] = [
-  { time: '01:04:32', level: 'info', msg: '[Twin] 数字孪生引擎初始化完成' },
-  { time: '01:04:33', level: 'info', msg: '[Sync] 同步网络拓扑数据: 15节点, 18链路' },
-  { time: '01:04:35', level: 'warn', msg: '[Alert] BTS-GD-005 PRB利用率 92% 超过阈值' },
-  { time: '01:04:36', level: 'info', msg: '[Sim] 启动容量预测仿真 (正常增长模式)' },
-  { time: '01:04:38', level: 'error', msg: '[Fault] Link GZ-SZ-03 BER告警: 1.2E-6' },
-  { time: '01:04:40', level: 'info', msg: '[TAOR] Think: 分析BER上升根因 → Act: 查询历史数据' },
-  { time: '01:04:42', level: 'info', msg: '[Recovery] 自动切换至备份路径, 业务无损' },
+  { time: '01:04:32', level: 'info', msg: '[Twin] 数字孪生引擎初始化完成', msgEn: '[Twin] Digital twin engine initialized' },
+  { time: '01:04:33', level: 'info', msg: '[Sync] 同步网络拓扑数据: 15节点, 18链路', msgEn: '[Sync] Synced network topology: 15 nodes, 18 links' },
+  { time: '01:04:35', level: 'warn', msg: '[Alert] BTS-GD-005 PRB利用率 92% 超过阈值', msgEn: '[Alert] BTS-GD-005 PRB utilization 92% exceeds threshold' },
+  { time: '01:04:36', level: 'info', msg: '[Sim] 启动容量预测仿真 (正常增长模式)', msgEn: '[Sim] Starting capacity prediction simulation (normal growth)' },
+  { time: '01:04:38', level: 'error', msg: '[Fault] Link GZ-SZ-03 BER告警: 1.2E-6', msgEn: '[Fault] Link GZ-SZ-03 BER alarm: 1.2E-6' },
+  { time: '01:04:40', level: 'info', msg: '[TAOR] Think: 分析BER上升根因 → Act: 查询历史数据', msgEn: '[TAOR] Think: Analyze BER root cause → Act: Query history' },
+  { time: '01:04:42', level: 'info', msg: '[Recovery] 自动切换至备份路径, 业务无损', msgEn: '[Recovery] Auto-switched to backup path, service unaffected' },
 ];
 
 /* ─── Main Component ─── */
@@ -725,16 +725,18 @@ export default function Topology() {
   // Live log generation
   useEffect(() => {
     if (!simRunning) return;
-    const msgs = [
-      '[Telemetry] 更新15节点实时遥测数据', '[Sim] 体验评分计算完成: 平均87.3',
-      '[Twin] 拓扑状态同步: 13/15节点正常', '[TAOR] Observe: KPI达标率 96.7%',
-      '[Predict] BTS-GD-007电池寿命预测: 剩余89天',
+    const msgs: { msg: string; msgEn: string }[] = [
+      { msg: '[Telemetry] 更新15节点实时遥测数据', msgEn: '[Telemetry] Updated real-time telemetry for 15 nodes' },
+      { msg: '[Sim] 体验评分计算完成: 平均87.3', msgEn: '[Sim] Experience score computed: avg 87.3' },
+      { msg: '[Twin] 拓扑状态同步: 13/15节点正常', msgEn: '[Twin] Topology sync: 13/15 nodes normal' },
+      { msg: '[TAOR] Observe: KPI达标率 96.7%', msgEn: '[TAOR] Observe: KPI compliance 96.7%' },
+      { msg: '[Predict] BTS-GD-007电池寿命预测: 剩余89天', msgEn: '[Predict] BTS-GD-007 battery life: 89 days remaining' },
     ];
     const timer = setInterval(() => {
       const now = new Date();
       const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-      const msg = msgs[Math.floor(Math.random() * msgs.length)];
-      setLogs(prev => [...prev.slice(-20), { time, level: Math.random() > 0.85 ? 'warn' : 'info', msg }]);
+      const entry = msgs[Math.floor(Math.random() * msgs.length)];
+      setLogs(prev => [...prev.slice(-20), { time, level: Math.random() > 0.85 ? 'warn' : 'info', msg: entry.msg, msgEn: entry.msgEn }]);
     }, 3000);
     return () => clearInterval(timer);
   }, [simRunning]);
@@ -1051,7 +1053,7 @@ export default function Topology() {
               {logs.map((log, i) => (
                 <div key={i} className={`flex gap-2 ${log.level === 'error' ? 'text-status-red' : log.level === 'warn' ? 'text-status-yellow' : 'text-text-muted'}`}>
                   <span className="text-text-muted/60 shrink-0">{log.time}</span>
-                  <span>{log.msg}</span>
+                  <span>{t(log.msgEn, log.msg)}</span>
                 </div>
               ))}
             </div>
