@@ -166,14 +166,14 @@ function rfLerp(a: number, b: number, t: number) {
 function rfHex(c: [number, number, number]) {
   return `#${c.map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('')}`;
 }
-// Continuous RSRP → experience-quality color (green=good → yellow → red=poor)
+// Continuous RSRP → experience-quality color (cyan/teal=good → yellow → pink=poor)
 function rfColor(rsrp: number): string {
   const stops: { v: number; c: [number, number, number] }[] = [
-    { v: -72, c: [34, 197, 94] },   // strong  — green
-    { v: -85, c: [132, 204, 22] },  // good    — lime
-    { v: -93, c: [234, 179, 8] },   // mid     — yellow
-    { v: -101, c: [249, 115, 22] }, // weak    — orange
-    { v: -109, c: [239, 68, 68] },  // poor    — red
+    { v: -72, c: [39, 189, 174] },  // strong  — teal (#27BDAE)
+    { v: -85, c: [80, 200, 140] },  // good    — teal-green
+    { v: -93, c: [255, 200, 61] },  // mid     — amber (#FFC83D)
+    { v: -101, c: [242, 100, 80] }, // weak    — salmon
+    { v: -109, c: [231, 76, 92] },  // poor    — pink (#E74C5C)
   ];
   if (rsrp >= stops[0].v) return rfHex(stops[0].c);
   if (rsrp <= stops[stops.length - 1].v) return rfHex(stops[stops.length - 1].c);
@@ -232,7 +232,7 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
         best = Math.max(-115, Math.min(-65, best));
         // stronger cells render slightly more opaque for depth
         const norm = (best + 115) / 50; // 0 (poor) → 1 (strong)
-        const opacity = 0.28 + norm * 0.42;
+        const opacity = 0.78 + norm * 0.17;
         out.push({ key: `${col}-${r}`, x: col * RF_GRID, y: r * RF_GRID, color: rfColor(best), opacity });
       }
     }
@@ -286,21 +286,17 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
             </h3>
             <div className="flex items-center gap-2.5 text-[10px] text-text-muted">
               <span className="text-text-muted/70 mr-0.5">{RF_GRID}m {t('grid', '栅格')}</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-status-green" />{t('Good', '良好')} ≥-85</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-status-yellow" />{t('Mid', '一般')} -85~-98</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-status-red" />{t('Poor', '较差')} &lt;-98</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#27BDAE' }} />{t('Good', '良好')} ≥-85</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#FFC83D' }} />{t('Mid', '一般')} -85~-98</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#E74C5C' }} />{t('Poor', '较差')} &lt;-98</span>
             </div>
           </div>
-          <svg viewBox="0 0 740 480" className="w-full rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
+          <svg viewBox="0 0 740 480" className="w-full rounded-lg" style={{ background: 'var(--color-bg-secondary)' }}>
             <defs>
               {/* thin grid lines drawn over the heatmap cells */}
               <pattern id="rfgrid" width={RF_GRID} height={RF_GRID} patternUnits="userSpaceOnUse">
-                <path d={`M ${RF_GRID} 0 L 0 0 0 ${RF_GRID}`} strokeWidth="0.3" opacity="0.10" style={{ stroke: 'var(--color-text-muted)', fill: 'none' }} />
+                <path d={`M ${RF_GRID} 0 L 0 0 0 ${RF_GRID}`} strokeWidth="0.3" opacity="0.06" style={{ stroke: 'var(--color-text-muted)', fill: 'none' }} />
               </pattern>
-              {/* soft blend so adjacent cells melt into a smooth coverage gradient */}
-              <filter id="rfSoft" x="-5%" y="-5%" width="110%" height="110%">
-                <feGaussianBlur stdDeviation="3.5" />
-              </filter>
             </defs>
 
             {/* subtle road context lines */}
@@ -310,10 +306,10 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
               <path d="M -20 380 C 250 330, 500 420, 760 360" />
             </g>
 
-            {/* Grid coverage heatmap — discrete cells, soft-blended into a gradient */}
-            <g filter="url(#rfSoft)">
+            {/* Grid coverage heatmap — sharp rectangular cells */}
+            <g>
               {gridCells.map(g => (
-                <rect key={g.key} x={g.x} y={g.y} width={RF_GRID} height={RF_GRID} rx={1}
+                <rect key={g.key} x={g.x} y={g.y} width={RF_GRID} height={RF_GRID}
                   fill={g.color} opacity={g.opacity} className="transition-all duration-700" />
               ))}
             </g>

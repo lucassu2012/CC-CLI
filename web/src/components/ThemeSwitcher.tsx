@@ -17,8 +17,8 @@ interface ThemeMeta {
 const THEMES: ThemeMeta[] = [
   {
     id: 'dark',
-    name: 'IOE Dark',
-    nameZh: 'IOE 深色',
+    name: 'Dark',
+    nameZh: '深色',
     desc: 'Default slate & cyan',
     descZh: '默认石墨蓝主题',
     icon: Moon,
