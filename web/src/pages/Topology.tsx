@@ -34,15 +34,15 @@ const nodeSize: Record<string, number> = {
 };
 
 const statusFill: Record<string, string> = {
-  normal: '#22c55e',
-  warning: '#eab308',
-  fault: '#ef4444',
+  normal: 'var(--color-status-green)',
+  warning: 'var(--color-status-yellow)',
+  fault: 'var(--color-status-red)',
 };
 
 const linkStroke: Record<string, string> = {
-  normal: '#334155',
-  degraded: '#eab308',
-  down: '#ef4444',
+  normal: 'var(--color-border)',
+  degraded: 'var(--color-status-yellow)',
+  down: 'var(--color-status-red)',
 };
 
 function NodeDetail({ node, onClose }: { node: TopoNode; onClose: () => void }) {
@@ -158,7 +158,7 @@ function NodeDetail({ node, onClose }: { node: TopoNode; onClose: () => void }) 
 /* ─── RF grid heatmap helpers ─── */
 const RF_W = 740;
 const RF_H = 480;
-const RF_GRID = 20; // px pitch of each coverage grid cell
+const RF_GRID = 10; // px pitch of each coverage grid cell
 
 function rfLerp(a: number, b: number, t: number) {
   return Math.round(a + (b - a) * t);
@@ -286,20 +286,20 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
             </h3>
             <div className="flex items-center gap-2.5 text-[10px] text-text-muted">
               <span className="text-text-muted/70 mr-0.5">{RF_GRID}m {t('grid', '栅格')}</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#22c55e' }} />{t('Good', '良好')} ≥-85</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#eab308' }} />{t('Mid', '一般')} -85~-98</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#ef4444' }} />{t('Poor', '较差')} &lt;-98</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-status-green" />{t('Good', '良好')} ≥-85</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-status-yellow" />{t('Mid', '一般')} -85~-98</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-status-red" />{t('Poor', '较差')} &lt;-98</span>
             </div>
           </div>
-          <svg viewBox="0 0 740 480" className="w-full rounded-lg" style={{ background: '#0c1222' }}>
+          <svg viewBox="0 0 740 480" className="w-full rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
             <defs>
               {/* thin grid lines drawn over the heatmap cells */}
               <pattern id="rfgrid" width={RF_GRID} height={RF_GRID} patternUnits="userSpaceOnUse">
-                <path d={`M ${RF_GRID} 0 L 0 0 0 ${RF_GRID}`} fill="none" stroke="#ffffff" strokeWidth="0.4" opacity="0.05" />
+                <path d={`M ${RF_GRID} 0 L 0 0 0 ${RF_GRID}`} strokeWidth="0.3" opacity="0.10" style={{ stroke: 'var(--color-text-muted)', fill: 'none' }} />
               </pattern>
               {/* soft blend so adjacent cells melt into a smooth coverage gradient */}
               <filter id="rfSoft" x="-5%" y="-5%" width="110%" height="110%">
-                <feGaussianBlur stdDeviation="2.2" />
+                <feGaussianBlur stdDeviation="3.5" />
               </filter>
             </defs>
 
@@ -313,7 +313,7 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
             {/* Grid coverage heatmap — discrete cells, soft-blended into a gradient */}
             <g filter="url(#rfSoft)">
               {gridCells.map(g => (
-                <rect key={g.key} x={g.x + 1} y={g.y + 1} width={RF_GRID - 2} height={RF_GRID - 2} rx={3}
+                <rect key={g.key} x={g.x} y={g.y} width={RF_GRID} height={RF_GRID} rx={1}
                   fill={g.color} opacity={g.opacity} className="transition-all duration-700" />
               ))}
             </g>
@@ -326,10 +326,10 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
               { x: 550, y: 200 }, { x: 100, y: 100 }, { x: 650, y: 420 },
             ].map((p, i) => (
               <g key={`weak-${i}`}>
-                <circle cx={p.x} cy={p.y} r={18} fill="none" stroke="#ef4444" strokeWidth="1" strokeDasharray="4 2" opacity="0.6">
+                <circle cx={p.x} cy={p.y} r={18} fill="none" strokeWidth="1" strokeDasharray="4 2" opacity="0.6" style={{ stroke: 'var(--color-status-red)' }}>
                   <animate attributeName="r" values="14;22;14" dur="2s" repeatCount="indefinite" />
                 </circle>
-                <text x={p.x} y={p.y + 4} textAnchor="middle" fill="#ef4444" fontSize="8" fontWeight="bold">!</text>
+                <text x={p.x} y={p.y + 4} textAnchor="middle" fontSize="8" fontWeight="bold" style={{ fill: 'var(--color-status-red)' }}>!</text>
               </g>
             ))}
 
@@ -340,27 +340,27 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
               return (
                 <g key={`bts-${c.id}`} onClick={() => setSelectedCell(sel ? null : c.id)} className="cursor-pointer">
                   {/* Selection ring */}
-                  {sel && <circle cx={c.x} cy={c.y} r={20} fill="none" stroke="#06b6d4" strokeWidth="2" opacity="0.8">
+                  {sel && <circle cx={c.x} cy={c.y} r={20} fill="none" strokeWidth="2" opacity="0.8" style={{ stroke: 'var(--color-accent-cyan)' }}>
                     <animate attributeName="r" values="18;24;18" dur="1.5s" repeatCount="indefinite" />
                   </circle>}
                   {/* Tower icon */}
-                  <circle cx={c.x} cy={c.y} r={12} fill={isNew ? '#22c55e' : '#0f172a'} stroke={isNew ? '#22c55e' : '#06b6d4'} strokeWidth={2} />
+                  <circle cx={c.x} cy={c.y} r={12} strokeWidth={2} style={{ fill: isNew ? 'var(--color-status-green)' : 'var(--color-bg-primary)', stroke: isNew ? 'var(--color-status-green)' : 'var(--color-accent-cyan)' }} />
                   {/* Antenna symbol */}
-                  <line x1={c.x} y1={c.y + 6} x2={c.x} y2={c.y - 6} stroke={isNew ? '#fff' : '#06b6d4'} strokeWidth="2" />
-                  <line x1={c.x - 4} y1={c.y - 3} x2={c.x + 4} y2={c.y - 3} stroke={isNew ? '#fff' : '#06b6d4'} strokeWidth="1.5" />
-                  <line x1={c.x - 3} y1={c.y} x2={c.x + 3} y2={c.y} stroke={isNew ? '#fff' : '#06b6d4'} strokeWidth="1" />
+                  <line x1={c.x} y1={c.y + 6} x2={c.x} y2={c.y - 6} strokeWidth="2" style={{ stroke: isNew ? 'var(--color-text-primary)' : 'var(--color-accent-cyan)' }} />
+                  <line x1={c.x - 4} y1={c.y - 3} x2={c.x + 4} y2={c.y - 3} strokeWidth="1.5" style={{ stroke: isNew ? 'var(--color-text-primary)' : 'var(--color-accent-cyan)' }} />
+                  <line x1={c.x - 3} y1={c.y} x2={c.x + 3} y2={c.y} strokeWidth="1" style={{ stroke: isNew ? 'var(--color-text-primary)' : 'var(--color-accent-cyan)' }} />
                   {/* Label */}
-                  <text x={c.x} y={c.y + 22} textAnchor="middle" fill="#94a3b8" fontSize="9">{c.name}</text>
+                  <text x={c.x} y={c.y + 22} textAnchor="middle" fontSize="9" style={{ fill: 'var(--color-text-secondary)' }}>{c.name}</text>
                   {/* RSRP badge */}
-                  <rect x={c.x + 10} y={c.y - 18} width={36} height={13} rx={3} fill="rgba(0,0,0,0.8)" stroke={c.rsrp > -80 ? '#22c55e' : c.rsrp > -90 ? '#eab308' : '#ef4444'} strokeWidth="0.5" />
-                  <text x={c.x + 28} y={c.y - 9} textAnchor="middle" fill={c.rsrp > -80 ? '#86efac' : c.rsrp > -90 ? '#fde047' : '#fca5a5'} fontSize="7" fontFamily="monospace">{c.rsrp}dBm</text>
+                  <rect x={c.x + 10} y={c.y - 18} width={36} height={13} rx={3} fill="rgba(0,0,0,0.8)" strokeWidth="0.5" style={{ stroke: c.rsrp > -80 ? 'var(--color-status-green)' : c.rsrp > -90 ? 'var(--color-status-yellow)' : 'var(--color-status-red)' }} />
+                  <text x={c.x + 28} y={c.y - 9} textAnchor="middle" fontSize="7" fontFamily="monospace" style={{ fill: c.rsrp > -80 ? 'var(--color-status-green)' : c.rsrp > -90 ? 'var(--color-status-yellow)' : 'var(--color-status-red)' }}>{c.rsrp}dBm</text>
                 </g>
               );
             })}
 
             {/* Signal propagation wave animation */}
             {cells.slice(0, 3).map(c => (
-              <circle key={`wave-${c.id}`} cx={c.x} cy={c.y} r="10" fill="none" stroke="#06b6d4" strokeWidth="0.5" opacity="0">
+              <circle key={`wave-${c.id}`} cx={c.x} cy={c.y} r="10" fill="none" strokeWidth="0.5" opacity="0" style={{ stroke: 'var(--color-accent-cyan)' }}>
                 <animate attributeName="r" values="15;80" dur="3s" repeatCount="indefinite" begin={`${c.id * 0.8}s`} />
                 <animate attributeName="opacity" values="0.4;0" dur="3s" repeatCount="indefinite" begin={`${c.id * 0.8}s`} />
               </circle>
@@ -595,12 +595,11 @@ function UserTwin({ t }: { t: (en: string, zh: string) => string }) {
                   {/* Risk score gauge */}
                   <div className="shrink-0">
                     <svg width="56" height="56" viewBox="0 0 56 56">
-                      <circle cx="28" cy="28" r="24" fill="none" stroke="#1e293b" strokeWidth="4" />
+                      <circle cx="28" cy="28" r="24" fill="none" strokeWidth="4" style={{ stroke: 'var(--color-bg-secondary)' }} />
                       <circle cx="28" cy="28" r="24" fill="none"
-                        stroke={u.riskScore >= 85 ? '#ef4444' : u.riskScore >= 70 ? '#eab308' : '#22c55e'}
                         strokeWidth="4" strokeDasharray={`${u.riskScore * 1.5} ${150 - u.riskScore * 1.5}`}
-                        strokeLinecap="round" transform="rotate(-90 28 28)" />
-                      <text x="28" y="28" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="14" fontWeight="bold">{u.riskScore}</text>
+                        strokeLinecap="round" transform="rotate(-90 28 28)" style={{ stroke: u.riskScore >= 85 ? 'var(--color-status-red)' : u.riskScore >= 70 ? 'var(--color-status-yellow)' : 'var(--color-status-green)' }} />
+                      <text x="28" y="28" textAnchor="middle" dominantBaseline="middle" fontSize="14" fontWeight="bold" style={{ fill: 'var(--color-text-primary)' }}>{u.riskScore}</text>
                     </svg>
                   </div>
                   {/* User info */}
@@ -656,11 +655,11 @@ function UserTwin({ t }: { t: (en: string, zh: string) => string }) {
                 {/* Confidence gauge */}
                 <div className="shrink-0">
                   <svg width="56" height="56" viewBox="0 0 56 56">
-                    <circle cx="28" cy="28" r="24" fill="none" stroke="#1e293b" strokeWidth="4" />
-                    <circle cx="28" cy="28" r="24" fill="none" stroke="#22c55e" strokeWidth="4"
+                    <circle cx="28" cy="28" r="24" fill="none" strokeWidth="4" style={{ stroke: 'var(--color-bg-secondary)' }} />
+                    <circle cx="28" cy="28" r="24" fill="none" strokeWidth="4"
                       strokeDasharray={`${u.confidence * 1.5} ${150 - u.confidence * 1.5}`}
-                      strokeLinecap="round" transform="rotate(-90 28 28)" />
-                    <text x="28" y="28" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="14" fontWeight="bold">{u.confidence}</text>
+                      strokeLinecap="round" transform="rotate(-90 28 28)" style={{ stroke: 'var(--color-status-green)' }} />
+                    <text x="28" y="28" textAnchor="middle" dominantBaseline="middle" fontSize="14" fontWeight="bold" style={{ fill: 'var(--color-text-primary)' }}>{u.confidence}</text>
                   </svg>
                 </div>
                 {/* User info */}
@@ -882,7 +881,7 @@ export default function Topology() {
             {/* Grid background */}
             <defs>
               <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.5" />
+                <path d="M 40 0 L 0 0 0 40" strokeWidth="0.5" style={{ stroke: 'var(--color-bg-secondary)', fill: 'none' }} />
               </pattern>
               <filter id="nodeShadow"><feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3" /></filter>
             </defs>
@@ -900,13 +899,13 @@ export default function Topology() {
                     y1={src.y}
                     x2={tgt.x}
                     y2={tgt.y}
-                    stroke={linkStroke[link.status]}
                     strokeWidth={link.status === 'down' ? 1 : 2}
+                    style={{ stroke: linkStroke[link.status] }}
                     strokeDasharray={link.status === 'down' ? '6,4' : link.status === 'degraded' ? '4,2' : undefined}
                     opacity={link.status === 'down' ? 0.5 : 0.8}
                   />
                   {link.status === 'normal' && (
-                    <circle r="3" fill="#06b6d4" opacity="0.6">
+                    <circle r="3" opacity="0.6" style={{ fill: 'var(--color-accent-cyan)' }}>
                       <animateMotion
                         dur={`${3 + Math.random() * 2}s`}
                         repeatCount="indefinite"
@@ -935,8 +934,8 @@ export default function Topology() {
                       cx={node.x}
                       cy={node.y}
                       r={size + 8}
-                      fill={statusFill[node.status]}
                       opacity={0.15}
+                      style={{ fill: statusFill[node.status] }}
                     >
                       <animate attributeName="r" values={`${size + 4};${size + 12};${size + 4}`} dur="2s" repeatCount="indefinite" />
                       <animate attributeName="opacity" values="0.15;0.05;0.15" dur="2s" repeatCount="indefinite" />
@@ -950,9 +949,9 @@ export default function Topology() {
                       cy={node.y}
                       r={size + 6}
                       fill="none"
-                      stroke="#06b6d4"
                       strokeWidth="2"
                       opacity="0.8"
+                      style={{ stroke: 'var(--color-accent-cyan)' }}
                     />
                   )}
 
@@ -961,25 +960,24 @@ export default function Topology() {
                     cx={node.x}
                     cy={node.y}
                     r={size}
-                    fill="#1e293b"
-                    stroke={statusFill[node.status]}
                     strokeWidth={2}
+                    style={{ fill: 'var(--color-bg-secondary)', stroke: statusFill[node.status] }}
                   />
 
                   {/* Icon placeholder - simple shapes */}
                   {node.type === 'data-center' && (
-                    <rect x={node.x - 7} y={node.y - 7} width={14} height={14} rx={2} fill={statusFill[node.status]} opacity={0.6} />
+                    <rect x={node.x - 7} y={node.y - 7} width={14} height={14} rx={2} opacity={0.6} style={{ fill: statusFill[node.status] }} />
                   )}
                   {node.type === 'core' && (
-                    <polygon points={`${node.x},${node.y - 7} ${node.x + 7},${node.y + 4} ${node.x - 7},${node.y + 4}`} fill={statusFill[node.status]} opacity={0.6} />
+                    <polygon points={`${node.x},${node.y - 7} ${node.x + 7},${node.y + 4} ${node.x - 7},${node.y + 4}`} opacity={0.6} style={{ fill: statusFill[node.status] }} />
                   )}
                   {node.type === 'aggregation' && (
-                    <circle cx={node.x} cy={node.y} r={6} fill={statusFill[node.status]} opacity={0.6} />
+                    <circle cx={node.x} cy={node.y} r={6} opacity={0.6} style={{ fill: statusFill[node.status] }} />
                   )}
                   {node.type === 'bts' && (
                     <>
-                      <line x1={node.x} y1={node.y + 5} x2={node.x} y2={node.y - 5} stroke={statusFill[node.status]} strokeWidth={2} opacity={0.6} />
-                      <line x1={node.x - 4} y1={node.y - 2} x2={node.x + 4} y2={node.y - 2} stroke={statusFill[node.status]} strokeWidth={2} opacity={0.6} />
+                      <line x1={node.x} y1={node.y + 5} x2={node.x} y2={node.y - 5} strokeWidth={2} opacity={0.6} style={{ stroke: statusFill[node.status] }} />
+                      <line x1={node.x - 4} y1={node.y - 2} x2={node.x + 4} y2={node.y - 2} strokeWidth={2} opacity={0.6} style={{ stroke: statusFill[node.status] }} />
                     </>
                   )}
 
@@ -988,9 +986,9 @@ export default function Topology() {
                     x={node.x}
                     y={node.y + size + 14}
                     textAnchor="middle"
-                    fill="#94a3b8"
                     fontSize="10"
                     fontFamily="Inter, sans-serif"
+                    style={{ fill: 'var(--color-text-secondary)' }}
                   >
                     {node.name}
                   </text>
@@ -998,8 +996,8 @@ export default function Topology() {
                   {showOverlay && (
                     <g>
                       <rect x={node.x + size - 2} y={node.y - size - 4} width={38} height={14} rx={3}
-                        fill="rgba(0,0,0,0.7)" stroke={node.details.load > 80 ? '#ef4444' : '#334155'} strokeWidth={0.5} />
-                      <text x={node.x + size + 17} y={node.y - size + 6} textAnchor="middle" fill={node.details.load > 80 ? '#fca5a5' : '#94a3b8'} fontSize="8" fontFamily="monospace">
+                        fill="rgba(0,0,0,0.7)" strokeWidth={0.5} style={{ stroke: node.details.load > 80 ? 'var(--color-status-red)' : 'var(--color-border)' }} />
+                      <text x={node.x + size + 17} y={node.y - size + 6} textAnchor="middle" fontSize="8" fontFamily="monospace" style={{ fill: node.details.load > 80 ? 'var(--color-status-red)' : 'var(--color-text-secondary)' }}>
                         {node.details.load}%
                       </text>
                     </g>

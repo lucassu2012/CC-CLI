@@ -211,7 +211,7 @@ export default function Dashboard() {
                           <stop offset="100%" stopColor={chartColor} stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 11, color: '#f1f5f9' }} labelFormatter={() => ''} formatter={v => [String(v), t(kpi.name, kpi.nameZh)]} />
+                      <Tooltip contentStyle={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 11, color: 'var(--color-text-primary)' }} labelFormatter={() => ''} formatter={v => [String(v), t(kpi.name, kpi.nameZh)]} />
                       <Area type="monotone" dataKey="v" stroke={chartColor} strokeWidth={1.5} fill={`url(#grad-${kpi.id})`} isAnimationActive={false} />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -1102,7 +1102,7 @@ function SystemArchModal({ systemId, onClose, t }: { systemId: string | null; on
             </h4>
             {/* Live terminal output */}
             {toolOutput && (
-              <div className="mb-3 bg-[#0d1117] rounded-lg border border-border p-3 font-mono text-[10px]">
+              <div className="mb-3 bg-bg-primary rounded-lg border border-border p-3 font-mono text-[10px]">
                 <div className="flex items-center gap-1.5 mb-1.5 text-text-muted">
                   <Play className="w-3 h-3 text-status-green" />
                   <span>{t('Live MCP Call', '实时MCP调用')}</span>

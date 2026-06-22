@@ -708,17 +708,17 @@ export default function Workflows() {
             onClick={() => { if (connectingFrom) setConnectingFrom(null); setAgentPicker(null); }}>
             <defs>
               <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                <polygon points="0 0, 8 3, 0 6" fill="#475569" />
+                <polygon points="0 0, 8 3, 0 6" style={{ fill: 'var(--color-border)' }} />
               </marker>
               <marker id="arrow-active" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                <polygon points="0 0, 8 3, 0 6" fill="#22c55e" />
+                <polygon points="0 0, 8 3, 0 6" style={{ fill: 'var(--color-status-green)' }} />
               </marker>
               <marker id="arrow-connector" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                <polygon points="0 0, 8 3, 0 6" fill="#06b6d4" />
+                <polygon points="0 0, 8 3, 0 6" style={{ fill: 'var(--color-accent-cyan)' }} />
               </marker>
               {/* Grid pattern */}
               <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
-                <circle cx="12" cy="12" r="0.8" fill="#1e293b" />
+                <circle cx="12" cy="12" r="0.8" style={{ fill: 'var(--color-bg-secondary)' }} />
               </pattern>
               {/* Glow filter */}
               <filter id="glow">
@@ -743,7 +743,7 @@ export default function Workflows() {
               const sx = fromNode.x + NODE_W; const sy = fromNode.y + NODE_H / 2;
               const dx = Math.abs(mousePos.x - sx) * 0.5;
               return <path d={`M ${sx} ${sy} C ${sx + dx} ${sy}, ${mousePos.x - dx} ${mousePos.y}, ${mousePos.x} ${mousePos.y}`}
-                fill="none" stroke="#06b6d4" strokeWidth={2} strokeDasharray="6 3" />;
+                fill="none" strokeWidth={2} strokeDasharray="6 3" style={{ stroke: 'var(--color-accent-cyan)' }} />;
             })()}
 
             {/* Edges */}
@@ -757,27 +757,27 @@ export default function Workflows() {
               const isActive = srcDone && tgtDone;
               const isAnimating = srcDone && !tgtDone && running;
               const isConnectorEdge = src.type === 'connector' || tgt.type === 'connector';
-              const connEdgeColor = isConnectorEdge ? '#06b6d4' : '#475569';
+              const connEdgeColor = isConnectorEdge ? 'var(--color-accent-cyan)' : 'var(--color-border)';
 
               return (
                 <g key={edge.id}>
-                  <path d={path} fill="none" stroke={isActive ? '#22c55e' : connEdgeColor} strokeWidth={isActive ? 2.5 : isConnectorEdge ? 2 : 1.5}
+                  <path d={path} fill="none" strokeWidth={isActive ? 2.5 : isConnectorEdge ? 2 : 1.5}
                     markerEnd={isActive ? 'url(#arrow-active)' : isConnectorEdge ? 'url(#arrow-connector)' : 'url(#arrow)'}
                     strokeDasharray={isAnimating ? '6 4' : isConnectorEdge ? '8 3' : 'none'}
                     className={isAnimating ? 'edge-active' : ''}
-                    style={{ transition: 'stroke 0.3s' }}
+                    style={{ stroke: isActive ? 'var(--color-status-green)' : connEdgeColor, transition: 'stroke 0.3s' }}
                   />
                   {edge.label && (
                     <text x={(src.x + NODE_W + tgt.x) / 2}
                           y={(src.y + NODE_H/2 + tgt.y + NODE_H/2) / 2 - 8}
-                          fill="#94a3b8" fontSize="9" textAnchor="middle">
+                          style={{ fill: 'var(--color-text-secondary)' }} fontSize="9" textAnchor="middle">
                       {t(edge.labelEn ?? edge.label, edge.label)}
                     </text>
                   )}
                   {isConnectorEdge && !edge.label && (
                     <text x={(src.x + NODE_W + tgt.x) / 2}
                           y={(src.y + NODE_H/2 + tgt.y + NODE_H/2) / 2 - 8}
-                          fill="#06b6d4" fontSize="8" textAnchor="middle" opacity={0.7}>
+                          style={{ fill: 'var(--color-accent-cyan)' }} fontSize="8" textAnchor="middle" opacity={0.7}>
                       API
                     </text>
                   )}
@@ -801,20 +801,24 @@ export default function Workflows() {
                   {/* Glow behind active node */}
                   {isCurrent && (
                     <rect x={node.x - 4} y={node.y - 4} width={NODE_W + 8} height={NODE_H + 8}
-                      rx={12} fill="none" stroke="#22c55e" strokeWidth={2}
-                      className="node-active-glow" filter="url(#glow)" />
+                      rx={12} fill="none" strokeWidth={2}
+                      className="node-active-glow" filter="url(#glow)"
+                      style={{ stroke: 'var(--color-status-green)' }} />
                   )}
                   {/* Selection outline */}
                   {isSelected && !isCurrent && (
                     <rect x={node.x - 3} y={node.y - 3} width={NODE_W + 6} height={NODE_H + 6}
-                      rx={11} fill="none" stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 2" />
+                      rx={11} fill="none" strokeWidth={1.5} strokeDasharray="4 2"
+                      style={{ stroke: 'var(--color-accent-cyan)' }} />
                   )}
                   {/* n8n-style node body */}
                   <rect x={node.x} y={node.y} width={NODE_W} height={NODE_H} rx={10}
-                    fill={isDone ? '#14532d' : '#111827'}
-                    stroke={isDone ? '#22c55e' : (connColor || agentColor || c.border)}
-                    strokeWidth={isCurrent ? 2.5 : 1.5}
-                    style={{ transition: 'all 0.3s' }}
+                    style={{
+                      fill: isDone ? 'var(--color-bg-primary)' : 'var(--color-bg-primary)',
+                      stroke: isDone ? 'var(--color-status-green)' : (connColor || agentColor || c.border),
+                      strokeWidth: isCurrent ? 2.5 : 1.5,
+                      transition: 'all 0.3s'
+                    }}
                   />
                   {/* n8n-style icon circle on left */}
                   <circle cx={node.x + 26} cy={node.y + NODE_H / 2} r={18}
@@ -822,30 +826,30 @@ export default function Workflows() {
                     stroke={isDone ? '#22c55e40' : (connColor ? `${connColor}40` : agentColor ? `${agentColor}40` : `${c.border}40`)}
                     strokeWidth={1} />
                   <text x={node.x + 26} y={node.y + NODE_H / 2 + 1}
-                    fill={isDone ? '#bbf7d0' : (connColor || agentColor || c.text)} fontSize="14" textAnchor="middle" dominantBaseline="middle">
+                    style={{ fill: isDone ? 'var(--color-status-green)' : (connColor || agentColor || c.text) }} fontSize="14" textAnchor="middle" dominantBaseline="middle">
                     {isDone ? '✓' : nodeIcon(node.type)}
                   </text>
                   {/* Name (right of icon) */}
                   <text x={node.x + 52} y={node.y + NODE_H / 2 - 6}
-                    fill={isDone ? '#bbf7d0' : '#e2e8f0'} fontSize="12" dominantBaseline="middle"
+                    style={{ fill: isDone ? 'var(--color-status-green)' : 'var(--color-text-primary)' }} fontSize="12" dominantBaseline="middle"
                     fontWeight={600}>
                     {t(node.nameEn ?? node.name, node.name)}
                   </text>
                   {/* Subtitle: agent type or node type */}
                   <text x={node.x + 52} y={node.y + NODE_H / 2 + 10}
-                    fill="#64748b" fontSize="9" dominantBaseline="middle">
+                    style={{ fill: 'var(--color-text-muted)' }} fontSize="9" dominantBaseline="middle">
                     {node.subAgent || (node.connectorType ? t(CONNECTORS[node.connectorType]?.nameEn, CONNECTORS[node.connectorType]?.name) : node.agentType ? t(SUB_AGENTS[node.agentType]?.nameEn, SUB_AGENTS[node.agentType]?.name) : node.type)}
                   </text>
                   {/* n8n-style left port (input) */}
                   <circle cx={node.x} cy={node.y + NODE_H / 2} r={5}
-                    fill="#1e293b" stroke={connectingFrom ? '#06b6d4' : '#475569'} strokeWidth={1.5}
+                    strokeWidth={1.5}
                     onClick={e => handlePortClick(e, node.id)}
-                    style={{ cursor: 'crosshair' }} />
+                    style={{ fill: 'var(--color-bg-secondary)', stroke: connectingFrom ? 'var(--color-accent-cyan)' : 'var(--color-border)', cursor: 'crosshair' }} />
                   {/* n8n-style right port (output) */}
                   <circle cx={node.x + NODE_W} cy={node.y + NODE_H / 2} r={5}
-                    fill="#1e293b" stroke={connectingFrom === node.id ? '#06b6d4' : '#475569'} strokeWidth={1.5}
+                    strokeWidth={1.5}
                     onClick={e => handlePortClick(e, node.id)}
-                    style={{ cursor: 'crosshair' }} />
+                    style={{ fill: 'var(--color-bg-secondary)', stroke: connectingFrom === node.id ? 'var(--color-accent-cyan)' : 'var(--color-border)', cursor: 'crosshair' }} />
                 </g>
               );
             })}
@@ -900,11 +904,11 @@ export default function Workflows() {
                 const src = nodes.find(n => n.id === e.source)!;
                 const tgt = nodes.find(n => n.id === e.target)!;
                 if (!src || !tgt) return null;
-                return <line key={e.id} x1={src.x+NODE_W} y1={src.y+NODE_H/2} x2={tgt.x} y2={tgt.y+NODE_H/2} stroke="#334155" strokeWidth="3" />;
+                return <line key={e.id} x1={src.x+NODE_W} y1={src.y+NODE_H/2} x2={tgt.x} y2={tgt.y+NODE_H/2} style={{ stroke: 'var(--color-border)' }} strokeWidth="3" />;
               })}
               {nodes.map(n => (
                 <rect key={n.id} x={n.x} y={n.y} width={NODE_W} height={NODE_H} rx={4}
-                  fill={activeNodeIds.has(n.id) ? '#22c55e' : COLORS[n.type].border} opacity={0.6} />
+                  style={{ fill: activeNodeIds.has(n.id) ? 'var(--color-status-green)' : COLORS[n.type].border }} opacity={0.6} />
               ))}
             </svg>
           </div>

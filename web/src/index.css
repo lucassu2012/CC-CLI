@@ -52,20 +52,20 @@ body {
 :root[data-theme="ioh"] {
   --color-bg-primary: #1A0F13;
   --color-bg-secondary: #23141A;
-  --color-bg-tertiary: #332029;
+  --color-bg-tertiary: #3A2530;
   --color-bg-card: #2A1A22;
-  --color-bg-hover: #3D2832;
+  --color-bg-hover: #4D3340;
   --color-accent-cyan: #F2A53A;
   --color-accent-blue: #FFC83D;
   --color-accent-purple: #FF3D60;
   --color-status-green: #27BDAE;
   --color-status-yellow: #FFC83D;
   --color-status-red: #E74C5C;
-  --color-status-orange: #E8830F;
+  --color-status-orange: #E89313;
   --color-text-primary: #FBF1EE;
   --color-text-secondary: #D4B6B0;
   --color-text-muted: #8A6770;
-  --color-border: #3A2530;
+  --color-border: #5A3848;
   --font-sans: 'Space Grotesk', 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
