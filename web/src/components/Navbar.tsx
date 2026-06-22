@@ -2,6 +2,7 @@ import { Activity, Bell, Globe, Menu, Wifi } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useText } from '../hooks/useText';
 import ScenarioSwitcher from './ScenarioSwitcher';
+import ThemeSwitcher from './ThemeSwitcher';
 
 export default function Navbar() {
   const toggleLanguage = useStore((s) => s.toggleLanguage);
@@ -36,6 +37,8 @@ export default function Navbar() {
           <Bell className="w-4.5 h-4.5 text-text-secondary hover:text-text-primary cursor-pointer transition-colors" />
           <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-status-red rounded-full text-[9px] text-white flex items-center justify-center font-medium">3</span>
         </div>
+
+        <ThemeSwitcher />
 
         <button
           onClick={toggleLanguage}

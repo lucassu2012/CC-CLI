@@ -23,21 +23,70 @@
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #334155 transparent;
+  scrollbar-color: var(--color-border) transparent;
 }
 
 body {
   margin: 0;
-  background: #0f172a;
-  color: #f1f5f9;
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
   min-height: 100vh;
   min-height: 100dvh;
+}
+
+/* ──────────────────────────────────────────────────────────
+   Theme overrides — switch by setting data-theme on <html>.
+   Default (no attribute / "dark") uses the @theme tokens above.
+   Each block overrides the Tailwind color tokens, which cascade
+   to every color utility (backgrounds, text, borders) automatically.
+   ────────────────────────────────────────────────────────── */
+
+/* IOH — Indosat Ooredoo Hutchison (dark maroon + orange→red brand) */
+:root[data-theme="ioh"] {
+  --color-bg-primary: #1A0F13;
+  --color-bg-secondary: #23141A;
+  --color-bg-tertiary: #332029;
+  --color-bg-card: #2A1A22;
+  --color-bg-hover: #3D2832;
+  --color-accent-cyan: #F2A53A;
+  --color-accent-blue: #FFC83D;
+  --color-accent-purple: #FF3D60;
+  --color-status-green: #27BDAE;
+  --color-status-yellow: #FFC83D;
+  --color-status-red: #E74C5C;
+  --color-status-orange: #E8830F;
+  --color-text-primary: #FBF1EE;
+  --color-text-secondary: #D4B6B0;
+  --color-text-muted: #8A6770;
+  --color-border: #3A2530;
+  --font-sans: 'Space Grotesk', 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+}
+
+/* Light — clean daytime theme */
+:root[data-theme="light"] {
+  --color-bg-primary: #f1f5f9;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #e2e8f0;
+  --color-bg-card: #ffffff;
+  --color-bg-hover: #eef2f7;
+  --color-accent-cyan: #0891b2;
+  --color-accent-blue: #2563eb;
+  --color-accent-purple: #7c3aed;
+  --color-status-green: #16a34a;
+  --color-status-yellow: #ca8a04;
+  --color-status-red: #dc2626;
+  --color-status-orange: #ea580c;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  --color-border: #e2e8f0;
 }
 
 @keyframes fadeIn {
@@ -81,7 +130,7 @@ body {
 .typing-cursor::after {
   content: '|';
   animation: blink 0.8s infinite;
-  color: #06b6d4;
+  color: var(--color-accent-cyan);
 }
 
 @keyframes flowPulse {

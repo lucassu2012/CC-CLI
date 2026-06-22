@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { useStore } from './store/useStore';
 import { ScenarioProvider } from './context/ScenarioContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -12,6 +14,16 @@ import Lab from './pages/Lab';
 import Permissions from './pages/Permissions';
 
 export default function App() {
+  const theme = useStore((s) => s.theme);
+
+  /* Apply the active theme by toggling data-theme on <html>.
+     "dark" is the default and needs no attribute (uses :root @theme tokens). */
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', theme);
+  }, [theme]);
+
   return (
     <ScenarioProvider>
       <div className="h-dvh flex flex-col bg-bg-primary">
