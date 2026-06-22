@@ -663,7 +663,7 @@ export default function Workflows() {
               <div key={type} draggable onDragStart={e => handlePaletteDragStart(e, type)}
                 className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-bg-primary transition-colors mb-1 cursor-grab active:cursor-grabbing">
                 <GripVertical className="w-3 h-3 text-text-muted/40" />
-                <div className="w-7 h-7 rounded-md flex items-center justify-center text-xs" style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}>
+                <div className="w-7 h-7 rounded-md flex items-center justify-center text-xs" style={{ backgroundColor: c.border + '22', border: `1px solid ${c.border}66`, color: c.border }}>
                   {nodeIcon(type)}
                 </div>
                 <span className="text-xs text-text-secondary capitalize">{type === 'trigger' ? t('Trigger', '触发器') : type === 'agent' ? t('Agent', '智能体') : type === 'connector' ? t('Connector', '连接器') : type === 'condition' ? t('Condition', '条件') : type === 'action' ? t('Action', '动作') : type === 'merge' ? t('Merge', '合并') : type === 'split' ? t('Split', '拆分') : t('Transform', '转换')}</span>
@@ -930,7 +930,7 @@ export default function Workflows() {
               <div>
                 <label className="text-xs text-text-muted block mb-1">{t('Type', '类型')}</label>
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded flex items-center justify-center text-xs" style={{ backgroundColor: COLORS[selectedNode.type].bg, border: `1px solid ${COLORS[selectedNode.type].border}` }}>
+                  <div className="w-5 h-5 rounded flex items-center justify-center text-xs" style={{ backgroundColor: COLORS[selectedNode.type].border + '22', border: `1px solid ${COLORS[selectedNode.type].border}66`, color: COLORS[selectedNode.type].border }}>
                     {nodeIcon(selectedNode.type)}
                   </div>
                   <span className="text-sm text-text-secondary capitalize">{selectedNode.type}</span>

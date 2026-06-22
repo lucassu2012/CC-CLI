@@ -337,7 +337,7 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
                   {/* Label */}
                   <text x={c.x} y={c.y + 22} textAnchor="middle" fontSize="9" style={{ fill: 'var(--color-text-secondary)' }}>{c.name}</text>
                   {/* RSRP badge */}
-                  <rect x={c.x + 10} y={c.y - 18} width={36} height={13} rx={3} fill="rgba(0,0,0,0.8)" strokeWidth="0.5" style={{ stroke: c.rsrp > -80 ? 'var(--color-status-green)' : c.rsrp > -90 ? 'var(--color-status-yellow)' : 'var(--color-status-red)' }} />
+                  <rect x={c.x + 10} y={c.y - 18} width={36} height={13} rx={3} strokeWidth="0.5" style={{ fill: 'var(--color-bg-card)', stroke: c.rsrp > -80 ? 'var(--color-status-green)' : c.rsrp > -90 ? 'var(--color-status-yellow)' : 'var(--color-status-red)' }} />
                   <text x={c.x + 28} y={c.y - 9} textAnchor="middle" fontSize="7" fontFamily="monospace" style={{ fill: c.rsrp > -80 ? 'var(--color-status-green)' : c.rsrp > -90 ? 'var(--color-status-yellow)' : 'var(--color-status-red)' }}>{c.rsrp}dBm</text>
                 </g>
               );
@@ -981,7 +981,7 @@ export default function Topology() {
                   {showOverlay && (
                     <g>
                       <rect x={node.x + size - 2} y={node.y - size - 4} width={38} height={14} rx={3}
-                        fill="rgba(0,0,0,0.7)" strokeWidth={0.5} style={{ stroke: node.details.load > 80 ? 'var(--color-status-red)' : 'var(--color-border)' }} />
+                        strokeWidth={0.5} style={{ fill: 'var(--color-bg-card)', stroke: node.details.load > 80 ? 'var(--color-status-red)' : 'var(--color-border)' }} />
                       <text x={node.x + size + 17} y={node.y - size + 6} textAnchor="middle" fontSize="8" fontFamily="monospace" style={{ fill: node.details.load > 80 ? 'var(--color-status-red)' : 'var(--color-text-secondary)' }}>
                         {node.details.load}%
                       </text>
