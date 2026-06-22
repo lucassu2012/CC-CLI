@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Radio, Server, Database, Wifi, X, Activity, Users, Zap, CheckCircle2, Play, Search, Filter, Layers, Eye, EyeOff, ZoomIn, ZoomOut, Maximize2, Terminal, ChevronDown, ChevronUp, ArrowRight, Network } from 'lucide-react';
 import { useText } from '../hooks/useText';
 import { topoNodes, topoLinks, type TopoNode } from '../data/topology';
@@ -155,6 +155,39 @@ function NodeDetail({ node, onClose }: { node: TopoNode; onClose: () => void }) 
   );
 }
 
+/* ─── RF grid heatmap helpers ─── */
+const RF_W = 740;
+const RF_H = 480;
+const RF_GRID = 20; // px pitch of each coverage grid cell
+
+function rfLerp(a: number, b: number, t: number) {
+  return Math.round(a + (b - a) * t);
+}
+function rfHex(c: [number, number, number]) {
+  return `#${c.map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('')}`;
+}
+// Continuous RSRP → experience-quality color (green=good → yellow → red=poor)
+function rfColor(rsrp: number): string {
+  const stops: { v: number; c: [number, number, number] }[] = [
+    { v: -72, c: [34, 197, 94] },   // strong  — green
+    { v: -85, c: [132, 204, 22] },  // good    — lime
+    { v: -93, c: [234, 179, 8] },   // mid     — yellow
+    { v: -101, c: [249, 115, 22] }, // weak    — orange
+    { v: -109, c: [239, 68, 68] },  // poor    — red
+  ];
+  if (rsrp >= stops[0].v) return rfHex(stops[0].c);
+  if (rsrp <= stops[stops.length - 1].v) return rfHex(stops[stops.length - 1].c);
+  for (let i = 0; i < stops.length - 1; i++) {
+    const a = stops[i];
+    const b = stops[i + 1];
+    if (rsrp <= a.v && rsrp >= b.v) {
+      const t = (a.v - rsrp) / (a.v - b.v);
+      return rfHex([rfLerp(a.c[0], b.c[0], t), rfLerp(a.c[1], b.c[1], t), rfLerp(a.c[2], b.c[2], t)]);
+    }
+  }
+  return rfHex(stops[stops.length - 1].c);
+}
+
 /* ─── Experience Twin: RF Coverage Simulation ─── */
 function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
   const [scenario, setScenario] = useState(0);
@@ -176,6 +209,36 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
   const avgRsrp = cells.reduce((s, c) => s + c.rsrp, 0) / cells.length;
   const coverage = scenario > 1 ? 96.8 : scenario > 0 ? 92.4 : 85.2;
   const weakSpots = scenario > 1 ? 1 : scenario > 0 ? 3 : 7;
+
+  /* Grid coverage heatmap — best-server RSRP per cell with a simple
+     distance-based propagation model, recomputed when the scenario changes. */
+  const gridCells = useMemo(() => {
+    const cols = Math.ceil(RF_W / RF_GRID);
+    const rows = Math.ceil(RF_H / RF_GRID);
+    const out: { key: string; x: number; y: number; color: string; opacity: number }[] = [];
+    for (let r = 0; r < rows; r++) {
+      for (let col = 0; col < cols; col++) {
+        const px = col * RF_GRID + RF_GRID / 2;
+        const py = r * RF_GRID + RF_GRID / 2;
+        let best = -120;
+        for (const c of cells) {
+          const dx = px - c.x;
+          const dy = py - c.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          // peak RSRP at tower, linear falloff out to ~1.4× radius
+          const signal = c.rsrp - 32 * (dist / (c.radius * 1.4));
+          if (signal > best) best = signal;
+        }
+        best = Math.max(-115, Math.min(-65, best));
+        // stronger cells render slightly more opaque for depth
+        const norm = (best + 115) / 50; // 0 (poor) → 1 (strong)
+        const opacity = 0.28 + norm * 0.42;
+        out.push({ key: `${col}-${r}`, x: col * RF_GRID, y: r * RF_GRID, color: rfColor(best), opacity });
+      }
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scenario]);
 
   // Optimization animation
   useEffect(() => {
@@ -221,51 +284,42 @@ function ExperienceTwin({ t }: { t: (en: string, zh: string) => string }) {
             <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5" />{t('RF Coverage Simulation', 'RF覆盖仿真')}
             </h3>
-            <div className="flex items-center gap-2 text-[10px] text-text-muted">
-              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm" style={{ background: 'linear-gradient(90deg, #ef4444, #f97316)' }} />&gt;-70dBm</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm" style={{ background: 'linear-gradient(90deg, #f97316, #eab308)' }} />-70~-85</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm" style={{ background: 'linear-gradient(90deg, #eab308, #22c55e)' }} />-85~-95</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm" style={{ background: 'linear-gradient(90deg, #22c55e, #3b82f6)' }} />-95~-105</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm bg-[#1e3a5f]" />&lt;-105</span>
+            <div className="flex items-center gap-2.5 text-[10px] text-text-muted">
+              <span className="text-text-muted/70 mr-0.5">{RF_GRID}m {t('grid', '栅格')}</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#22c55e' }} />{t('Good', '良好')} ≥-85</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#eab308' }} />{t('Mid', '一般')} -85~-98</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#ef4444' }} />{t('Poor', '较差')} &lt;-98</span>
             </div>
           </div>
           <svg viewBox="0 0 740 480" className="w-full rounded-lg" style={{ background: '#0c1222' }}>
             <defs>
-              {/* Grid */}
-              <pattern id="rfgrid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.3" />
+              {/* thin grid lines drawn over the heatmap cells */}
+              <pattern id="rfgrid" width={RF_GRID} height={RF_GRID} patternUnits="userSpaceOnUse">
+                <path d={`M ${RF_GRID} 0 L 0 0 0 ${RF_GRID}`} fill="none" stroke="#ffffff" strokeWidth="0.4" opacity="0.05" />
               </pattern>
-              {/* RF propagation gradients - warm to cool like CloudRF */}
-              {cells.map(c => (
-                <radialGradient key={`rfg-${c.id}`} id={`rfgrad-${c.id}`} cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
-                  <stop offset="25%" stopColor="#f97316" stopOpacity="0.35" />
-                  <stop offset="45%" stopColor="#eab308" stopOpacity="0.25" />
-                  <stop offset="65%" stopColor="#22c55e" stopOpacity="0.18" />
-                  <stop offset="85%" stopColor="#3b82f6" stopOpacity="0.1" />
-                  <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0" />
-                </radialGradient>
-              ))}
-              <filter id="rfBlur"><feGaussianBlur stdDeviation="8" /></filter>
+              {/* soft blend so adjacent cells melt into a smooth coverage gradient */}
+              <filter id="rfSoft" x="-5%" y="-5%" width="110%" height="110%">
+                <feGaussianBlur stdDeviation="2.2" />
+              </filter>
             </defs>
-            <rect width="740" height="480" fill="url(#rfgrid)" />
 
-            {/* Coverage zones - overlapping radial gradients like CloudRF heatmap */}
-            <g filter="url(#rfBlur)">
-              {cells.map(c => (
-                <circle key={`cov-${c.id}`} cx={c.x} cy={c.y} r={c.radius}
-                  fill={`url(#rfgrad-${c.id})`} className="transition-all duration-1000" />
+            {/* subtle road context lines */}
+            <g stroke="#dc9650" strokeWidth="2" opacity="0.12" fill="none">
+              <path d="M -20 120 C 200 180, 520 60, 760 200" />
+              <path d="M 120 -20 C 200 200, 380 320, 520 500" />
+              <path d="M -20 380 C 250 330, 500 420, 760 360" />
+            </g>
+
+            {/* Grid coverage heatmap — discrete cells, soft-blended into a gradient */}
+            <g filter="url(#rfSoft)">
+              {gridCells.map(g => (
+                <rect key={g.key} x={g.x + 1} y={g.y + 1} width={RF_GRID - 2} height={RF_GRID - 2} rx={3}
+                  fill={g.color} opacity={g.opacity} className="transition-all duration-700" />
               ))}
             </g>
 
-            {/* Coverage boundary contour lines */}
-            {cells.map(c => (
-              <g key={`contour-${c.id}`}>
-                <circle cx={c.x} cy={c.y} r={c.radius * 0.3} fill="none" stroke="#ef4444" strokeWidth="0.5" opacity="0.3" strokeDasharray="3 3" />
-                <circle cx={c.x} cy={c.y} r={c.radius * 0.6} fill="none" stroke="#eab308" strokeWidth="0.5" opacity="0.2" strokeDasharray="3 3" />
-                <circle cx={c.x} cy={c.y} r={c.radius * 0.9} fill="none" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" strokeDasharray="3 3" />
-              </g>
-            ))}
+            {/* grid lines on top to keep the lattice readable */}
+            <rect width="740" height="480" fill="url(#rfgrid)" />
 
             {/* Weak coverage indicators */}
             {scenario === 0 && [
