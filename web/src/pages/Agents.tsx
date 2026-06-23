@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, ChevronRight, Wrench, Save, Settings, Brain, BookOpen, GitBranch, Cpu, Layers, Check, ArrowLeft, Activity, Share2, AlertTriangle, Crown, Radio, ArrowRightLeft, Compass, Zap, Users, BarChart3, MessageSquare, Send, Database, Link2, Search, Target, TrendingUp, Bell, DollarSign, MapPin, Signal, Gauge, CheckCircle2, RefreshCw, CircleAlert, CircleCheck, Megaphone} from 'lucide-react';
 import { useText } from '../hooks/useText';
+import { useStore } from '../store/useStore';
 import { domainAgents as defaultAgents, defaultSupervisor, type DomainAgent, type SubAgent } from '../data/agents';
 import { defaultCollaborationEvents, defaultSharedContext, defaultConflictResolutions } from '../data/a2a-protocol';
 import { generatedSkills as defaultSkills } from '../data/knowledge';
@@ -601,11 +602,18 @@ function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory
   onClickConvHistory: () => void; onClickMemory: () => void;
   t: (en: string, zh: string) => string;
 }) {
+  // Resolve the theme accent so accent-colored stages match the active brand theme
+  const theme = useStore(s => s.theme);
+  const [accent, setAccent] = useState('#06b6d4');
+  useEffect(() => {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--color-accent-cyan').trim();
+    if (v) setAccent(v);
+  }, [theme]);
   const FLOWS = [
     { label: 'NLP', status: t('Intent parse', '意图解析'), color: '#8b5cf6' },
     { label: 'A2A-T', status: t('Route select', '路由选择'), color: '#8b5cf6' },
-    { label: 'MCP', status: t('Tool call', '工具调用'), color: '#06b6d4' },
-    { label: 'Response', status: t('Stream out', '流式输出'), color: '#06b6d4' },
+    { label: 'MCP', status: t('Tool call', '工具调用'), color: accent },
+    { label: 'Response', status: t('Stream out', '流式输出'), color: accent },
   ];
   return (
     <div className="p-4 flex flex-col h-full">
@@ -676,9 +684,9 @@ function DirectRoutingTopology({ agents, tick, onSelectAgent, onClickConvHistory
         </div>
 
         {/* Processing */}
-        <div className="shrink-0 rounded-xl border-2 p-3" style={{ borderColor: '#06b6d450', backgroundColor: '#06b6d406', width: 130 }}>
-          <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: '#06b6d420' }}>
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#06b6d418' }}>
+        <div className="shrink-0 rounded-xl border-2 p-3" style={{ borderColor: accent + '50', backgroundColor: accent + '06', width: 130 }}>
+          <div className="flex items-center gap-2 mb-2 pb-2 border-b" style={{ borderColor: accent + '20' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: accent + '18' }}>
               <Cpu className="w-3.5 h-3.5 text-accent-cyan" />
             </div>
             <span className="text-[11px] font-bold text-accent-cyan">{t('PROCESSING', '处理引擎')}</span>
@@ -740,7 +748,13 @@ function HierarchicalTopology({ agents, tick, onSelectAgent, onSelectSubAgent, o
   onClickMemory: () => void; onClickContext: () => void; onClickSupervisor: () => void;
   t: (en: string, zh: string) => string;
 }) {
-  const supColor = '#06b6d4';
+  // Resolve the theme accent so the supervisor box matches the active brand theme
+  const theme = useStore(s => s.theme);
+  const [supColor, setSupColor] = useState('#06b6d4');
+  useEffect(() => {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--color-accent-cyan').trim();
+    if (v) setSupColor(v);
+  }, [theme]);
   const SUP_ITEMS = [
     { en: 'Task Delegation', zh: '任务分配', icon: Send },
     { en: 'Context Routing', zh: '上下文路由', icon: Share2 },

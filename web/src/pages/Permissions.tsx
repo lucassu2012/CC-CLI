@@ -124,7 +124,7 @@ const AUDIT_LOG = [
 ];
 
 export default function Permissions() {
-  const { t } = useText();
+  const { t, isZh } = useText();
   const { scenario } = useScenario();
   const scenarioAudit = scenario?.auditLog ?? AUDIT_LOG;
   const scenarioKey = scenario?.meta.id ?? 'default';
@@ -349,28 +349,10 @@ export default function Permissions() {
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Name (EN)', '名称（英文）')}</label>
-                  <input className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none" value={editForm.nameEn} onChange={e => setEditForm({ ...editForm, nameEn: e.target.value })} />
-                </div>
-                <div>
-                  <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Name (ZH)', '名称（中文）')}</label>
-                  <input className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none" value={editForm.nameZh} onChange={e => setEditForm({ ...editForm, nameZh: e.target.value })} />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Description (EN)', '描述（英文）')}</label>
-                  <textarea rows={2} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none resize-none" value={editForm.descEn} onChange={e => setEditForm({ ...editForm, descEn: e.target.value })} />
-                </div>
-                <div>
-                  <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Description (ZH)', '描述（中文）')}</label>
-                  <textarea rows={2} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none resize-none" value={editForm.descZh} onChange={e => setEditForm({ ...editForm, descZh: e.target.value })} />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Approval (EN)', '审批（英文）')}</label>
-                  <input className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none" value={editForm.approvalEn} onChange={e => setEditForm({ ...editForm, approvalEn: e.target.value })} />
+                  <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Name', '名称')}</label>
+                  <input className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none"
+                    value={isZh ? editForm.nameZh : editForm.nameEn}
+                    onChange={e => setEditForm(isZh ? { ...editForm, nameZh: e.target.value } : { ...editForm, nameEn: e.target.value })} />
                 </div>
                 <div>
                   <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Agent Count', 'Agent数量')}</label>
@@ -378,16 +360,34 @@ export default function Permissions() {
                 </div>
               </div>
               <div>
-                <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Escalation Rule (EN)', '升级规则（英文）')}</label>
-                <input className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none" value={editForm.escalationEn} onChange={e => setEditForm({ ...editForm, escalationEn: e.target.value })} />
+                <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Description', '描述')}</label>
+                <textarea rows={2} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none resize-none"
+                  value={isZh ? editForm.descZh : editForm.descEn}
+                  onChange={e => setEditForm(isZh ? { ...editForm, descZh: e.target.value } : { ...editForm, descEn: e.target.value })} />
               </div>
               <div>
-                <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Allowed Operations (EN, one per line)', '允许操作（英文，每行一个）')}</label>
-                <textarea rows={4} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary font-mono focus:border-accent-cyan focus:outline-none resize-none" value={editForm.opsEn.join('\n')} onChange={e => setEditForm({ ...editForm, opsEn: e.target.value.split('\n') })} />
+                <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Approval', '审批')}</label>
+                <input className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none"
+                  value={isZh ? editForm.approvalZh : editForm.approvalEn}
+                  onChange={e => setEditForm(isZh ? { ...editForm, approvalZh: e.target.value } : { ...editForm, approvalEn: e.target.value })} />
               </div>
               <div>
-                <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Rules & Constraints (EN, one per line)', '规则与约束（英文，每行一个）')}</label>
-                <textarea rows={4} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary font-mono focus:border-accent-cyan focus:outline-none resize-none" value={editForm.rulesEn.join('\n')} onChange={e => setEditForm({ ...editForm, rulesEn: e.target.value.split('\n') })} />
+                <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Escalation Rule', '升级规则')}</label>
+                <input className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary focus:border-accent-cyan focus:outline-none"
+                  value={isZh ? editForm.escalationZh : editForm.escalationEn}
+                  onChange={e => setEditForm(isZh ? { ...editForm, escalationZh: e.target.value } : { ...editForm, escalationEn: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Allowed Operations (one per line)', '允许操作（每行一个）')}</label>
+                <textarea rows={4} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary font-mono focus:border-accent-cyan focus:outline-none resize-none"
+                  value={(isZh ? editForm.opsZh : editForm.opsEn).join('\n')}
+                  onChange={e => setEditForm(isZh ? { ...editForm, opsZh: e.target.value.split('\n') } : { ...editForm, opsEn: e.target.value.split('\n') })} />
+              </div>
+              <div>
+                <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">{t('Rules & Constraints (one per line)', '规则与约束（每行一个）')}</label>
+                <textarea rows={4} className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-xs text-text-primary font-mono focus:border-accent-cyan focus:outline-none resize-none"
+                  value={(isZh ? editForm.rulesZh : editForm.rulesEn).join('\n')}
+                  onChange={e => setEditForm(isZh ? { ...editForm, rulesZh: e.target.value.split('\n') } : { ...editForm, rulesEn: e.target.value.split('\n') })} />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button onClick={() => { setEditingLevel(null); setEditForm(null); }}
